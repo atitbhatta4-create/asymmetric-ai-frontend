@@ -1,7 +1,7 @@
 // src/pages/Dashboard.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./Dashboard.css";
+import "./dashboard.css";
 import { api } from "../api";
 
 type RiskMode = "ULTRA_SAFE" | "SAFE" | "NORMAL" | "MINI_ASYM" | "AGGRESSIVE";
