@@ -1,0 +1,368 @@
+:root{
+  --bg0:#070a14;
+  --bg1:#0a1022;
+  --card: rgba(13,22,44,.72);
+  --stroke: rgba(255,255,255,.10);
+  --stroke2: rgba(255,255,255,.07);
+  --text: rgba(255,255,255,.92);
+  --muted: rgba(255,255,255,.60);
+  --teal: rgba(0,255,209,.95);
+  --red: rgba(255,80,120,.90);
+  --shadow: 0 18px 45px rgba(0,0,0,.55);
+}
+
+.dash{
+  min-height: 100vh;
+  padding: 14px;
+  color: var(--text);
+  background:
+    radial-gradient(900px 600px at 20% -10%, rgba(0,255,209,.09), transparent 55%),
+    radial-gradient(900px 600px at 85% 0%, rgba(120,90,255,.10), transparent 55%),
+    linear-gradient(180deg,var(--bg0),var(--bg1));
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+}
+
+.container{
+  max-width: 1180px;   /* NOT WIDE */
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card{
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+}
+
+.cardHead{
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--stroke2);
+}
+
+.title{
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.hint{
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.good{ color: var(--teal); }
+.bad{ color: var(--red); }
+
+/* TOP HEADER */
+.header{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.brand{
+  padding: 16px 14px;
+  border-radius: 18px;
+  border: 1px solid var(--stroke);
+  background: rgba(255,255,255,.03);
+}
+
+.brandName{ font-size: 22px; font-weight: 950; }
+.brandSub{ font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+/* Top coins small boxes */
+.coinsRow{
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.coinChip{
+  border-radius: 16px;
+  border: 1px solid var(--stroke);
+  background: rgba(255,255,255,.04);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: 160ms ease;
+  text-align: left;
+  color: var(--text);
+}
+.coinChip:hover{
+  border-color: rgba(0,255,209,.30);
+  transform: translateY(-1px);
+}
+.coinChip.active{
+  border-color: rgba(0,255,209,.55);
+  box-shadow: 0 0 0 4px rgba(0,255,209,.08);
+}
+.coinSym{ font-weight: 950; letter-spacing: .02em; }
+.coinPx{ margin-top: 6px; font-size: 12px; color: rgba(255,255,255,.75); }
+
+/* MAIN GRID */
+.mainGrid{
+  display: grid;
+  grid-template-columns: 1fr 320px; /* right side compact */
+  gap: 12px;
+  align-items: start;
+}
+
+.exec{ padding-bottom: 10px; }
+
+.modes{
+  padding: 10px 14px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pill{
+  padding: 9px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.82);
+  font-weight: 900;
+  font-size: 12px;
+  cursor: pointer;
+}
+.pill.active{
+  color: var(--teal);
+  border-color: rgba(0,255,209,.55);
+  box-shadow: 0 0 0 4px rgba(0,255,209,.08);
+}
+
+.formRow{
+  padding: 10px 14px 0;
+}
+.formRow label{
+  display:block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  font-weight: 800;
+}
+
+.rowInline{
+  display: flex;
+  gap: 8px;
+}
+
+.grid4{
+  padding: 10px 14px 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.field label{
+  display:block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  font-weight: 800;
+}
+
+.input{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  background: rgba(0,0,0,.22);
+  color: var(--text);
+  outline: none;
+}
+.input:focus{
+  border-color: rgba(0,255,209,.35);
+  box-shadow: 0 0 0 4px rgba(0,255,209,.07);
+}
+
+.ghost{
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.78);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.sideRow{
+  padding: 10px 14px 0;
+  display: flex;
+  gap: 10px;
+}
+.sideBtn{
+  flex:1;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--stroke);
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.85);
+  font-weight: 950;
+  cursor: pointer;
+}
+.sideBtn.long.active{
+  border-color: rgba(0,255,209,.55);
+  color: var(--teal);
+  box-shadow: 0 0 0 4px rgba(0,255,209,.08);
+}
+.sideBtn.short.active{
+  border-color: rgba(255,80,120,.55);
+  color: var(--red);
+  box-shadow: 0 0 0 4px rgba(255,80,120,.08);
+}
+
+.actions{
+  padding: 12px 14px 14px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  align-items: center;
+}
+.primary{
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,255,209,.35);
+  background: linear-gradient(90deg, rgba(0,255,209,.22), rgba(0,255,209,.10));
+  color: var(--teal);
+  font-weight: 950;
+  cursor: pointer;
+  min-width: 160px;
+}
+.primary:disabled{ opacity:.6; cursor:not-allowed; }
+.danger{
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,80,120,.35);
+  background: rgba(255,80,120,.10);
+  color: rgba(255,255,255,.90);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.error{
+  margin: 0 14px 14px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,80,120,.35);
+  background: rgba(255,80,120,.10);
+  color: rgba(255,255,255,.90);
+  font-weight: 800;
+}
+
+/* RIGHT COLUMN */
+.rightCol{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.stat .big{
+  padding: 10px 14px 14px;
+  font-size: 30px;
+  font-weight: 950;
+}
+
+/* BOTTOM GRID */
+.bottomGrid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;  /* SAME SIZE */
+  gap: 12px;
+}
+
+.tableWrap{
+  padding: 10px 12px 14px;
+  overflow: auto;
+  max-height: 280px;
+}
+.table{
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 780px;
+}
+.table th{
+  text-align: left;
+  font-size: 11px;
+  color: rgba(255,255,255,.65);
+  font-weight: 900;
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--stroke2);
+}
+.table td{
+  padding: 10px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  font-size: 12px;
+  color: rgba(255,255,255,.86);
+}
+.empty{ color: rgba(255,255,255,.55) !important; padding: 18px 10px !important; }
+
+.curve{
+  padding: 12px 14px 14px;
+}
+.curve svg{
+  width: 100%;
+  height: 260px;
+  border-radius: 14px;
+  background: rgba(0,0,0,.18);
+  border: 1px solid var(--stroke2);
+}
+
+/* Responsive */
+@media (max-width: 1100px){
+  .coinsRow{ grid-template-columns: repeat(2, 1fr); }
+  .mainGrid{ grid-template-columns: 1fr; }
+  .grid4{ grid-template-columns: 1fr 1fr; }
+  .bottomGrid{ grid-template-columns: 1fr; }
+}
+
+/* =========================================================
+   FORCE SAME SIZE: RECENT TRADES & EQUITY CURVE (SAFE FIX)
+   - makes both bottom cards exactly same height
+   - table scrolls inside, curve fills inside
+   ========================================================= */
+.bottomGrid > .card{
+  height: 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tableWrap{
+  flex: 1;
+  max-height: none;
+  overflow-y: auto;
+}
+
+.curve{
+  flex: 1;
+  display: flex;
+}
+
+.curve svg{
+  height: 100%;
+}
+/* ===== Right-side Equity Curve (fills the blank gap nicely) ===== */
+.rightCol .card.stat.eqCurveCard{
+  display: flex;
+  flex-direction: column;
+}
+
+.rightCol .card.stat.eqCurveCard .eqCurveBody{
+  padding: 10px 14px 14px;
+  flex: 1;
+  display: flex;
+}
+
+/* Make the chart fully fill the available space */
+.rightCol .card.stat.eqCurveCard .eqCurveBody > div{
+  width: 100%;
+  height: 100%;
+}
+
+/* OPTIONAL: remove extra big text spacing inside stat cards */
+.rightCol .card.stat .big{
+  padding: 8px 14px 12px;
+}
