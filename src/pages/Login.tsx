@@ -1,6 +1,6 @@
 // frontend/src/pages/Login.tsx
 import React, { useEffect, useState } from "react";
-import { api } from "../api";
+import * as api from "../lib/api";
 import { useNavigate } from "react-router-dom";
 
 type SessionOut = { ok: boolean; email?: string | null };
@@ -21,7 +21,7 @@ export default function Login({
   useEffect(() => {
     (async () => {
       try {
-        const s = (await api("/session", { method: "GET" })) as SessionOut;
+        const s = (await api.apiRequest("/session", { method: "GET" })) as SessionOut;
         if (s?.ok) nav("/accept");
       } catch {
         // ignore
@@ -43,9 +43,9 @@ export default function Login({
 
     setLoading(true);
     try {
-      await api("/auth/login", {
+      await api.apiRequest("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email: cleanEmail, password }),
+        body: { email: cleanEmail, password },
       });
 
       await onLoggedIn();
