@@ -1,67 +1,43 @@
-// src/api.ts
-const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
+// src/lib/api.ts
+// Centralized API helper for Vercel + local dev
 
-function getStoredToken(): string {
-  return (
-    localStorage.getItem("access_token") ||
-    localStorage.getItem("token") ||
-    localStorage.getItem("jwt") ||
-    ""
+const RAW =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_BACKEND_URL ||
+  "";
+
+export const API_BASE = RAW.replace(/\/+$/, "");
+
+// In production, NEVER allow localhost fallback
+if (import.meta.env.PROD && (!API_BASE || API_BASE.includes("127.0.0.1") || API_BASE.includes("localhost"))) {
+  throw new Error(
+    "Missing VITE_API_URL in production. Set it in Vercel Environment Variables."
   );
 }
 
-function storeTokenIfPresent(data: any) {
-  // support common names
-  const t =
-    data?.access_token ||
-    data?.token ||
-    data?.jwt ||
-    data?.data?.access_token ||
-    data?.data?.token;
-
-  if (typeof t === "string" && t.length > 10) {
-    localStorage.setItem("access_token", t);
-  }
-}
-
-export async function api(path: string, init: RequestInit = {}) {
-  const token = getStoredToken();
-
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(init.headers as any),
-  };
-
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    headers,
+export async function apiFetch<T>(
+  path: string,
+  opts: RequestInit = {}
+): Promise<T> {
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  const res = await fetch(`${API_BASE}${cleanPath}`, {
     credentials: "include",
+    ...opts,
+    headers: {
+      "Content-Type": "application/json",
+      ...(opts.headers || {}),
+    },
   });
 
-  const text = await res.text();
-  let data: any = null;
-
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch {
-    data = text || null;
-  }
-
   if (!res.ok) {
-    // show backend error clearly
-    const msg =
-      typeof data === "string"
-        ? data
-        : data?.detail || data?.message || `${res.status} ${res.statusText}`;
-    throw new Error(msg);
+    const text = await res.text().catch(() => "");
+    throw new Error(`${res.status} ${res.statusText}: ${text}`);
   }
 
-  // ✅ if this is login response and contains token, store it
-  if (path.includes("/auth/login")) {
-    storeTokenIfPresent(data);
+  const contentType = res.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    return (await res.json()) as T;
   }
-
-  return data;
+  return (await res.text()) as unknown as T;
 }

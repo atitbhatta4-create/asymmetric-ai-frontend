@@ -1,11 +1,29 @@
 // frontend/src/components/RecentTradesPanel.tsx
-// FULL, SIMPLE, SELF-CONTAINED VERSION
-// - no type imports
-// - calls http://127.0.0.1:8000/trades directly
+// FULL, SIMPLE, SELF-CONTAINED VERSION (Updated)
+// - Uses env var API base when deployed (Vercel)
+// - Falls back to localhost for local dev
+// - Includes credentials for cookie-based session auth
 
 import React, { useEffect, useState } from "react";
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+/**
+ * Pick API base URL in this priority order:
+ * 1) VITE_API_URL
+ * 2) VITE_API_BASE_URL
+ * 3) VITE_BACKEND_URL
+ * 4) fallback to localhost (dev)
+ *
+ * In Vercel set one of these in Project Settings → Environment Variables:
+ *   VITE_API_URL = https://YOUR-BACKEND.onrender.com
+ */
+const RAW_API_BASE =
+  (import.meta as any).env?.VITE_API_URL ||
+  (import.meta as any).env?.VITE_API_BASE_URL ||
+  (import.meta as any).env?.VITE_BACKEND_URL ||
+  "http://127.0.0.1:8000";
+
+// Remove trailing slash if present
+const API_BASE_URL = String(RAW_API_BASE).replace(/\/+$/, "");
 
 // Local Trade type for this component only
 type Trade = {
@@ -29,14 +47,25 @@ const RecentTradesPanel: React.FC = () => {
   const loadTrades = async () => {
     try {
       setError(null);
-      const res = await fetch(`${API_BASE_URL}/trades`);
+
+      const res = await fetch(`${API_BASE_URL}/trades`, {
+        method: "GET",
+        credentials: "include", // IMPORTANT for cookie-based sessions
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
       if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || "Failed to fetch trades");
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `Failed to fetch trades (HTTP ${res.status})`);
       }
+
       const data = await res.json();
-      setTrades(data);
-    } catch (err: any) {
+
+      // Ensure it's an array
+      setTrades(Array.isArray(data) ? data : []);
+    } catch (err) {
       console.error("Failed to load trades:", err);
       setError("Failed to load trades");
     } finally {
@@ -49,30 +78,21 @@ const RecentTradesPanel: React.FC = () => {
     loadTrades();
     const id = setInterval(loadTrades, 3000);
     return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div className="bg-[#021024] rounded-2xl p-4 text-slate-100 flex flex-col h-full">
       <div className="flex items-baseline justify-between mb-2">
-        <h2 className="text-sm font-semibold tracking-wide">
-          RECENT TRADES
-        </h2>
-        <span className="text-xs text-slate-400">
-          Trades: {trades.length}
-        </span>
+        <h2 className="text-sm font-semibold tracking-wide">RECENT TRADES</h2>
+        <span className="text-xs text-slate-400">Trades: {trades.length}</span>
       </div>
 
       {loading && trades.length === 0 && (
-        <div className="text-xs text-slate-400 mt-3">
-          Loading trades…
-        </div>
+        <div className="text-xs text-slate-400 mt-3">Loading trades…</div>
       )}
 
-      {error && (
-        <div className="text-xs text-red-400 mt-2">
-          {error}
-        </div>
-      )}
+      {error && <div className="text-xs text-red-400 mt-2">{error}</div>}
 
       {!loading && !error && trades.length === 0 && (
         <div className="text-xs text-slate-400 mt-3">
@@ -112,9 +132,7 @@ const RecentTradesPanel: React.FC = () => {
                     key={t.id}
                     className="border-b border-slate-800 last:border-b-0"
                   >
-                    <td className="py-1 pr-2 whitespace-nowrap">
-                      {timeStr}
-                    </td>
+                    <td className="py-1 pr-2 whitespace-nowrap">{timeStr}</td>
                     <td className="py-1 pr-2">{t.symbol}</td>
                     <td className="py-1 pr-2">
                       <span
@@ -127,17 +145,17 @@ const RecentTradesPanel: React.FC = () => {
                         {t.side}
                       </span>
                     </td>
-                    <td className="py-1 pr-2">{t.size_pct.toFixed(2)}%</td>
-                    <td className="py-1 pr-2">{t.sl_pct.toFixed(2)}%</td>
-                    <td className="py-1 pr-2">{t.tp_pct.toFixed(2)}%</td>
-                    <td className="py-1 pr-2">{t.leverage.toFixed(1)}x</td>
+                    <td className="py-1 pr-2">{Number(t.size_pct).toFixed(2)}%</td>
+                    <td className="py-1 pr-2">{Number(t.sl_pct).toFixed(2)}%</td>
+                    <td className="py-1 pr-2">{Number(t.tp_pct).toFixed(2)}%</td>
+                    <td className="py-1 pr-2">{Number(t.leverage).toFixed(1)}x</td>
                     <td className="py-1 pr-2">
-                      {t.price.toLocaleString(undefined, {
+                      {Number(t.price).toLocaleString(undefined, {
                         maximumFractionDigits: 2,
                       })}
                     </td>
                     <td className="py-1 pr-2">
-                      {t.equity.toLocaleString(undefined, {
+                      {Number(t.equity).toLocaleString(undefined, {
                         maximumFractionDigits: 2,
                       })}
                     </td>
@@ -148,6 +166,11 @@ const RecentTradesPanel: React.FC = () => {
           </table>
         </div>
       )}
+
+      {/* Optional debug line (remove later) */}
+      <div className="mt-2 text-[10px] text-slate-500">
+        API: {API_BASE_URL}
+      </div>
     </div>
   );
 };
