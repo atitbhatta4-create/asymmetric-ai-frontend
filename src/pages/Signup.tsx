@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { api } from "../api";
+import * as api from "../lib/api";
 import { useNavigate } from "react-router-dom";
 
 export default function Signup() {
@@ -35,15 +35,15 @@ export default function Signup() {
       const e = email.trim().toLowerCase();
 
       // 1) create account
-      await api("/auth/signup", {
+      await api.apiRequest("/auth/signup", {
         method: "POST",
-        body: JSON.stringify({ email: e, password }),
+        body: { email: e, password },
       });
 
       // 2) auto-login right away (sets cookie)
-      await api("/auth/login", {
+      await api.apiRequest("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email: e, password }),
+        body: { email: e, password },
       });
 
       setOk("Account created. Redirecting…");
