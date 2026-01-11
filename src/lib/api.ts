@@ -1,13 +1,16 @@
-// frontend/src/lib/api.ts
+// src/lib/api.ts
 
 const API_BASE =
   import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? "http://127.0.0.1:8000" : "");
+  (import.meta.env.DEV
+    ? "http://127.0.0.1:8000"
+    : "https://asymmetric-ai-backend.onrender.com");
 
 if (!API_BASE) {
   console.error("❌ VITE_API_URL is missing in production");
 }
 
+// ✅ Main function (keep this name because your code already uses it)
 export async function apiRequest<T = any>(
   path: string,
   options: RequestInit = {}
@@ -26,19 +29,13 @@ export async function apiRequest<T = any>(
     throw new Error(text || `Request failed ${res.status}`);
   }
 
-  // If backend returns non-json sometimes, avoid crash
-  const ct = res.headers.get("content-type") || "";
-  if (!ct.includes("application/json")) {
-    return (await res.text()) as any;
-  }
-
   return res.json();
 }
 
-// ✅ Alias (some components use apiFetch)
+// ✅ Alias (some files may use apiFetch)
 export const apiFetch = apiRequest;
 
-// API helpers
+// ---- Helpers ----
 export const getSession = () => apiRequest("/session");
 
 export const login = (email: string, password: string) =>
@@ -47,9 +44,10 @@ export const login = (email: string, password: string) =>
     body: JSON.stringify({ email, password }),
   });
 
-export const logout = () =>
-  apiRequest("/auth/logout", {
+export const signup = (email: string, password: string) =>
+  apiRequest("/auth/signup", {
     method: "POST",
+    body: JSON.stringify({ email, password }),
   });
 
 export const getTrades = () => apiRequest("/trades");
