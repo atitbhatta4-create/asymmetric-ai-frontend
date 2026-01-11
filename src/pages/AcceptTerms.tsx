@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../api";
+import * as api from "../lib/api";
 
 type Props = {
   onAccept: () => void;
@@ -16,7 +16,7 @@ export default function AcceptTerms({ onAccept }: Props) {
   useEffect(() => {
     (async () => {
       try {
-        const s = (await api("/session", { method: "GET" })) as SessionOut;
+        const s = (await api.apiRequest("/session", { method: "GET" })) as SessionOut;
         setSessionEmail(s?.ok ? s.email : null);
       } catch {
         setSessionEmail(null);
@@ -31,7 +31,7 @@ export default function AcceptTerms({ onAccept }: Props) {
 
   const doLogout = async () => {
     try {
-      await api("/auth/logout", { method: "POST" });
+      await api.apiRequest("/auth/logout", { method: "POST" });
     } finally {
       nav("/login");
     }
@@ -60,7 +60,15 @@ export default function AcceptTerms({ onAccept }: Props) {
           boxShadow: "0 0 40px rgba(0,0,0,0.65)",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 12,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
           <div>
             <div style={{ fontSize: 34, fontWeight: 950, letterSpacing: 0.2, marginBottom: 4 }}>
               Before you continue
