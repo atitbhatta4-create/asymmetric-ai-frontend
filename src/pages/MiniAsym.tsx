@@ -1,7 +1,7 @@
 // src/pages/MiniAsym.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../api";
+import * as api from "../lib/api";
 
 type RiskMode = "ULTRA_SAFE" | "SAFE" | "NORMAL" | "MINI_ASYM" | "AGGRESSIVE";
 type Side = "LONG" | "SHORT";
@@ -38,11 +38,11 @@ type RiskPreviewOut = {
 };
 
 async function apiGet<T>(path: string): Promise<T> {
-  return (await api(path, { method: "GET" })) as T;
+  return (await api.apiRequest(path, { method: "GET" })) as T;
 }
 
 async function apiPost<T>(path: string, body?: any): Promise<T> {
-  return (await api(path, { method: "POST", body: JSON.stringify(body ?? {}) })) as T;
+  return (await api.apiRequest(path, { method: "POST", body: JSON.stringify(body ?? {}) })) as T;
 }
 
 function fmtNum(n: number, dp = 2) {
@@ -75,7 +75,7 @@ function presetForMode(mode: RiskMode) {
 }
 
 function parseTradeTime(t: Trade): Date | null {
-  const s = ((t.time || t.created_at || "") + "").trim();
+  const s = (((t.time || t.created_at) || "") + "").trim();
   if (!s) return null;
 
   // backend sends "YYYY-MM-DD HH:mm:ss" (UTC). Convert to ISO-ish.

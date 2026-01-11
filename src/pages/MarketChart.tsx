@@ -11,7 +11,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { api } from "../api";
+import * as api from "../lib/api";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
@@ -62,15 +62,17 @@ export default function MarketChart() {
   const [err, setErr] = useState<string | null>(null);
 
   const loadPrice = async () => {
-    const out = await api<PriceResponse>(`/price/${symbol}`);
+    const out = (await api.apiRequest(`/price/${symbol}`, { method: "GET" })) as PriceResponse;
     setPrice(Number(out.price));
   };
 
   const loadKlines = async () => {
     // expects backend endpoint: GET /klines/{symbol}?tf=1h&limit=200
-    const out = await api<{ symbol: string; tf: string; klines: KlineRow[] }>(
-      `/klines/${symbol}?tf=${encodeURIComponent(tf)}&limit=200`
-    );
+    const out = (await api.apiRequest(
+      `/klines/${symbol}?tf=${encodeURIComponent(tf)}&limit=200`,
+      { method: "GET" }
+    )) as { symbol: string; tf: string; klines: KlineRow[] };
+
     setKlines(Array.isArray(out.klines) ? out.klines : []);
   };
 
