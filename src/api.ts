@@ -4,7 +4,7 @@ const RAW_BACKEND =
   import.meta.env.VITE_API_URL ||
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_BACKEND_URL ||
-  "http://localhost:8000";
+  "http://127.0.0.1:8000";
 
 // remove trailing slash
 export const BACKEND = String(RAW_BACKEND).replace(/\/+$/, "");
