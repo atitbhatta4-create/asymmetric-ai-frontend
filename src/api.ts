@@ -1,111 +1,86 @@
-// src/api.ts
-// Central API helper for Asymmetric AI frontend (Vite)
+// src/api.ts (or src/api/API.ts)
 
-type ApiOptions = {
-  method?: string;
-  headers?: Record<string, string>;
-  body?: any;
-  credentials?: RequestCredentials;
-};
-
-function normalizeBaseUrl(url: string): string {
-  // remove trailing slashes
-  return url.replace(/\/+$/, "");
-}
-
-function normalizePath(path: string): string {
-  // ensure it starts with /
-  if (!path.startsWith("/")) return `/${path}`;
-  return path;
-}
-
-const RAW_BACKEND =
-  import.meta.env.VITE_BACKEND_URL ||
-  import.meta.env.VITE_API_BASE_URL ||
+const RAW =
+  (import.meta as any).env?.VITE_API_URL ||
+  (import.meta as any).env?.VITE_API_BASE_URL ||
+  (import.meta as any).env?.VITE_BACKEND_URL ||
   "";
 
-// IMPORTANT: do NOT fallback to localhost in production builds
-if (!RAW_BACKEND) {
-  // This will help you instantly know env is missing on Vercel
-  throw new Error(
-    "Missing backend URL. Set VITE_BACKEND_URL in Vercel Environment Variables."
-  );
+function cleanBaseUrl(url: string) {
+  return String(url).trim().replace(/\/+$/, "");
 }
 
-export const BACKEND = normalizeBaseUrl(String(RAW_BACKEND));
+export const API_BASE_URL = cleanBaseUrl(RAW);
 
-export async function api<T = any>(
-  path: string,
-  opts: ApiOptions = {}
-): Promise<T> {
-  const url = `${BACKEND}${normalizePath(path)}`;
+// ✅ Never allow localhost/127.0.0.1 in production builds
+const isProd = (import.meta as any).env?.PROD === true;
 
-  const {
-    method = "GET",
-    headers = {},
-    body,
-    credentials = "include", // for cookie-based sessions
-  } = opts;
+if (isProd) {
+  if (!API_BASE_URL) {
+    throw new Error(
+      "Missing VITE_API_URL in production. Set it in Vercel Environment Variables."
+    );
+  }
+  if (
+    API_BASE_URL.includes("localhost") ||
+    API_BASE_URL.includes("127.0.0.1")
+  ) {
+    throw new Error(
+      `Invalid API base URL in production: ${API_BASE_URL}. Use your deployed backend URL.`
+    );
+  }
+}
 
-  const finalHeaders: Record<string, string> = {
-    ...headers,
-  };
+// optional helper
+function join(base: string, path: string) {
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${p}`;
+}
 
-  let finalBody: BodyInit | undefined = undefined;
+export type ApiOptions = RequestInit & {
+  json?: any;
+};
 
-  // Auto-handle JSON body
-  if (body !== undefined) {
-    const isFormData =
-      typeof FormData !== "undefined" && body instanceof FormData;
-
-    if (isFormData) {
-      finalBody = body; // browser sets proper boundary
-    } else {
-      finalHeaders["Content-Type"] =
-        finalHeaders["Content-Type"] || "application/json";
-      finalBody = JSON.stringify(body);
-    }
+export async function api<T = any>(path: string, opts: ApiOptions = {}): Promise<T> {
+  if (!API_BASE_URL) {
+    throw new Error("API base URL is empty. Did you set VITE_API_URL?");
   }
 
-  const res = await fetch(url, {
-    method,
-    headers: finalHeaders,
-    body: finalBody,
-    credentials,
+  const headers: Record<string, string> = {
+    ...(opts.headers as any),
+  };
+
+  let body = opts.body;
+
+  if (opts.json !== undefined) {
+    headers["Content-Type"] = "application/json";
+    body = JSON.stringify(opts.json);
+  }
+
+  const res = await fetch(join(API_BASE_URL, path), {
+    method: opts.method || "GET",
+    credentials: "include", // keep cookies working
+    ...opts,
+    headers,
+    body,
   });
 
-  // Try to parse JSON, fallback to text
-  const contentType = res.headers.get("content-type") || "";
-  const isJson = contentType.includes("application/json");
+  const text = await res.text();
+  let data: any = null;
+
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = text;
+  }
 
   if (!res.ok) {
-    const errPayload = isJson ? await safeJson(res) : await res.text();
     throw new Error(
-      typeof errPayload === "string"
-        ? errPayload
-        : errPayload?.detail || errPayload?.message || `HTTP ${res.status}`
+      typeof data === "string"
+        ? data
+        : data?.detail || data?.message || `HTTP ${res.status}`
     );
   }
 
-  return isJson ? ((await res.json()) as T) : ((await res.text()) as any as T);
+  return data as T;
 }
-
-async function safeJson(res: Response) {
-  try {
-    return await res.json();
-  } catch {
-    return null;
-  }
-}
-
-// Optional convenience wrappers (use if you want)
-export const apiGet = <T = any>(path: string) => api<T>(path);
-
-export const apiPost = <T = any>(path: string, body?: any) =>
-  api<T>(path, { method: "POST", body });
-
-export const apiPut = <T = any>(path: string, body?: any) =>
-  api<T>(path, { method: "PUT", body });
-
-export const apiDelete = <T = any>(path: string) =>
-  api<T>(path, { method: "DELETE" });
