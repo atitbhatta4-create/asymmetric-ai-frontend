@@ -1,20 +1,18 @@
 // frontend/src/lib/api.ts
-// SINGLE SOURCE OF TRUTH for backend URL
 
-const RAW_API_BASE =
-  import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_BACKEND_URL ||
-  "";
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? "http://127.0.0.1:8000" : "");
+   export const apiFetch = apiRequest;
+if (!API_BASE) {
+  console.error("❌ VITE_API_URL is missing in production");
+}
 
-export const API_BASE_URL = RAW_API_BASE.replace(/\/+$/, "");
-
-export async function apiFetch(
+export async function apiRequest<T = any>(
   path: string,
   options: RequestInit = {}
-) {
-  const cleanPath = path.startsWith("/") ? path : `/${path}`;
-
-  const res = await fetch(`${API_BASE_URL}${cleanPath}`, {
+): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
@@ -25,8 +23,18 @@ export async function apiFetch(
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(text || `HTTP ${res.status}`);
+    throw new Error(text || `Request failed ${res.status}`);
   }
 
   return res.json();
 }
+
+// API helpers
+export const getSession = () => apiRequest("/session");
+export const login = (email: string, password: string) =>
+  apiRequest("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+
+export const getTrades = () => apiRequest("/trades");
