@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../api";
+import * as api from "../lib/api";
 
 type RiskMode = "ULTRA_SAFE" | "SAFE" | "NORMAL" | "MINI_ASYM" | "AGGRESSIVE";
 type Side = "LONG" | "SHORT";
@@ -23,7 +23,7 @@ type Trade = {
 type TradesOut = { trades: Trade[] };
 
 async function apiGet<T>(path: string): Promise<T> {
-  return (await api(path, { method: "GET" })) as T;
+  return (await api.apiRequest(path, { method: "GET" })) as T;
 }
 
 function fmtMoney(n: number) {

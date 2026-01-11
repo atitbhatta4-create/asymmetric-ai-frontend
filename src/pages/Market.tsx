@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../api";
+import * as api from "../lib/api";
 
 type PriceResponse = { symbol: string; price: number };
 
@@ -56,7 +56,7 @@ export default function Market() {
   }, [query, allSymbols]);
 
   const loadPrice = async (s: string) => {
-    const out = await api<PriceResponse>(`/price/${s}`);
+    const out = (await api.apiRequest(`/price/${s}`, { method: "GET" })) as PriceResponse;
     return out.price;
   };
 
