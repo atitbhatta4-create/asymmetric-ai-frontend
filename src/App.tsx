@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Routes, Route, NavLink, useNavigate, Navigate } from "react-router-dom";
-import { api } from "./api";
+import * as api from "./lib/api";
 
 import Dashboard from "./pages/Dashboard";
 import Market from "./pages/Market";
@@ -63,7 +63,7 @@ export default function App() {
 
   const loadSession = async () => {
     try {
-      const s = (await api("/session", { method: "GET" })) as SessionOut;
+      const s = (await api.apiRequest("/session", { method: "GET" })) as SessionOut;
       setSession(s);
     } catch {
       setSession({ ok: false, email: null });
@@ -73,7 +73,7 @@ export default function App() {
   const checkAdmin = async () => {
     setAdminChecked(false);
     try {
-      await api("/admin/status", { method: "GET" });
+      await api.apiRequest("/admin/status", { method: "GET" });
       setIsAdmin(true);
     } catch {
       setIsAdmin(false);
@@ -103,7 +103,7 @@ export default function App() {
 
   const doLogout = async () => {
     try {
-      await api("/auth/logout", { method: "POST" });
+      await api.apiRequest("/auth/logout", { method: "POST" });
     } finally {
       setIsAdmin(false);
       setAdminChecked(false);
