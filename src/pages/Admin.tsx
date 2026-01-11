@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { api } from "../api";
+import * as api from "../lib/api";
 import { useNavigate } from "react-router-dom";
 
 type AdminStatus = {
@@ -86,14 +86,20 @@ export default function Admin() {
     setErr(null);
     setMsg(null);
     try {
-      const s = await api<AdminStatus>("/admin/status");
+      const s = (await api.apiRequest("/admin/status", { method: "GET" })) as AdminStatus;
       setStatus(s);
 
-      const settings = await api<{ signup_enabled: boolean; seat_capacity: number }>("/admin/settings");
+      const settings = (await api.apiRequest("/admin/settings", { method: "GET" })) as {
+        signup_enabled: boolean;
+        seat_capacity: number;
+      };
       setSignupEnabled(settings.signup_enabled);
       setSeatCapacity(settings.seat_capacity);
 
-      const u = await api<{ ok: boolean; users: UserRow[] }>(`/admin/users?limit=200`);
+      const u = (await api.apiRequest(`/admin/users?limit=200`, { method: "GET" })) as {
+        ok: boolean;
+        users: UserRow[];
+      };
       setUsers(u.users || []);
     } catch (e: any) {
       setErr(e?.message || "Failed to load admin data");
@@ -108,9 +114,9 @@ export default function Admin() {
     setErr(null);
     setMsg(null);
     try {
-      await api("/admin/settings", {
+      await api.apiRequest("/admin/settings", {
         method: "POST",
-        body: JSON.stringify({ signup_enabled: signupEnabled, seat_capacity: seatCapacity }),
+        body: { signup_enabled: signupEnabled, seat_capacity: seatCapacity },
       });
       setMsg("Saved ✅");
       await load();
@@ -123,8 +129,10 @@ export default function Admin() {
     setErr(null);
     setMsg(null);
     try {
-      const url = `/admin/users?limit=500${userQ.trim() ? `&q=${encodeURIComponent(userQ.trim())}` : ""}`;
-      const u = await api<{ ok: boolean; users: UserRow[] }>(url);
+      const url = `/admin/users?limit=500${
+        userQ.trim() ? `&q=${encodeURIComponent(userQ.trim())}` : ""
+      }`;
+      const u = (await api.apiRequest(url, { method: "GET" })) as { ok: boolean; users: UserRow[] };
       setUsers(u.users || []);
     } catch (e: any) {
       setErr(e?.message || "Users load failed");
@@ -136,7 +144,10 @@ export default function Admin() {
     setErr(null);
     setMsg(null);
     try {
-      const out = await api<{ ok: boolean; stopped_ai_for: string[] }>("/admin/stop-all-ai", { method: "POST" });
+      const out = (await api.apiRequest("/admin/stop-all-ai", { method: "POST" })) as {
+        ok: boolean;
+        stopped_ai_for: string[];
+      };
       setMsg(`Stopped AI for ${out.stopped_ai_for.length} user(s) ✅`);
       await load();
     } catch (e: any) {
@@ -149,7 +160,7 @@ export default function Admin() {
     setErr(null);
     setMsg(null);
     try {
-      await api(`/admin/reset-user?email=${encodeURIComponent(email)}`, { method: "POST" });
+      await api.apiRequest(`/admin/reset-user?email=${encodeURIComponent(email)}`, { method: "POST" });
       setMsg(`User reset: ${email} ✅`);
       await load();
     } catch (e: any) {

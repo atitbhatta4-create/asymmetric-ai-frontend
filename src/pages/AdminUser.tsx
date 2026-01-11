@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { api } from "../api";
+import * as api from "../lib/api";
 import { useNavigate, useParams } from "react-router-dom";
 
 const cardStyle: React.CSSProperties = {
@@ -56,7 +56,10 @@ export default function AdminUser() {
     setErr(null);
     setMsg(null);
     try {
-      const d = await api<UserDetailsResp>(`/admin/user/${encodeURIComponent(decodedEmail)}?trades_limit=50`);
+      const d = (await api.apiRequest(
+        `/admin/user/${encodeURIComponent(decodedEmail)}?trades_limit=50`,
+        { method: "GET" }
+      )) as UserDetailsResp;
       setData(d);
     } catch (e: any) {
       setErr(e?.message || "Failed to load user details");
@@ -73,7 +76,7 @@ export default function AdminUser() {
     setErr(null);
     setMsg(null);
     try {
-      await api(`/admin/reset-user?email=${encodeURIComponent(decodedEmail)}`, { method: "POST" });
+      await api.apiRequest(`/admin/reset-user?email=${encodeURIComponent(decodedEmail)}`, { method: "POST" });
       setMsg("User reset ✅");
       await load();
     } catch (e: any) {
@@ -86,7 +89,7 @@ export default function AdminUser() {
     setErr(null);
     setMsg(null);
     try {
-      await api("/admin/stop-all-ai", { method: "POST" });
+      await api.apiRequest("/admin/stop-all-ai", { method: "POST" });
       setMsg("Stopped all AI ✅");
       await load();
     } catch (e: any) {
