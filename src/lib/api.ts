@@ -56,3 +56,4 @@ export const signup = (email: string, password: string) =>
 
 export const getTrades = () =>
   apiRequest("/trades");
+export const api = apiRequest;
