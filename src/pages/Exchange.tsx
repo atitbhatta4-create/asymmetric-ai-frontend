@@ -1,5 +1,6 @@
+// src/pages/Exchange.tsx
 import React, { useEffect, useState } from "react";
-import { api } from "../api";
+import { apiRequest as api } from "../lib/api";
 
 type Status = {
   connected: boolean;
@@ -49,7 +50,12 @@ export default function Exchange() {
       setStatus(s);
     } catch (e: any) {
       setErr(e?.message || "Failed to load exchange status");
-      setStatus({ connected: false, exchange: null, api_key_masked: null, created_at: null });
+      setStatus({
+        connected: false,
+        exchange: null,
+        api_key_masked: null,
+        created_at: null,
+      });
     }
   };
 
@@ -112,7 +118,9 @@ export default function Exchange() {
       setOk(out?.note ? out.note : "Exchange test OK.");
     } catch (e: any) {
       if (isNotFound(e)) {
-        setErr("Backend missing /exchange/test endpoint. Add it in main.py (I’ll give you the code).");
+        setErr(
+          "Backend missing /exchange/test endpoint. Add it in main.py (I’ll give you the code)."
+        );
       } else {
         setErr(e?.message || "Test failed");
       }
@@ -131,7 +139,9 @@ export default function Exchange() {
       setOk(out?.note ? out.note : "Balances fetched.");
     } catch (e: any) {
       if (isNotFound(e)) {
-        setErr("Backend missing /exchange/balance endpoint. Add it in main.py (I’ll give you the code).");
+        setErr(
+          "Backend missing /exchange/balance endpoint. Add it in main.py (I’ll give you the code)."
+        );
       } else {
         setErr(e?.message || "Balance fetch failed");
       }
@@ -156,7 +166,16 @@ export default function Exchange() {
           border: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        <div style={{ fontWeight: 900, letterSpacing: 0.6, fontSize: 12, opacity: 0.8 }}>STATUS</div>
+        <div
+          style={{
+            fontWeight: 900,
+            letterSpacing: 0.6,
+            fontSize: 12,
+            opacity: 0.8,
+          }}
+        >
+          STATUS
+        </div>
 
         {err && (
           <div
@@ -193,7 +212,9 @@ export default function Exchange() {
           <div style={{ marginTop: 10 }}>
             <div>
               Connected:{" "}
-              <b style={{ color: status.connected ? "#00ffe0" : "#ff5078" }}>{status.connected ? "YES" : "NO"}</b>
+              <b style={{ color: status.connected ? "#00ffe0" : "#ff5078" }}>
+                {status.connected ? "YES" : "NO"}
+              </b>
             </div>
 
             {status.connected && (
@@ -204,9 +225,18 @@ export default function Exchange() {
                 <div style={{ marginTop: 6 }}>
                   API Key: <b>{status.api_key_masked}</b>
                 </div>
-                <div style={{ marginTop: 6, opacity: 0.75 }}>Connected at: {status.created_at}</div>
+                <div style={{ marginTop: 6, opacity: 0.75 }}>
+                  Connected at: {status.created_at}
+                </div>
 
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 10,
+                    flexWrap: "wrap",
+                    marginTop: 12,
+                  }}
+                >
                   <button
                     onClick={testConnection}
                     disabled={loading}
@@ -268,7 +298,9 @@ export default function Exchange() {
                       opacity: 0.95,
                     }}
                   >
-                    <div style={{ fontWeight: 950, marginBottom: 6 }}>Test Result</div>
+                    <div style={{ fontWeight: 950, marginBottom: 6 }}>
+                      Test Result
+                    </div>
                     <div>ok: {String(testRes.ok)}</div>
                     <div>canTrade: {String(testRes.canTrade)}</div>
                     <div>accountType: {String(testRes.accountType)}</div>
@@ -288,7 +320,9 @@ export default function Exchange() {
                       opacity: 0.95,
                     }}
                   >
-                    <div style={{ fontWeight: 950, marginBottom: 6 }}>Balances</div>
+                    <div style={{ fontWeight: 950, marginBottom: 6 }}>
+                      Balances
+                    </div>
                     {balances.balances.length === 0 ? (
                       <div style={{ opacity: 0.75 }}>No balances returned.</div>
                     ) : (
@@ -332,7 +366,16 @@ export default function Exchange() {
             border: "1px solid rgba(255,255,255,0.08)",
           }}
         >
-          <div style={{ fontWeight: 900, letterSpacing: 0.6, fontSize: 12, opacity: 0.8 }}>CONNECT</div>
+          <div
+            style={{
+              fontWeight: 900,
+              letterSpacing: 0.6,
+              fontSize: 12,
+              opacity: 0.8,
+            }}
+          >
+            CONNECT
+          </div>
 
           <div style={{ marginTop: 12 }}>
             <div style={{ fontSize: 12, opacity: 0.75 }}>Exchange</div>
@@ -390,7 +433,9 @@ export default function Exchange() {
 
           {exchange === "okx" && (
             <div style={{ marginTop: 12 }}>
-              <div style={{ fontSize: 12, opacity: 0.75 }}>Passphrase (OKX)</div>
+              <div style={{ fontSize: 12, opacity: 0.75 }}>
+                Passphrase (OKX)
+              </div>
               <input
                 value={passphrase}
                 onChange={(e) => setPassphrase(e.target.value)}
