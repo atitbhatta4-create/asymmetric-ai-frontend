@@ -1,3 +1,4 @@
+// frontend/src/pages/Signup.tsx
 import React, { useState } from "react";
 import * as api from "../lib/api";
 import { useNavigate } from "react-router-dom";
@@ -14,12 +15,15 @@ export default function Signup() {
 
   const validate = () => {
     const e = email.trim().toLowerCase();
+    // FIX: missing || caused broken validation / build issues
     if (!e || !e.includes("@") || !e.includes(".")) return "Enter a valid email.";
     if (!password || password.length < 6) return "Password must be at least 6 characters.";
     return null;
   };
 
   const doSignup = async () => {
+    if (loading) return;
+
     setErr(null);
     setOk(null);
 
@@ -37,6 +41,7 @@ export default function Signup() {
       // 1) create account
       await api.apiRequest("/auth/signup", {
         method: "POST",
+        // IMPORTANT: pass object, do NOT JSON.stringify
         body: { email: e, password },
       });
 
@@ -55,6 +60,10 @@ export default function Signup() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
+    if (e.key === "Enter") doSignup();
   };
 
   return (
@@ -122,7 +131,9 @@ export default function Signup() {
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={onKeyDown}
             placeholder="you@example.com"
+            autoComplete="email"
             style={{
               width: "100%",
               marginTop: 6,
@@ -142,7 +153,9 @@ export default function Signup() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={onKeyDown}
             placeholder="min 6 characters"
+            autoComplete="new-password"
             style={{
               width: "100%",
               marginTop: 6,
@@ -177,11 +190,17 @@ export default function Signup() {
 
         <div style={{ marginTop: 14, fontSize: 12, opacity: 0.65 }}>
           By continuing you agree to{" "}
-          <span onClick={() => nav("/terms")} style={{ color: "#00ffe0", fontWeight: 900, cursor: "pointer" }}>
+          <span
+            onClick={() => nav("/terms")}
+            style={{ color: "#00ffe0", fontWeight: 900, cursor: "pointer" }}
+          >
             Terms
           </span>{" "}
           and{" "}
-          <span onClick={() => nav("/risk")} style={{ color: "#00ffe0", fontWeight: 900, cursor: "pointer" }}>
+          <span
+            onClick={() => nav("/risk")}
+            style={{ color: "#00ffe0", fontWeight: 900, cursor: "pointer" }}
+          >
             Risk Disclosure
           </span>
           .

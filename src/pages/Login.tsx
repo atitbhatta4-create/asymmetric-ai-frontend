@@ -45,6 +45,7 @@ export default function Login({
     try {
       await api.apiRequest("/auth/login", {
         method: "POST",
+        // IMPORTANT: pass object, do NOT JSON.stringify (apiRequest does it)
         body: { email: cleanEmail, password },
       });
 
