@@ -1,4 +1,3 @@
-// frontend/src/pages/Login.tsx
 import React, { useEffect, useState } from "react";
 import * as api from "../lib/api";
 import { useNavigate } from "react-router-dom";
@@ -45,7 +44,6 @@ export default function Login({
     try {
       await api.apiRequest("/auth/login", {
         method: "POST",
-        // IMPORTANT: pass object, do NOT JSON.stringify (apiRequest does it)
         body: { email: cleanEmail, password },
       });
 
@@ -174,24 +172,6 @@ export default function Login({
           >
             Create account
           </span>
-        </div>
-
-        <div style={{ marginTop: 16, fontSize: 12, opacity: 0.65 }}>
-          By continuing you agree to{" "}
-          <span
-            onClick={() => nav("/terms")}
-            style={{ color: "#00ffe0", fontWeight: 900, cursor: "pointer" }}
-          >
-            Terms
-          </span>{" "}
-          and{" "}
-          <span
-            onClick={() => nav("/risk")}
-            style={{ color: "#00ffe0", fontWeight: 900, cursor: "pointer" }}
-          >
-            Risk Disclosure
-          </span>
-          .
         </div>
       </div>
     </div>
