@@ -1,6 +1,8 @@
 // src/lib/api.ts
 
-const API_BASE = import.meta.env.VITE_API_URL || "/api";
+const API_BASE = import.meta.env.DEV
+  ? (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000")
+  : "/api";
 /**
  * Allow body to be object (we stringify it safely)
  */
