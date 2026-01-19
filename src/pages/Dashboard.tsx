@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./dashboard.css";
-import { api } from "../api";
+import { api } from "../lib/api";
 
 type RiskMode = "ULTRA_SAFE" | "SAFE" | "NORMAL" | "MINI_ASYM" | "AGGRESSIVE";
 type Side = "LONG" | "SHORT";
@@ -154,6 +154,13 @@ function EquityCurveChart({
   // baseline at start
   const yStart = padT + innerH * (1 - (start - min) / span);
   const lastPt = pts[pts.length - 1];
+  const lastLabelY = Math.max(
+    padT + 6,
+    Math.min(lastPt.y - 14, padT + innerH - 28)
+  );
+
+  const badgeBorder = up ? "rgba(0,255,209,.32)" : "rgba(255,80,120,.32)";
+  const badgeBg = up ? "rgba(0,255,209,.10)" : "rgba(255,80,120,.10)";
 
   return (
     <div style={{ padding: "12px 14px 14px" }}>
@@ -174,8 +181,8 @@ function EquityCurveChart({
           style={{
             padding: "6px 10px",
             borderRadius: 999,
-            border: `1px solid ${up ? "rgba(0,255,209,.32)" : "rgba(255,80,120,.32)"}`,
-            background: up ? "rgba(0,255,209,.10)" : "rgba(255,80,120,.10)",
+            border: `1px solid ${badgeBorder}`,
+            background: badgeBg,
             fontWeight: 950,
             fontSize: 12,
             whiteSpace: "nowrap",
@@ -192,7 +199,8 @@ function EquityCurveChart({
           height,
           width: "100%",
           borderRadius: 14,
-          background: "linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.10))",
+          background:
+            "linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.10))",
           border: "1px solid rgba(255,255,255,.07)",
           overflow: "hidden",
         }}
@@ -264,17 +272,28 @@ function EquityCurveChart({
 
           {/* area + line */}
           <path d={area} fill="url(#eqFill)" />
-          <path d={d} fill="none" stroke={glow} strokeWidth="7" filter="url(#eqGlow)" />
+          <path
+            d={d}
+            fill="none"
+            stroke={glow}
+            strokeWidth="7"
+            filter="url(#eqGlow)"
+          />
           <path d={d} fill="none" stroke={line} strokeWidth="3.2" />
 
           {/* last point */}
           <circle cx={lastPt.x} cy={lastPt.y} r={5.5} fill={line} />
-          <circle cx={lastPt.x} cy={lastPt.y} r={9} fill="rgba(255,255,255,0.06)" />
+          <circle
+            cx={lastPt.x}
+            cy={lastPt.y}
+            r={9}
+            fill="rgba(255,255,255,0.06)"
+          />
 
           {/* last label (right) */}
           <rect
             x={W - padR - 154}
-            y={Math.max(padT + 6, Math.min(lastPt.y - 14, padT + innerH - 28))}
+            y={lastLabelY}
             width="146"
             height="26"
             rx="10"
@@ -283,7 +302,7 @@ function EquityCurveChart({
           />
           <text
             x={W - padR - 81}
-            y={Math.max(padT + 6, Math.min(lastPt.y - 14, padT + innerH - 28)) + 17}
+            y={lastLabelY + 17}
             textAnchor="middle"
             fontSize="12"
             fill="rgba(255,255,255,0.88)"
@@ -439,7 +458,7 @@ export default function Dashboard() {
         const list = (t.trades ?? []).slice();
         setTrades(list);
 
-        // Build curve from oldest -> newest, start from session equity (or 1000)
+        // Build curve from oldest -> newest
         const startEq = 1000;
         const curve: number[] = [startEq];
         for (const tr of list.slice().reverse()) {
@@ -451,9 +470,7 @@ export default function Dashboard() {
         await loadAutoHistory();
       } catch (e: any) {
         setError(
-          `Please login again and refresh.${
-            e?.message ? ` (${e.message})` : ""
-          }`
+          `Please login again and refresh.${e?.message ? ` (${e.message})` : ""}`
         );
       }
     })();
@@ -643,7 +660,9 @@ export default function Dashboard() {
     if (!aiRunning) return "AI: STOPPED";
 
     const modeTxt = autoStatus?.mode ? `${autoStatus.mode}` : "";
-    const sig = autoStatus?.last_signal ? `signal ${autoStatus.last_signal}` : "";
+    const sig = autoStatus?.last_signal
+      ? `signal ${autoStatus.last_signal}`
+      : "";
     const blocked = autoStatus?.blocked_reason
       ? ` • BLOCKED: ${autoStatus.blocked_reason}`
       : "";
@@ -713,8 +732,11 @@ export default function Dashboard() {
             Exchange:{" "}
             {connected ? (
               <>
-                Connected (<span style={{ opacity: 0.9 }}>{exStatus?.exchange}</span>){" "}
-                <span style={{ opacity: 0.7 }}>• {exStatus?.api_key_masked}</span>
+                Connected (
+                <span style={{ opacity: 0.9 }}>{exStatus?.exchange}</span>){" "}
+                <span style={{ opacity: 0.7 }}>
+                  • {exStatus?.api_key_masked}
+                </span>
               </>
             ) : (
               "Not Connected"
@@ -776,7 +798,9 @@ export default function Dashboard() {
           <section className="card exec">
             <div className="cardHead">
               <div className="title">EXECUTE TRADE</div>
-              <div className="hint">Sandbox only — manual disabled while AI runs</div>
+              <div className="hint">
+                Sandbox only — manual disabled while AI runs
+              </div>
             </div>
 
             <div className="modes">
@@ -800,14 +824,18 @@ export default function Dashboard() {
                 <input
                   className="input"
                   value={symbolInput}
-                  onChange={(e) => setSymbolInput(e.target.value.toUpperCase())}
+                  onChange={(e) =>
+                    setSymbolInput(e.target.value.toUpperCase())
+                  }
                   placeholder="BTCUSDT"
                 />
                 <button
                   className="ghost"
                   type="button"
                   onClick={() =>
-                    setLiveSymbol((symbolInput || activeSymbol).toUpperCase().trim())
+                    setLiveSymbol(
+                      (symbolInput || activeSymbol).toUpperCase().trim()
+                    )
                   }
                 >
                   Track
@@ -949,7 +977,10 @@ export default function Dashboard() {
                 />
               </div>
 
-              <div className="field" style={{ display: "flex", alignItems: "end", gap: 10 }}>
+              <div
+                className="field"
+                style={{ display: "flex", alignItems: "end", gap: 10 }}
+              >
                 <label style={{ width: "100%" }}>
                   Trend filter (EMA50/EMA200)
                   <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
@@ -1005,7 +1036,10 @@ export default function Dashboard() {
               </button>
             </div>
 
-            <div className="actions" style={{ gap: 10, display: "flex", flexWrap: "wrap" }}>
+            <div
+              className="actions"
+              style={{ gap: 10, display: "flex", flexWrap: "wrap" }}
+            >
               <button
                 className="primary"
                 type="button"
@@ -1036,7 +1070,7 @@ export default function Dashboard() {
             {error ? <div className="error">{error}</div> : null}
           </section>
 
-          {/* RIGHT: STATS + EQUITY CURVE (moved here) */}
+          {/* RIGHT: STATS + EQUITY CURVE */}
           <div className="rightCol">
             <section className="card stat">
               <div className="cardHead">
@@ -1064,7 +1098,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* BOTTOM: RECENT TRADES ONLY (removed old equity curve card) */}
+        {/* BOTTOM: RECENT TRADES ONLY */}
         <section className="card">
           <div className="cardHead">
             <div className="title">RECENT TRADES</div>
@@ -1108,7 +1142,9 @@ export default function Dashboard() {
                       <tr key={t.id ?? i}>
                         <td>{when}</td>
                         <td>{t.symbol}</td>
-                        <td className={t.side === "LONG" ? "good" : "bad"}>{t.side}</td>
+                        <td className={t.side === "LONG" ? "good" : "bad"}>
+                          {t.side}
+                        </td>
                         <td>{t.mode || "-"}</td>
                         <td>{Number(t.size ?? 0).toFixed(2)}</td>
                         <td>{Number(t.sl ?? 0).toFixed(2)}</td>
