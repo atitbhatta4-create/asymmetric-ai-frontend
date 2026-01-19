@@ -1,12 +1,9 @@
 // src/lib/api.ts
 
-const API_BASE =
-  import.meta.env.PROD
-    ? "/api"
-    : (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000");
-/**
- * Allow body to be object (we stringify it safely)
- */
+const API_BASE = import.meta.env.PROD
+  ? "/api"
+  : (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000");
+
 type ApiRequestInit = Omit<RequestInit, "body"> & {
   body?: any;
 };
@@ -20,40 +17,39 @@ export async function apiRequest<T = any>(
   const res = await fetch(`${API_BASE}${path}`, {
     credentials: "include",
     headers: {
-      "Content-Type": "application/json",
+      ...(body ? { "Content-Type": "application/json" } : {}),
       ...(headers || {}),
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
     ...rest,
   });
 
+  // try to parse json; if not, return text in error
+  const text = await res.text();
+  const maybeJson = text ? (() => { try { return JSON.parse(text); } catch { return null; } })() : null;
+
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Request failed (${res.status})`);
+    const msg =
+      (maybeJson && (maybeJson.detail || maybeJson.msg)) ||
+      text ||
+      `Request failed (${res.status})`;
+    throw new Error(msg);
   }
 
-  return res.json();
+  return (maybeJson ?? (text as any)) as T;
 }
 
-/* =========================
-   Helpers
-========================= */
-
-export const getSession = () =>
-  apiRequest("/session");
+export const getSession = () => apiRequest("/session");
 
 export const login = (email: string, password: string) =>
-  apiRequest("/auth/login", {
-    method: "POST",
-    body: { email, password },
-  });
+  apiRequest("/auth/login", { method: "POST", body: { email, password } });
 
 export const signup = (email: string, password: string) =>
-  apiRequest("/auth/signup", {
-    method: "POST",
-    body: { email, password },
-  });
+  apiRequest("/auth/signup", { method: "POST", body: { email, password } });
 
-export const getTrades = () =>
-  apiRequest("/trades");
+export const logout = () =>
+  apiRequest("/auth/logout", { method: "POST" });
+
+export const getTrades = () => apiRequest("/trades");
+
 export const api = apiRequest;
