@@ -8,6 +8,14 @@ type ApiRequestInit = Omit<RequestInit, "body"> & {
   body?: any;
 };
 
+function tryParseJson(text: string) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 export async function apiRequest<T = any>(
   path: string,
   options: ApiRequestInit = {}
@@ -17,26 +25,26 @@ export async function apiRequest<T = any>(
   const res = await fetch(`${API_BASE}${path}`, {
     credentials: "include",
     headers: {
-      ...(body ? { "Content-Type": "application/json" } : {}),
+      ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
       ...(headers || {}),
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
     ...rest,
   });
 
-  // try to parse json; if not, return text in error
   const text = await res.text();
-  const maybeJson = text ? (() => { try { return JSON.parse(text); } catch { return null; } })() : null;
+  const json = text ? tryParseJson(text) : null;
 
   if (!res.ok) {
     const msg =
-      (maybeJson && (maybeJson.detail || maybeJson.msg)) ||
+      (json && (json.detail || json.message || json.msg || json.error)) ||
       text ||
       `Request failed (${res.status})`;
     throw new Error(msg);
   }
 
-  return (maybeJson ?? (text as any)) as T;
+  // If backend returns JSON, return it. Otherwise return text.
+  return (json ?? (text as any)) as T;
 }
 
 export const getSession = () => apiRequest("/session");
@@ -47,8 +55,7 @@ export const login = (email: string, password: string) =>
 export const signup = (email: string, password: string) =>
   apiRequest("/auth/signup", { method: "POST", body: { email, password } });
 
-export const logout = () =>
-  apiRequest("/auth/logout", { method: "POST" });
+export const logout = () => apiRequest("/auth/logout", { method: "POST" });
 
 export const getTrades = () => apiRequest("/trades");
 
