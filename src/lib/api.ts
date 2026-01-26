@@ -1,7 +1,10 @@
 // src/lib/api.ts
 
+// In production, call your backend directly (Render URL).
+// In dev, use VITE_API_URL or localhost.
 const API_BASE = import.meta.env.PROD
-  ? "/api"
+  ? (import.meta.env.VITE_API_URL ||
+      "https://asymmetric-ai-backend.onrender.com")
   : (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000");
 
 type ApiRequestInit = Omit<RequestInit, "body"> & {
@@ -37,13 +40,13 @@ export async function apiRequest<T = any>(
 
   if (!res.ok) {
     const msg =
-      (json && (json.detail || json.message || json.msg || json.error)) ||
+      (json &&
+        (json.detail || json.message || json.msg || json.error)) ||
       text ||
       `Request failed (${res.status})`;
     throw new Error(msg);
   }
 
-  // If backend returns JSON, return it. Otherwise return text.
   return (json ?? (text as any)) as T;
 }
 
