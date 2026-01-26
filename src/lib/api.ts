@@ -1,11 +1,10 @@
 // src/lib/api.ts
 
-// In production, call your backend directly (Render URL).
-// In dev, use VITE_API_URL or localhost.
-const API_BASE = import.meta.env.PROD
-  ? (import.meta.env.VITE_API_URL ||
-      "https://asymmetric-ai-backend.onrender.com")
-  : (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000");
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD
+    ? "https://asymmetric-ai-backend.onrender.com"
+    : "http://127.0.0.1:8000");
 
 type ApiRequestInit = Omit<RequestInit, "body"> & {
   body?: any;
