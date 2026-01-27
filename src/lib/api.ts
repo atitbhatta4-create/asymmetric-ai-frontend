@@ -1,7 +1,10 @@
 // src/lib/api.ts
 
-const API_BASE =
-  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+// In production (Vercel) we call "/api" and Vercel rewrites it to the backend.
+// In dev we call your local backend or VITE_API_URL.
+const API_BASE = import.meta.env.PROD
+  ? "/api"
+  : (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000");
 
 type ApiRequestInit = Omit<RequestInit, "body"> & {
   body?: any;
@@ -36,11 +39,7 @@ export async function apiRequest<T = any>(
 
   if (!res.ok) {
     const msg =
-      (json &&
-        (json.detail ||
-          json.message ||
-          json.msg ||
-          json.error)) ||
+      (json && (json.detail || json.message || json.msg || json.error)) ||
       text ||
       `Request failed (${res.status})`;
     throw new Error(msg);
@@ -52,19 +51,13 @@ export async function apiRequest<T = any>(
 export const getSession = () => apiRequest("/session");
 
 export const login = (email: string, password: string) =>
-  apiRequest("/auth/login", {
-    method: "POST",
-    body: { email, password },
-  });
+  apiRequest("/auth/login", { method: "POST", body: { email, password } });
 
 export const signup = (email: string, password: string) =>
-  apiRequest("/auth/signup", {
-    method: "POST",
-    body: { email, password },
-  });
+  apiRequest("/auth/signup", { method: "POST", body: { email, password } });
 
-export const logout = () =>
-  apiRequest("/auth/logout", { method: "POST" });
+export const logout = () => apiRequest("/auth/logout", { method: "POST" });
 
 export const getTrades = () => apiRequest("/trades");
+
 export const api = apiRequest;
