@@ -11,7 +11,7 @@ import {
   Legend,
 } from "chart.js";
 import { useNavigate } from "react-router-dom";
-import { api } from "./api";
+import { api } from "./lib/api";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
