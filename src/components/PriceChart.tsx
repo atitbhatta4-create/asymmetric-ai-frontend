@@ -21,12 +21,13 @@ export const PriceChart: React.FC<PriceChartProps> = ({ trades }) => {
   if (!trades || trades.length === 0) {
     return (
       <div className="w-full h-full flex items-center justify-center text-xs text-slate-500">
-        No trades yet — your equity line will appear here after you start placing trades.
+        No trades yet — your equity line will appear here after you start placing
+        trades.
       </div>
     );
   }
 
-  const values = trades.map((t) => t.equity_after);
+  const values = trades.map((t) => Number(t.equity_after));
   const min = Math.min(...values);
   const max = Math.max(...values);
 
@@ -37,15 +38,17 @@ export const PriceChart: React.FC<PriceChartProps> = ({ trades }) => {
   const yMax = max + padding;
 
   const n = trades.length;
-  const points = trades
-    .map((t, idx) => {
-      const x =
-        n === 1 ? 0 : (idx / (n - 1)) * 100; // 0..100 horizontally
-      const norm = (t.equity_after - yMin) / (yMax - yMin); // 0..1
-      const y = 100 - norm * 100; // invert for SVG (0 at top)
-      return `${x},${y}`;
-    })
-    .join(" ");
+
+  const xy = trades.map((t, idx) => {
+    const x = n === 1 ? 0 : (idx / (n - 1)) * 100; // 0..100 horizontally
+    const norm = (Number(t.equity_after) - yMin) / (yMax - yMin); // 0..1
+    const y = 100 - norm * 100; // invert for SVG (0 at top)
+    return { x, y };
+  });
+
+  const points = xy.map((p) => `${p.x},${p.y}`).join(" ");
+
+  const last = xy[xy.length - 1];
 
   return (
     <svg
@@ -84,16 +87,10 @@ export const PriceChart: React.FC<PriceChartProps> = ({ trades }) => {
       />
 
       {/* last point dot */}
-      {points && (
+      {last && (
         <circle
-          cx={100}
-          cy={
-            (() => {
-              const last = trades[trades.length - 1];
-              const norm = (last.equity_after - yMin) / (yMax - yMin);
-              return 100 - norm * 100;
-            })()
-          }
+          cx={last.x}
+          cy={last.y}
           r={1.5}
           fill="rgb(74,222,128)"
         />
