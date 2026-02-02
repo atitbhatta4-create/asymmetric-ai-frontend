@@ -4,6 +4,7 @@ const API_BASE =
   import.meta.env.PROD
     ? "/api"
     : import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 type ApiRequestInit = Omit<RequestInit, "body"> & {
   body?: any;
 };
@@ -14,6 +15,23 @@ function tryParseJson(text: string) {
   } catch {
     return null;
   }
+}
+
+function extractErrorMessage(json: any, fallbackText: string, status: number) {
+  // FastAPI often returns: { detail: [...] } for 422
+  const detail = json?.detail ?? json?.message ?? json?.msg ?? json?.error;
+
+  if (Array.isArray(detail)) {
+    // show full validation errors instead of "[object Object]"
+    return JSON.stringify(detail, null, 2);
+  }
+
+  if (typeof detail === "string" && detail.trim()) return detail;
+  if (typeof detail === "number") return String(detail);
+
+  if (fallbackText && fallbackText.trim()) return fallbackText;
+
+  return `Request failed (${status})`;
 }
 
 export async function apiRequest<T = any>(
@@ -36,14 +54,7 @@ export async function apiRequest<T = any>(
   const json = text ? tryParseJson(text) : null;
 
   if (!res.ok) {
-    const msg =
-      (json &&
-        (json.detail ||
-          json.message ||
-          json.msg ||
-          json.error)) ||
-      text ||
-      `Request failed (${res.status})`;
+    const msg = extractErrorMessage(json, text, res.status);
     throw new Error(msg);
   }
 
