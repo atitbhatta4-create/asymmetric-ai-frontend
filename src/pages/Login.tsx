@@ -28,19 +28,17 @@ export default function Login({
     setLoading(true);
 
     try {
-      // 1️⃣ LOGIN (this sets the cookie)
-      await api.apiRequest("/auth/login", {
-        method: "POST",
-        body: { email: cleanEmail, password },
-      });
+      // 1) LOGIN (sets cookie)
+      await api.login(cleanEmail, password);
 
-      // 2️⃣ NAVIGATE IMMEDIATELY (do NOT wait)
+      // 2) NAVIGATE IMMEDIATELY
       nav("/accept");
 
-      // 3️⃣ REFRESH SESSION IN BACKGROUND
+      // 3) REFRESH SESSION IN BACKGROUND
       onLoggedIn().catch(() => {});
     } catch (e: any) {
       setErr(e?.message || "Login failed");
+    } finally {
       setLoading(false);
     }
   };
@@ -70,7 +68,10 @@ export default function Login({
       </button>
 
       <p>
-        New user? <span onClick={() => nav("/signup")}>Create account</span>
+        New user?{" "}
+        <span style={{ cursor: "pointer" }} onClick={() => nav("/signup")}>
+          Create account
+        </span>
       </p>
     </div>
   );
