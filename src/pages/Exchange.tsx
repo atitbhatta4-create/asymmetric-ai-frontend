@@ -1,6 +1,6 @@
 // src/pages/Exchange.tsx
 import React, { useEffect, useState } from "react";
-import { apiRequest as api } from "../lib/api";
+import { api } from "../lib/api";
 
 type Status = {
   connected: boolean;
@@ -24,49 +24,8 @@ type BalanceOut = {
 };
 
 function isNotFound(err: any) {
-  const msg = String(err?.message || err || "");
+  const msg = String(err?.message || "");
   return msg.includes("404") || msg.toLowerCase().includes("not found");
-}
-
-/**
- * Fix: Avoid "Error: [object Object]"
- * This tries to extract a useful string from whatever backend returns.
- */
-function normalizeError(e: any): string {
-  if (!e) return "Unknown error";
-
-  // If it's already a string
-  if (typeof e === "string") return e;
-
-  // Standard Error instance
-  if (e?.message && typeof e.message === "string") return e.message;
-
-  // FastAPI often returns { detail: "..." } or { detail: { ... } }
-  if (e?.detail) {
-    if (typeof e.detail === "string") return e.detail;
-    try {
-      return JSON.stringify(e.detail, null, 2);
-    } catch {
-      return String(e.detail);
-    }
-  }
-
-  // Some APIs return { error: "..." }
-  if (e?.error) {
-    if (typeof e.error === "string") return e.error;
-    try {
-      return JSON.stringify(e.error, null, 2);
-    } catch {
-      return String(e.error);
-    }
-  }
-
-  // If backend returned full object
-  try {
-    return JSON.stringify(e, null, 2);
-  } catch {
-    return String(e);
-  }
 }
 
 export default function Exchange() {
@@ -90,8 +49,7 @@ export default function Exchange() {
       const s = await api<Status>("/exchange/status");
       setStatus(s);
     } catch (e: any) {
-      // If status endpoint fails, we still want UI to work
-      setErr(normalizeError(e) || "Failed to load exchange status");
+      setErr(e?.message || "Failed to load exchange status");
       setStatus({
         connected: false,
         exchange: null,
@@ -107,38 +65,22 @@ export default function Exchange() {
 
   const connect = async () => {
     if (loading) return;
-
     setLoading(true);
     setErr(null);
     setOk(null);
     setTestRes(null);
     setBalances(null);
 
-    const cleanKey = apiKey.trim();
-    const cleanSecret = apiSecret.trim();
-    const cleanPass = passphrase.trim();
-
-    if (!cleanKey || !cleanSecret) {
-      setErr("Please enter API Key and API Secret.");
-      setLoading(false);
-      return;
-    }
-    if (exchange === "okx" && !cleanPass) {
-      setErr("Please enter OKX passphrase.");
-      setLoading(false);
-      return;
-    }
-
     try {
+      // ✅ IMPORTANT: body must be an OBJECT (NOT JSON.stringify)
       await api("/exchange/connect", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: {
           exchange,
-          api_key: cleanKey,
-          api_secret: cleanSecret,
-          passphrase: exchange === "okx" ? cleanPass : undefined,
-        }),
+          api_key: apiKey,
+          api_secret: apiSecret,
+          passphrase: exchange === "okx" ? passphrase : undefined,
+        },
       });
 
       setOk("Connected successfully.");
@@ -147,7 +89,7 @@ export default function Exchange() {
       setPassphrase("");
       await load();
     } catch (e: any) {
-      setErr(normalizeError(e) || "Connect failed");
+      setErr(e?.message || "Connect failed");
     } finally {
       setLoading(false);
     }
@@ -155,18 +97,18 @@ export default function Exchange() {
 
   const disconnect = async () => {
     if (loading) return;
-
     setLoading(true);
     setErr(null);
     setOk(null);
     setTestRes(null);
     setBalances(null);
+
     try {
       await api("/exchange/disconnect", { method: "POST" });
       setOk("Disconnected.");
       await load();
     } catch (e: any) {
-      setErr(normalizeError(e) || "Disconnect failed");
+      setErr(e?.message || "Disconnect failed");
     } finally {
       setLoading(false);
     }
@@ -174,21 +116,19 @@ export default function Exchange() {
 
   const testConnection = async () => {
     if (loading) return;
-
     setLoading(true);
     setErr(null);
     setOk(null);
+
     try {
       const out = await api<TestOut>("/exchange/test");
       setTestRes(out);
       setOk(out?.note ? out.note : "Exchange test OK.");
     } catch (e: any) {
       if (isNotFound(e)) {
-        setErr(
-          "Backend missing /exchange/test endpoint. Add it in main.py (I’ll give you the code)."
-        );
+        setErr("Backend missing /exchange/test endpoint.");
       } else {
-        setErr(normalizeError(e) || "Test failed");
+        setErr(e?.message || "Test failed");
       }
     } finally {
       setLoading(false);
@@ -197,21 +137,19 @@ export default function Exchange() {
 
   const fetchBalances = async () => {
     if (loading) return;
-
     setLoading(true);
     setErr(null);
     setOk(null);
+
     try {
       const out = await api<BalanceOut>("/exchange/balance");
       setBalances(out);
       setOk(out?.note ? out.note : "Balances fetched.");
     } catch (e: any) {
       if (isNotFound(e)) {
-        setErr(
-          "Backend missing /exchange/balance endpoint. Add it in main.py (I’ll give you the code)."
-        );
+        setErr("Backend missing /exchange/balance endpoint.");
       } else {
-        setErr(normalizeError(e) || "Balance fetch failed");
+        setErr(e?.message || "Balance fetch failed");
       }
     } finally {
       setLoading(false);
