@@ -1,7 +1,9 @@
 /// <reference types="vite/client" />
 
 const API_BASE =
-  import.meta.env.PROD ? "/api" : import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+  import.meta.env.PROD
+    ? "/api"
+    : import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 type ApiRequestInit = Omit<RequestInit, "body"> & {
   body?: any;
@@ -12,31 +14,6 @@ function tryParseJson(text: string) {
     return JSON.parse(text);
   } catch {
     return null;
-  }
-}
-
-function pickErrorMessage(json: any, fallback: string) {
-  if (!json) return fallback;
-
-  // common FastAPI shape: { detail: "..." } or { detail: { ... } }
-  const detail = json.detail ?? json.message ?? json.msg ?? json.error;
-
-  if (typeof detail === "string" && detail.trim()) return detail;
-
-  // sometimes detail is an object/list
-  if (detail !== undefined) {
-    try {
-      return typeof detail === "string" ? detail : JSON.stringify(detail);
-    } catch {
-      // ignore
-    }
-  }
-
-  // last fallback: stringify whole json
-  try {
-    return JSON.stringify(json);
-  } catch {
-    return fallback;
   }
 }
 
@@ -60,15 +37,21 @@ export async function apiRequest<T = any>(
   const json = text ? tryParseJson(text) : null;
 
   if (!res.ok) {
-    const fallback = text || `Request failed (${res.status})`;
-    const msg = pickErrorMessage(json, fallback);
+    const msg =
+      (json &&
+        (json.detail ||
+          json.message ||
+          json.msg ||
+          json.error)) ||
+      text ||
+      `Request failed (${res.status})`;
     throw new Error(msg);
   }
 
   return (json ?? (text as any)) as T;
 }
 
-// helpers (named exports)
+// helpers
 export const getSession = () => apiRequest("/session");
 
 export const login = (email: string, password: string) =>
@@ -88,9 +71,15 @@ export const logout = () => apiRequest("/auth/logout", { method: "POST" });
 export const getTrades = () => apiRequest("/trades");
 
 /**
- * ✅ callable api function + methods
+ * ✅ MAGIC FIX:
+ * api is BOTH:
+ *  - callable: api("/path")
+ *  - and has helpers: api.login(...), api.getSession(), etc.
  */
-type ApiCallable = (<T = any>(path: string, options?: ApiRequestInit) => Promise<T>) & {
+type ApiCallable = (<T = any>(
+  path: string,
+  options?: ApiRequestInit
+) => Promise<T>) & {
   apiRequest: typeof apiRequest;
   request: typeof apiRequest;
   getSession: typeof getSession;
@@ -100,7 +89,10 @@ type ApiCallable = (<T = any>(path: string, options?: ApiRequestInit) => Promise
   getTrades: typeof getTrades;
 };
 
-const apiFn = (async function <T = any>(path: string, options?: ApiRequestInit) {
+const apiFn = (async function <T = any>(
+  path: string,
+  options?: ApiRequestInit
+) {
   return apiRequest<T>(path, options);
 }) as ApiCallable;
 
