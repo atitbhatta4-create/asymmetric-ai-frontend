@@ -13,14 +13,7 @@ import {
 } from "chart.js";
 import * as api from "../lib/api";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
 type KlineRow = {
   t: number; // timestamp (ms or seconds depending on backend)
@@ -55,6 +48,7 @@ const btn = (active: boolean): React.CSSProperties => ({
 });
 
 const formatNumber = (n: number | null | undefined, digits = 2) => {
+  // ✅ FIX: add missing ||
   if (n === null || n === undefined || Number.isNaN(Number(n))) return "—";
   return Number(n).toFixed(digits);
 };
@@ -86,11 +80,12 @@ export default function MarketChart() {
   };
 
   const loadKlines = async () => {
-    // expects backend endpoint: GET /klines/{symbol}?tf=1h&limit=200
-    const out = (await api.apiRequest(
-      `/klines/${symbol}?tf=${encodeURIComponent(tf)}&limit=200`,
-      { method: "GET" }
-    )) as { symbol: string; tf: string; klines: KlineRow[]; note?: string };
+    // ✅ FIX: this must be a string (template literal), not /regex/
+    const path = `/klines/${symbol}?tf=${encodeURIComponent(tf)}&limit=200`;
+
+    const out = (await api.apiRequest(path, {
+      method: "GET",
+    })) as { symbol: string; tf: string; klines: KlineRow[]; note?: string };
 
     const rows = Array.isArray(out.klines) ? out.klines : [];
     setKlines(rows);
@@ -126,6 +121,7 @@ export default function MarketChart() {
       labels: klines.map((k) => new Date(toMs(k.t)).toLocaleString()),
       datasets: [
         {
+          // ✅ FIX: must be a string
           label: `${symbol} Close`,
           data: klines.map((k) => Number(k.close)),
           tension: 0.25,
