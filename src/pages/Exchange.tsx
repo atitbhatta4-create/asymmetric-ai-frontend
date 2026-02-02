@@ -24,8 +24,49 @@ type BalanceOut = {
 };
 
 function isNotFound(err: any) {
-  const msg = String(err?.message || "");
+  const msg = String(err?.message || err || "");
   return msg.includes("404") || msg.toLowerCase().includes("not found");
+}
+
+/**
+ * Fix: Avoid "Error: [object Object]"
+ * This tries to extract a useful string from whatever backend returns.
+ */
+function normalizeError(e: any): string {
+  if (!e) return "Unknown error";
+
+  // If it's already a string
+  if (typeof e === "string") return e;
+
+  // Standard Error instance
+  if (e?.message && typeof e.message === "string") return e.message;
+
+  // FastAPI often returns { detail: "..." } or { detail: { ... } }
+  if (e?.detail) {
+    if (typeof e.detail === "string") return e.detail;
+    try {
+      return JSON.stringify(e.detail, null, 2);
+    } catch {
+      return String(e.detail);
+    }
+  }
+
+  // Some APIs return { error: "..." }
+  if (e?.error) {
+    if (typeof e.error === "string") return e.error;
+    try {
+      return JSON.stringify(e.error, null, 2);
+    } catch {
+      return String(e.error);
+    }
+  }
+
+  // If backend returned full object
+  try {
+    return JSON.stringify(e, null, 2);
+  } catch {
+    return String(e);
+  }
 }
 
 export default function Exchange() {
@@ -49,7 +90,8 @@ export default function Exchange() {
       const s = await api<Status>("/exchange/status");
       setStatus(s);
     } catch (e: any) {
-      setErr(e?.message || "Failed to load exchange status");
+      // If status endpoint fails, we still want UI to work
+      setErr(normalizeError(e) || "Failed to load exchange status");
       setStatus({
         connected: false,
         exchange: null,
@@ -64,34 +106,56 @@ export default function Exchange() {
   }, []);
 
   const connect = async () => {
+    if (loading) return;
+
     setLoading(true);
     setErr(null);
     setOk(null);
     setTestRes(null);
     setBalances(null);
+
+    const cleanKey = apiKey.trim();
+    const cleanSecret = apiSecret.trim();
+    const cleanPass = passphrase.trim();
+
+    if (!cleanKey || !cleanSecret) {
+      setErr("Please enter API Key and API Secret.");
+      setLoading(false);
+      return;
+    }
+    if (exchange === "okx" && !cleanPass) {
+      setErr("Please enter OKX passphrase.");
+      setLoading(false);
+      return;
+    }
+
     try {
       await api("/exchange/connect", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           exchange,
-          api_key: apiKey,
-          api_secret: apiSecret,
-          passphrase: exchange === "okx" ? passphrase : undefined,
+          api_key: cleanKey,
+          api_secret: cleanSecret,
+          passphrase: exchange === "okx" ? cleanPass : undefined,
         }),
       });
+
       setOk("Connected successfully.");
       setApiKey("");
       setApiSecret("");
       setPassphrase("");
       await load();
     } catch (e: any) {
-      setErr(e?.message || "Connect failed");
+      setErr(normalizeError(e) || "Connect failed");
     } finally {
       setLoading(false);
     }
   };
 
   const disconnect = async () => {
+    if (loading) return;
+
     setLoading(true);
     setErr(null);
     setOk(null);
@@ -102,13 +166,15 @@ export default function Exchange() {
       setOk("Disconnected.");
       await load();
     } catch (e: any) {
-      setErr(e?.message || "Disconnect failed");
+      setErr(normalizeError(e) || "Disconnect failed");
     } finally {
       setLoading(false);
     }
   };
 
   const testConnection = async () => {
+    if (loading) return;
+
     setLoading(true);
     setErr(null);
     setOk(null);
@@ -122,7 +188,7 @@ export default function Exchange() {
           "Backend missing /exchange/test endpoint. Add it in main.py (I’ll give you the code)."
         );
       } else {
-        setErr(e?.message || "Test failed");
+        setErr(normalizeError(e) || "Test failed");
       }
     } finally {
       setLoading(false);
@@ -130,6 +196,8 @@ export default function Exchange() {
   };
 
   const fetchBalances = async () => {
+    if (loading) return;
+
     setLoading(true);
     setErr(null);
     setOk(null);
@@ -143,7 +211,7 @@ export default function Exchange() {
           "Backend missing /exchange/balance endpoint. Add it in main.py (I’ll give you the code)."
         );
       } else {
-        setErr(e?.message || "Balance fetch failed");
+        setErr(normalizeError(e) || "Balance fetch failed");
       }
     } finally {
       setLoading(false);

@@ -1,9 +1,20 @@
 // src/lib/api.ts
 /// <reference types="vite/client" />
-const API_BASE =
-  import.meta.env.PROD
+
+/**
+ * API base rules:
+ * - If VITE_API_URL is set (recommended in Vercel), always use it.
+ * - Otherwise:
+ *   - PROD uses "/api" (for Vercel proxy setups)
+ *   - DEV uses local backend
+ */
+const ENV_URL = (import.meta.env.VITE_API_URL || "").trim();
+
+const API_BASE = ENV_URL
+  ? ENV_URL.replace(/\/+$/, "") // remove trailing slash
+  : import.meta.env.PROD
     ? "/api"
-    : import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+    : "http://127.0.0.1:8000";
 
 type ApiRequestInit = Omit<RequestInit, "body"> & {
   body?: any;
@@ -17,19 +28,48 @@ function tryParseJson(text: string) {
   }
 }
 
+function pickErrorMessage(json: any, fallback: string) {
+  const raw =
+    json?.detail ??
+    json?.message ??
+    json?.msg ??
+    json?.error;
+
+  if (!raw) return fallback;
+
+  if (typeof raw === "string") return raw;
+
+  try {
+    return JSON.stringify(raw, null, 2);
+  } catch {
+    return String(raw);
+  }
+}
+
 export async function apiRequest<T = any>(
   path: string,
   options: ApiRequestInit = {}
 ): Promise<T> {
   const { body, headers, ...rest } = options;
 
+  // If body is already a string, do not stringify again
+  const isBodyDefined = body !== undefined && body !== null;
+  const finalBody =
+    !isBodyDefined
+      ? undefined
+      : typeof body === "string"
+        ? body
+        : JSON.stringify(body);
+
   const res = await fetch(`${API_BASE}${path}`, {
     credentials: "include",
     headers: {
-      ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+      ...(isBodyDefined && typeof body !== "string"
+        ? { "Content-Type": "application/json" }
+        : {}),
       ...(headers || {}),
     },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: finalBody,
     ...rest,
   });
 
@@ -37,17 +77,19 @@ export async function apiRequest<T = any>(
   const json = text ? tryParseJson(text) : null;
 
   if (!res.ok) {
-    const msg =
-      (json && (json.detail || json.message || json.msg || json.error)) ||
-      text ||
-      `Request failed (${res.status})`;
+    const fallback = text || `Request failed (${res.status})`;
+    const msg = json ? pickErrorMessage(json, fallback) : fallback;
     throw new Error(msg);
   }
 
+  // return JSON if possible, else plain text
   return (json ?? (text as any)) as T;
 }
 
-// helpers
+/* =========================
+   Helpers
+========================= */
+
 export const getSession = () => apiRequest("/session");
 
 export const login = (email: string, password: string) =>
@@ -67,10 +109,10 @@ export const logout = () => apiRequest("/auth/logout", { method: "POST" });
 export const getTrades = () => apiRequest("/trades");
 
 /**
- * ✅ MAGIC FIX:
- * api is BOTH:
- *  - a callable function: api("/path")
- *  - and an object: api.apiRequest("/path"), api.login(...)
+ * ✅ MAGIC:
+ * api is both callable AND has helpers:
+ *   await api("/path")
+ *   await api.login(...)
  */
 type ApiCallable = (<T = any>(
   path: string,
