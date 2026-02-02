@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as api from "../lib/api";
 
-type PriceResponse = { symbol: string; price: number };
+type PriceResponse = { symbol: string; price: number | string };
 
 const card: React.CSSProperties = {
   background: "rgba(9, 15, 30, 0.96)",
@@ -55,15 +55,21 @@ export default function Market() {
     return allSymbols.filter((s) => s.includes(q));
   }, [query, allSymbols]);
 
-  const loadPrice = async (s: string) => {
-    const out = (await api.apiRequest(`/price/${s}`, { method: "GET" })) as PriceResponse;
-    return out.price;
+  const loadPrice = async (s: string): Promise<number> => {
+    const out = (await api.apiRequest(`/price/${s}`, {
+      method: "GET",
+    })) as PriceResponse;
+
+    const p = typeof out.price === "string" ? Number(out.price) : out.price;
+    if (Number.isNaN(p)) throw new Error("Invalid price returned");
+    return p;
   };
 
   const refresh = async () => {
     setLoading(true);
     try {
       const next: Record<string, number | null> = {};
+
       await Promise.all(
         filtered.map(async (s) => {
           try {
@@ -73,6 +79,7 @@ export default function Market() {
           }
         })
       );
+
       setPrices((prev) => ({ ...prev, ...next }));
     } finally {
       setLoading(false);
@@ -88,7 +95,13 @@ export default function Market() {
 
   return (
     <div style={{ display: "grid", gap: 14 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "baseline",
+        }}
+      >
         <div>
           <div style={{ fontSize: 28, fontWeight: 950 }}>Market</div>
           <div style={{ fontSize: 13, opacity: 0.7 }}>
@@ -147,14 +160,18 @@ export default function Market() {
               >
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 950 }}>{s}</div>
-                  <div style={{ fontSize: 12, opacity: 0.65 }}>Tap to open chart</div>
+                  <div style={{ fontSize: 12, opacity: 0.65 }}>
+                    Tap to open chart
+                  </div>
                 </div>
 
                 <div style={{ textAlign: "right" }}>
                   <div style={{ fontSize: 16, fontWeight: 950 }}>
                     {prices[s] == null ? "—" : `$${formatNumber(prices[s], 2)}`}
                   </div>
-                  <div style={{ fontSize: 11, opacity: 0.55 }}>Auto refresh</div>
+                  <div style={{ fontSize: 11, opacity: 0.55 }}>
+                    Auto refresh
+                  </div>
                 </div>
               </button>
             ))
