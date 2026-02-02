@@ -13,10 +13,17 @@ import {
 } from "chart.js";
 import * as api from "../lib/api";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip,
+  Legend
+);
 
 type KlineRow = {
-  t: number;
+  t: number; // timestamp (ms or seconds depending on backend)
   open: number;
   high: number;
   low: number;
@@ -24,7 +31,7 @@ type KlineRow = {
   volume: number;
 };
 
-type PriceResponse = { symbol: string; price: number };
+type PriceResponse = { symbol: string; price: number | string };
 
 const card: React.CSSProperties = {
   background: "rgba(9, 15, 30, 0.96)",
@@ -37,7 +44,9 @@ const card: React.CSSProperties = {
 
 const btn = (active: boolean): React.CSSProperties => ({
   borderRadius: 999,
-  border: active ? "1px solid rgba(0,255,224,0.35)" : "1px solid rgba(255,255,255,0.10)",
+  border: active
+    ? "1px solid rgba(0,255,224,0.35)"
+    : "1px solid rgba(255,255,255,0.10)",
   background: active ? "rgba(0,255,224,0.10)" : "rgba(255,255,255,0.04)",
   color: "white",
   padding: "10px 14px",
@@ -48,6 +57,12 @@ const btn = (active: boolean): React.CSSProperties => ({
 const formatNumber = (n: number | null | undefined, digits = 2) => {
   if (n === null || n === undefined || Number.isNaN(Number(n))) return "—";
   return Number(n).toFixed(digits);
+};
+
+// if backend returns seconds, convert to ms
+const toMs = (t: number) => {
+  // 10^12 is ~2001 in ms; anything smaller is probably seconds
+  return t < 1_000_000_000_000 ? t * 1000 : t;
 };
 
 export default function MarketChart() {
@@ -62,8 +77,12 @@ export default function MarketChart() {
   const [err, setErr] = useState<string | null>(null);
 
   const loadPrice = async () => {
-    const out = (await api.apiRequest(`/price/${symbol}`, { method: "GET" })) as PriceResponse;
-    setPrice(Number(out.price));
+    const out = (await api.apiRequest(`/price/${symbol}`, {
+      method: "GET",
+    })) as PriceResponse;
+
+    const p = typeof out.price === "string" ? Number(out.price) : out.price;
+    setPrice(Number.isNaN(p) ? null : p);
   };
 
   const loadKlines = async () => {
@@ -71,9 +90,10 @@ export default function MarketChart() {
     const out = (await api.apiRequest(
       `/klines/${symbol}?tf=${encodeURIComponent(tf)}&limit=200`,
       { method: "GET" }
-    )) as { symbol: string; tf: string; klines: KlineRow[] };
+    )) as { symbol: string; tf: string; klines: KlineRow[]; note?: string };
 
-    setKlines(Array.isArray(out.klines) ? out.klines : []);
+    const rows = Array.isArray(out.klines) ? out.klines : [];
+    setKlines(rows);
   };
 
   const refreshAll = async () => {
@@ -101,10 +121,9 @@ export default function MarketChart() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol, tf]);
 
-  // ✅ IMPORTANT: strong typing fixes TS error and chart renders
   const chartData = useMemo<ChartData<"line", number[], string>>(() => {
     return {
-      labels: klines.map((k) => new Date(k.t).toLocaleString()),
+      labels: klines.map((k) => new Date(toMs(k.t)).toLocaleString()),
       datasets: [
         {
           label: `${symbol} Close`,
@@ -144,7 +163,14 @@ export default function MarketChart() {
 
   return (
     <div style={{ display: "grid", gap: 14 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 12,
+        }}
+      >
         <div>
           <div style={{ fontSize: 28, fontWeight: 950 }}>{symbol}</div>
           <div style={{ fontSize: 13, opacity: 0.7 }}>
@@ -222,7 +248,9 @@ export default function MarketChart() {
           {loading ? (
             <div style={{ opacity: 0.75 }}>Loading chart…</div>
           ) : klines.length === 0 ? (
-            <div style={{ opacity: 0.75 }}>No kline data.</div>
+            <div style={{ opacity: 0.75 }}>
+              No kline data. (Check backend: /klines/{symbol}?tf={tf}&limit=200)
+            </div>
           ) : (
             <Line data={chartData} options={chartOptions} />
           )}
