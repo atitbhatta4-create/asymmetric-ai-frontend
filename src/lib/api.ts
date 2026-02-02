@@ -1,4 +1,5 @@
 // src/lib/api.ts
+/// <reference types="vite/client" />
 
 const API_BASE =
   import.meta.env.VITE_API_URL ||
@@ -16,7 +17,7 @@ function tryParseJson(text: string) {
   }
 }
 
-export async function apiRequest<T = unknown>(
+export async function apiRequest<T = any>(
   path: string,
   options: ApiRequestInit = {}
 ): Promise<T> {
@@ -37,21 +38,16 @@ export async function apiRequest<T = unknown>(
 
   if (!res.ok) {
     const msg =
-      (json &&
-        (json.detail ||
-          json.message ||
-          json.msg ||
-          json.error)) ||
+      (json && (json.detail || json.message || json.msg || json.error)) ||
       text ||
       `Request failed (${res.status})`;
     throw new Error(msg);
   }
 
-  // ✅ return JSON if possible, otherwise text
-  return (json ?? text) as unknown as T;
+  return (json ?? (text as any)) as T;
 }
 
-// API helpers
+// helpers
 export const getSession = () => apiRequest("/session");
 
 export const login = (email: string, password: string) =>
@@ -66,10 +62,42 @@ export const signup = (email: string, password: string) =>
     body: { email, password },
   });
 
-export const logout = () =>
-  apiRequest("/auth/logout", { method: "POST" });
+export const logout = () => apiRequest("/auth/logout", { method: "POST" });
 
 export const getTrades = () => apiRequest("/trades");
 
-// keep this alias if your code uses it
-export const api = apiRequest;
+/**
+ * ✅ MAGIC FIX:
+ * api is BOTH:
+ *  - a callable function: api("/path")
+ *  - and an object: api.apiRequest("/path"), api.login(...)
+ */
+type ApiCallable = (<T = any>(
+  path: string,
+  options?: ApiRequestInit
+) => Promise<T>) & {
+  apiRequest: typeof apiRequest;
+  request: typeof apiRequest;
+  getSession: typeof getSession;
+  login: typeof login;
+  signup: typeof signup;
+  logout: typeof logout;
+  getTrades: typeof getTrades;
+};
+
+const apiFn = (async function <T = any>(
+  path: string,
+  options?: ApiRequestInit
+) {
+  return apiRequest<T>(path, options);
+}) as ApiCallable;
+
+apiFn.apiRequest = apiRequest;
+apiFn.request = apiRequest;
+apiFn.getSession = getSession;
+apiFn.login = login;
+apiFn.signup = signup;
+apiFn.logout = logout;
+apiFn.getTrades = getTrades;
+
+export const api = apiFn;
