@@ -3,7 +3,7 @@
 
 const API_BASE =
   import.meta.env.VITE_API_URL ||
-  (import.meta.env.PROD ? "" : "http://127.0.0.1:8000");
+  "https://asymmetric-ai-backend.onrender.com";
 
 type ApiRequestInit = Omit<RequestInit, "body"> & {
   body?: any;
