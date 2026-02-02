@@ -1,6 +1,7 @@
+// src/pages/Login.tsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import * as api from "../lib/api";
+import { login } from "../lib/api";
 
 export default function Login({
   onLoggedIn,
@@ -29,7 +30,7 @@ export default function Login({
 
     try {
       // 1) LOGIN (sets cookie)
-      await api.login(cleanEmail, password);
+      await login(cleanEmail, password);
 
       // 2) NAVIGATE IMMEDIATELY
       nav("/accept");
@@ -52,6 +53,7 @@ export default function Login({
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        autoComplete="email"
       />
 
       <input
@@ -59,6 +61,7 @@ export default function Login({
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        autoComplete="current-password"
       />
 
       {err && <div className="error">{err}</div>}
