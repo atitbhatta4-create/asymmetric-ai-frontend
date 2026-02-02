@@ -17,23 +17,6 @@ function tryParseJson(text: string) {
   }
 }
 
-function extractErrorMessage(json: any, fallbackText: string, status: number) {
-  // FastAPI often returns: { detail: [...] } for 422
-  const detail = json?.detail ?? json?.message ?? json?.msg ?? json?.error;
-
-  if (Array.isArray(detail)) {
-    // show full validation errors instead of "[object Object]"
-    return JSON.stringify(detail, null, 2);
-  }
-
-  if (typeof detail === "string" && detail.trim()) return detail;
-  if (typeof detail === "number") return String(detail);
-
-  if (fallbackText && fallbackText.trim()) return fallbackText;
-
-  return `Request failed (${status})`;
-}
-
 export async function apiRequest<T = any>(
   path: string,
   options: ApiRequestInit = {}
@@ -54,7 +37,14 @@ export async function apiRequest<T = any>(
   const json = text ? tryParseJson(text) : null;
 
   if (!res.ok) {
-    const msg = extractErrorMessage(json, text, res.status);
+    const msg =
+      (json &&
+        (json.detail ||
+          json.message ||
+          json.msg ||
+          json.error)) ||
+      text ||
+      `Request failed (${res.status})`; // ✅ FIX
     throw new Error(msg);
   }
 
@@ -81,7 +71,6 @@ export const logout = () => apiRequest("/auth/logout", { method: "POST" });
 export const getTrades = () => apiRequest("/trades");
 
 /**
- * ✅ MAGIC FIX:
  * api is BOTH:
  *  - callable: api("/path")
  *  - and has helpers: api.login(...), api.getSession(), etc.
