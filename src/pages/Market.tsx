@@ -24,7 +24,8 @@ const inputStyle: React.CSSProperties = {
 };
 
 const formatNumber = (n: number | null | undefined, digits = 2) => {
-  if (n === null || n === undefined || Number.isNaN(n)) return "—";
+  // ✅ FIX: add missing ||
+  if (n === null || n === undefined || Number.isNaN(Number(n))) return "—";
   return Number(n).toFixed(digits);
 };
 
@@ -90,8 +91,8 @@ export default function Market() {
     refresh();
     const id = setInterval(() => refresh(), 6000);
     return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query]);
+    // ✅ better dependency: refresh should follow filtered list
+  }, [filtered]);
 
   return (
     <div style={{ display: "grid", gap: 14 }}>
