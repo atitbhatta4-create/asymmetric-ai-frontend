@@ -1,9 +1,9 @@
 // src/lib/api.ts
 /// <reference types="vite/client" />
-
 const API_BASE =
-  import.meta.env.VITE_API_URL ||
-  "https://asymmetric-ai-backend.onrender.com";
+  import.meta.env.PROD
+    ? "/api"
+    : import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 type ApiRequestInit = Omit<RequestInit, "body"> & {
   body?: any;
