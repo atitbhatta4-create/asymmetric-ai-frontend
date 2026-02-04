@@ -1,4 +1,3 @@
-// src/pages/Login.tsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../lib/api";
@@ -32,10 +31,10 @@ export default function Login({
       // 1) LOGIN (sets cookie)
       await login(cleanEmail, password);
 
-      // 2) NAVIGATE IMMEDIATELY
+      // 2) navigate to accept (terms flow)
       nav("/accept");
 
-      // 3) REFRESH SESSION IN BACKGROUND
+      // 3) refresh session in background
       onLoggedIn().catch(() => {});
     } catch (e: any) {
       setErr(String(e?.message || "Login failed"));
@@ -99,7 +98,6 @@ export default function Login({
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={onKeyDown}
             autoComplete="email"
-            type="email"
             style={{
               width: "100%",
               marginTop: 6,

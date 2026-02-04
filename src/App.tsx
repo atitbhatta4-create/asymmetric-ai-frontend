@@ -127,8 +127,12 @@ export default function App() {
   if (!authed) {
     return (
       <Routes>
+        {/* Explicit routes (avoids "still same" confusion) */}
+        <Route path="/login" element={<Login onLoggedIn={loadSession} />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="*" element={<Login onLoggedIn={loadSession} />} />
+
+        {/* Default route */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
   }
@@ -179,7 +183,6 @@ export default function App() {
           Mini-Asym Panel
         </NavLink>
 
-        {/* Admin link only if backend confirms admin */}
         {isAdmin && (
           <NavLink to="/admin" style={({ isActive }) => linkStyle(isActive)}>
             Admin
@@ -217,12 +220,13 @@ export default function App() {
           <Route path="/history" element={<History />} />
           <Route path="/mini-asym" element={<MiniAsym />} />
 
-          {/* Admin routes (double protected: frontend + backend) */}
+          {/* Admin routes */}
           <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/" replace />} />
           <Route path="/admin/user/:email" element={isAdmin ? <AdminUser /> : <Navigate to="/" replace />} />
 
           <Route path="/terms" element={<Terms />} />
           <Route path="/risk" element={<RiskDisclosure />} />
+
           <Route path="*" element={<Dashboard />} />
         </Routes>
       </main>
