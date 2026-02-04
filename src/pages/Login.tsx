@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { login } from "../lib/api";
+import * as api from "../lib/api";
 
 export default function Login({
   onLoggedIn,
@@ -11,13 +11,11 @@ export default function Login({
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   const doLogin = async () => {
     if (loading) return;
-
     setErr(null);
 
     const cleanEmail = email.trim().toLowerCase();
@@ -28,23 +26,14 @@ export default function Login({
 
     setLoading(true);
     try {
-      // 1) LOGIN (sets cookie)
-      await login(cleanEmail, password);
-
-      // 2) navigate to accept (terms flow)
+      await api.login(cleanEmail, password);
       nav("/accept");
-
-      // 3) refresh session in background
       onLoggedIn().catch(() => {});
     } catch (e: any) {
-      setErr(String(e?.message || "Login failed"));
+      setErr(e?.message || "Login failed");
     } finally {
       setLoading(false);
     }
-  };
-
-  const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
-    if (e.key === "Enter") doLogin();
   };
 
   return (
@@ -70,9 +59,7 @@ export default function Login({
           boxShadow: "0 0 40px rgba(0,0,0,0.65)",
         }}
       >
-        <div style={{ fontSize: 34, fontWeight: 950, letterSpacing: 0.3 }}>
-          Asymmetric AI
-        </div>
+        <div style={{ fontSize: 34, fontWeight: 950 }}>Asymmetric AI</div>
         <div style={{ opacity: 0.7, marginTop: 6 }}>Login</div>
 
         {err && (
@@ -84,10 +71,9 @@ export default function Login({
               color: "#fecaca",
               padding: 10,
               borderRadius: 14,
-              whiteSpace: "pre-wrap",
             }}
           >
-            <b>Error:</b> {err}
+            {err}
           </div>
         )}
 
@@ -96,7 +82,6 @@ export default function Login({
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={onKeyDown}
             autoComplete="email"
             style={{
               width: "100%",
@@ -106,7 +91,6 @@ export default function Login({
               border: "1px solid rgba(148,163,184,0.5)",
               background: "rgba(15,23,42,0.85)",
               color: "white",
-              outline: "none",
             }}
           />
         </div>
@@ -117,7 +101,6 @@ export default function Login({
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={onKeyDown}
             autoComplete="current-password"
             style={{
               width: "100%",
@@ -127,7 +110,6 @@ export default function Login({
               border: "1px solid rgba(148,163,184,0.5)",
               background: "rgba(15,23,42,0.85)",
               color: "white",
-              outline: "none",
             }}
           />
         </div>
@@ -141,7 +123,6 @@ export default function Login({
             borderRadius: 14,
             border: "none",
             padding: "12px 14px",
-            cursor: loading ? "not-allowed" : "pointer",
             fontWeight: 950,
             background: "linear-gradient(90deg,#00ff9d,#00ffe0)",
             color: "#021018",
