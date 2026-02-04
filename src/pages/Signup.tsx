@@ -35,10 +35,7 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      await api.apiRequest("/auth/signup", {
-        method: "POST",
-        body: { email: cleanEmail, password },
-      });
+      await api.signup(email, password);
 
       setOk("Account created. You can login now.");
       setTimeout(() => nav("/login"), 600);
