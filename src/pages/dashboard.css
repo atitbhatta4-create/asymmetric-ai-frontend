@@ -366,3 +366,73 @@
 .rightCol .card.stat .big{
   padding: 8px 14px 12px;
 }
+/* =========================================================
+   MOBILE FIX (add at very bottom)
+   ========================================================= */
+
+@media (max-width: 720px) {
+  .dash { padding: 10px; }
+  .container { padding: 0; }
+
+  /* coins become 2 columns (not 5) */
+  .coinsRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  /* Symbol input row stacks (input, Track, Chart) */
+  .rowInline {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  .rowInline .ghost {
+    width: 100% !important;
+  }
+
+  /* actions buttons stack and fill width */
+  .actions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    justify-content: stretch !important;
+  }
+  .actions .primary,
+  .actions .danger,
+  .actions .ghost {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* side buttons still 2 columns but bigger */
+  .sideRow {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* right column stays normal */
+  .rightCol { gap: 12px; }
+}
+
+/* very small phones */
+@media (max-width: 480px) {
+  /* coins become 1 column */
+  .coinsRow {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* form grids become 1 column */
+  .grid4 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .brandName { font-size: 18px; }
+  .brandSub { font-size: 12px; }
+}
+
+/* Table: allow horizontal scroll without shrinking the whole UI */
+.tableWrap {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+.table {
+  min-width: 900px; /* keep readable on phone, scroll inside tableWrap */
+}
