@@ -1,8 +1,5 @@
 {
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "https://asymmetric-ai-backend.onrender.com/api/$1"
-    }
+    { "source": "/api/(.*)", "destination": "https://asymmetric-ai-backend.onrender.com/$1" }
   ]
 }
