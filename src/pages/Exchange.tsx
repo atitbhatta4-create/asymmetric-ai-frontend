@@ -4,7 +4,7 @@ import { api } from "../lib/api";
 
 type Status = {
   connected: boolean;
-  exchange: "binance" | "okx" | null;
+  exchange: "binance" | "okx" | "bybit" | null;
   api_key_masked: string | null;
   created_at: string | null;
 };
@@ -31,7 +31,7 @@ function isNotFound(err: any) {
 export default function Exchange() {
   const [status, setStatus] = useState<Status | null>(null);
 
-  const [exchange, setExchange] = useState<"binance" | "okx">("binance");
+  const [exchange, setExchange] = useState<"binance" | "okx" | "bybit">("okx");
   const [apiKey, setApiKey] = useState("");
   const [apiSecret, setApiSecret] = useState("");
   const [passphrase, setPassphrase] = useState("");
@@ -80,6 +80,7 @@ export default function Exchange() {
           api_key: apiKey,
           api_secret: apiSecret,
           passphrase: exchange === "okx" ? passphrase : undefined,
+          // Bybit uses api_key + api_secret only (no passphrase)
         },
       });
 
@@ -398,8 +399,9 @@ export default function Exchange() {
                 color: "white",
               }}
             >
-              <option value="binance">Binance</option>
               <option value="okx">OKX</option>
+              <option value="bybit">Bybit</option>
+              <option value="binance">Binance</option>
             </select>
           </div>
 

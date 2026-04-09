@@ -47,6 +47,18 @@ export default function Market() {
   const [query, setQuery] = useState("BTC");
   const [prices, setPrices] = useState<Record<string, number | null>>({});
   const [loading, setLoading] = useState(false);
+  const [exchange, setExchange] = useState<string>("okx");
+
+  // Fetch the user's connected exchange once on mount
+  useEffect(() => {
+    api.apiRequest("/exchange/status", { method: "GET" })
+      .then((res: any) => {
+        if (res?.connected && res?.exchange) {
+          setExchange(res.exchange.toLowerCase());
+        }
+      })
+      .catch(() => {}); // not logged in or no exchange — default stays okx
+  }, []);
 
   const allSymbols = useMemo(() => DEFAULT_MARKET, []);
 
@@ -57,7 +69,7 @@ export default function Market() {
   }, [query, allSymbols]);
 
   const loadPrice = async (s: string): Promise<number> => {
-    const out = (await api.apiRequest(`/price/${s}`, {
+    const out = (await api.apiRequest(`/price/${s}?exchange=${encodeURIComponent(exchange)}`, {
       method: "GET",
     })) as PriceResponse;
 
@@ -91,8 +103,8 @@ export default function Market() {
     refresh();
     const id = setInterval(() => refresh(), 6000);
     return () => clearInterval(id);
-    // ✅ better dependency: refresh should follow filtered list
-  }, [filtered]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtered, exchange]);
 
   return (
     <div style={{ display: "grid", gap: 14 }}>
@@ -106,7 +118,8 @@ export default function Market() {
         <div>
           <div style={{ fontSize: 28, fontWeight: 950 }}>Market</div>
           <div style={{ fontSize: 13, opacity: 0.7 }}>
-            Search a coin → click it → open Binance-style chart
+            Search a coin → click it → open chart &nbsp;·&nbsp;
+            <span style={{ textTransform: "uppercase", color: "#00ffe0" }}>{exchange}</span> prices
           </div>
         </div>
 

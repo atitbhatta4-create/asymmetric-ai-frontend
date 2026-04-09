@@ -69,9 +69,21 @@ export default function MarketChart() {
   const [klines, setKlines] = useState<KlineRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [exchange, setExchange] = useState<string>("okx");
+
+  // Fetch the user's connected exchange once on mount
+  useEffect(() => {
+    api.apiRequest("/exchange/status", { method: "GET" })
+      .then((res: any) => {
+        if (res?.connected && res?.exchange) {
+          setExchange(res.exchange.toLowerCase());
+        }
+      })
+      .catch(() => {}); // not logged in or no exchange — default stays okx
+  }, []);
 
   const loadPrice = async () => {
-    const out = (await api.apiRequest(`/price/${symbol}`, {
+    const out = (await api.apiRequest(`/price/${symbol}?exchange=${encodeURIComponent(exchange)}`, {
       method: "GET",
     })) as PriceResponse;
 
@@ -80,8 +92,7 @@ export default function MarketChart() {
   };
 
   const loadKlines = async () => {
-    // ✅ FIX: this must be a string (template literal), not /regex/
-    const path = `/klines/${symbol}?tf=${encodeURIComponent(tf)}&limit=200`;
+    const path = `/klines/${symbol}?tf=${encodeURIComponent(tf)}&limit=200&exchange=${encodeURIComponent(exchange)}`;
 
     const out = (await api.apiRequest(path, {
       method: "GET",
@@ -114,7 +125,7 @@ export default function MarketChart() {
 
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [symbol, tf]);
+  }, [symbol, tf, exchange]);
 
   const chartData = useMemo<ChartData<"line", number[], string>>(() => {
     return {
@@ -170,7 +181,8 @@ export default function MarketChart() {
         <div>
           <div style={{ fontSize: 28, fontWeight: 950 }}>{symbol}</div>
           <div style={{ fontSize: 13, opacity: 0.7 }}>
-            Live price: <b>${formatNumber(price, 2)}</b> (refresh every 5s)
+            Live price: <b>${formatNumber(price, 2)}</b> &nbsp;·&nbsp;
+            <span style={{ textTransform: "uppercase", color: "#00ffe0" }}>{exchange}</span>
           </div>
         </div>
 
