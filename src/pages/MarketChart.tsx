@@ -140,6 +140,7 @@ export default function MarketChart() {
       layout: {
         background: { type: ColorType.Solid, color: "rgba(9,15,30,0)" },
         textColor: "#9ca3af",
+        attributionLogo: false,
       },
       grid: {
         vertLines: { color: "rgba(75,85,99,0.18)" },
