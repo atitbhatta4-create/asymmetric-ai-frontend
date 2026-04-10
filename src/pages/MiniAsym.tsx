@@ -42,7 +42,7 @@ async function apiGet<T>(path: string): Promise<T> {
 }
 
 async function apiPost<T>(path: string, body?: any): Promise<T> {
-  return (await api.apiRequest(path, { method: "POST", body: JSON.stringify(body ?? {}) })) as T;
+  return (await api.apiRequest(path, { method: "POST", body: body ?? {} })) as T;
 }
 
 function fmtNum(n: number, dp = 2) {

@@ -121,7 +121,7 @@ export default function AppSimple() {
 
     const out = await api<RiskPreviewResp>("/risk/preview", {
       method: "POST",
-      body: JSON.stringify({ symbol: activeSymbol, side, mode: newMode, size, sl, tp, leverage }),
+      body: { symbol: activeSymbol, side, mode: newMode, size, sl, tp, leverage },
     });
 
     if (!out.allowed) {
@@ -142,7 +142,7 @@ export default function AppSimple() {
     try {
       await api("/trade", {
         method: "POST",
-        body: JSON.stringify({ symbol: activeSymbol, side, mode, size, sl, tp, leverage }),
+        body: { symbol: activeSymbol, side, mode, size, sl, tp, leverage },
       });
       await Promise.all([fetchBalance(), fetchTrades(), refreshLivePrice(), refreshTopPrices()]);
     } catch (e: any) {
