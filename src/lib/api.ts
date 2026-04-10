@@ -37,14 +37,12 @@ export async function apiRequest<T = any>(
   const json = text ? tryParseJson(text) : null;
 
   if (!res.ok) {
-    const msg =
-      (json &&
-        (json.detail ||
-          json.message ||
-          json.msg ||
-          json.error)) ||
-      text ||
-      `Request failed (${res.status})`; // ✅ FIX
+    // FastAPI validation errors return detail as an array of {loc, msg, type}
+    let detail = json?.detail ?? json?.message ?? json?.msg ?? json?.error;
+    if (Array.isArray(detail)) {
+      detail = detail.map((d: any) => d?.msg ?? JSON.stringify(d)).join("; ");
+    }
+    const msg = (detail ? String(detail) : null) || text || `Request failed (${res.status})`;
     throw new Error(msg);
   }
 

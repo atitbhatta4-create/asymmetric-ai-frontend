@@ -385,7 +385,7 @@ export default function Dashboard() {
     try {
       return (await api(path, {
         method: "POST",
-        body: JSON.stringify(body ?? {}),
+        body: body ?? {},  // apiRequest handles JSON.stringify — don't double-stringify
       })) as T;
     } catch (e: any) {
       const msg = String(e?.message || "");
