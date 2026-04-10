@@ -116,6 +116,19 @@ export default function MiniAsym() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
 
+  // Live signal breakdown from AI runner
+  const [signalData, setSignalData] = useState<{
+    running: boolean;
+    symbol?: string;
+    mode?: string;
+    signal?: string;
+    side?: string;
+    blocked?: string | null;
+    adaptive_strictness?: number;
+    pending_trade?: { entry_price: number; side: string; open_ts: number } | null;
+    breakdown?: Record<string, { ok: boolean; reason?: string; [k: string]: any }>;
+  } | null>(null);
+
   // Update inputs when mode changes
   useEffect(() => {
     const p = presetForMode(mode);
@@ -139,6 +152,20 @@ export default function MiniAsym() {
 
   useEffect(() => {
     load();
+  }, []);
+
+  // Poll /auto/signal every 5s to show live 4-layer breakdown
+  useEffect(() => {
+    let alive = true;
+    const poll = async () => {
+      try {
+        const r = await apiGet<any>("/auto/signal");
+        if (alive) setSignalData(r);
+      } catch {}
+    };
+    poll();
+    const id = setInterval(poll, 5000);
+    return () => { alive = false; clearInterval(id); };
   }, []);
 
   // Live price refresh
@@ -463,6 +490,108 @@ export default function MiniAsym() {
           </div>
         </div>
       </div>
+
+      {/* Live 4-Layer Signal Breakdown */}
+      {signalData?.running && (
+        <div
+          style={{
+            marginTop: 14,
+            borderRadius: 18,
+            padding: 14,
+            background: "rgba(9, 15, 30, 0.92)",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ fontWeight: 950 }}>Live Signal — 4-Layer Analysis</div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
+              <span style={{ opacity: 0.7 }}>{signalData.symbol}</span>
+              <span
+                style={{
+                  padding: "4px 10px", borderRadius: 999, fontWeight: 900,
+                  background: signalData.side === "LONG" ? "rgba(0,255,157,0.15)" : "rgba(255,80,120,0.15)",
+                  border: signalData.side === "LONG" ? "1px solid rgba(0,255,157,0.3)" : "1px solid rgba(255,80,120,0.3)",
+                  color: signalData.side === "LONG" ? "#00ff9d" : "#ff5078",
+                }}
+              >
+                {signalData.side ?? "—"}
+              </span>
+              {signalData.mode === "MINI_ASYM" && typeof signalData.adaptive_strictness === "number" && (
+                <span style={{ opacity: 0.75, fontSize: 12 }}>
+                  Strictness: {signalData.adaptive_strictness.toFixed(2)}×
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Pending trade indicator */}
+          {signalData.pending_trade && (
+            <div style={{
+              marginTop: 10, padding: "8px 12px", borderRadius: 12,
+              background: "rgba(255,200,0,0.10)", border: "1px solid rgba(255,200,0,0.25)",
+              fontSize: 13, fontWeight: 900,
+            }}>
+              Trade open @ {signalData.pending_trade.entry_price?.toFixed(2)} ({signalData.pending_trade.side}) — awaiting close price
+            </div>
+          )}
+
+          {/* Blocked reason */}
+          {signalData.blocked && !signalData.pending_trade && (
+            <div style={{
+              marginTop: 10, padding: "8px 12px", borderRadius: 12,
+              background: "rgba(220,38,38,0.10)", border: "1px solid rgba(248,113,113,0.3)",
+              fontSize: 12, opacity: 0.9,
+            }}>
+              {signalData.blocked}
+            </div>
+          )}
+
+          {/* 4 layers */}
+          {signalData.breakdown && Object.keys(signalData.breakdown).length > 0 && (
+            <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
+              {(["regime", "direction", "entry", "momentum"] as const).map((layer) => {
+                const l = signalData.breakdown![layer];
+                if (!l) return null;
+                const ok = l.ok;
+                return (
+                  <div
+                    key={layer}
+                    style={{
+                      padding: 12, borderRadius: 14,
+                      border: ok ? "1px solid rgba(0,255,157,0.20)" : "1px solid rgba(255,80,120,0.20)",
+                      background: ok ? "rgba(0,255,157,0.05)" : "rgba(255,80,120,0.05)",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontWeight: 950, fontSize: 12, textTransform: "uppercase", opacity: 0.8 }}>
+                        {layer}
+                      </span>
+                      <span style={{
+                        fontSize: 11, fontWeight: 900, padding: "2px 8px", borderRadius: 999,
+                        background: ok ? "rgba(0,255,157,0.15)" : "rgba(255,80,120,0.15)",
+                        color: ok ? "#00ff9d" : "#ff5078",
+                      }}>
+                        {ok ? "PASS" : "FAIL"}
+                      </span>
+                    </div>
+                    <div style={{ marginTop: 6, fontSize: 12, opacity: 0.75, lineHeight: 1.4 }}>
+                      {ok
+                        ? layer === "regime"
+                          ? `ADX ${l.adx} (min ${l.adx_min}) · ATR ${l.atr_pct}%`
+                          : layer === "direction"
+                          ? `${l.trend} · ${l.signal}`
+                          : layer === "entry"
+                          ? `EMA21 dist ${l.price_vs_ema21_pct}% · RSI ${l.rsi}`
+                          : `${l.candles_n} candle(s) · vol ${l.volume_ratio}×`
+                        : (l.reason || "—")}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Risk Inputs + Preview Reason */}
       <div
