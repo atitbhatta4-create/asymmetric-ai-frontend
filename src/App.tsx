@@ -11,6 +11,7 @@ import MiniAsym from "./pages/MiniAsym";
 
 import Admin from "./pages/Admin";
 import AdminUser from "./pages/AdminUser";
+import Settings from "./pages/Settings";
 
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -182,6 +183,9 @@ export default function App() {
         <NavLink to="/mini-asym" style={({ isActive }) => linkStyle(isActive)}>
           Mini-Asym Panel
         </NavLink>
+        <NavLink to="/settings" style={({ isActive }) => linkStyle(isActive)}>
+          Settings
+        </NavLink>
 
         {isAdmin && (
           <NavLink to="/admin" style={({ isActive }) => linkStyle(isActive)}>
@@ -219,6 +223,7 @@ export default function App() {
           <Route path="/exchange" element={<Exchange />} />
           <Route path="/history" element={<History />} />
           <Route path="/mini-asym" element={<MiniAsym />} />
+          <Route path="/settings" element={<Settings />} />
 
           {/* Admin routes */}
           <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/" replace />} />
