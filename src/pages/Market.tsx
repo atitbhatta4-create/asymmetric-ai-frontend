@@ -102,7 +102,7 @@ export default function Market() {
     .slice(0, 4);
 
   return (
-    <div style={{ color: "white", maxWidth: 860 }}>
+    <div style={{ color: "white" }}>
       {/* ── Header ── */}
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 24, fontWeight: 950 }}>Market</div>
