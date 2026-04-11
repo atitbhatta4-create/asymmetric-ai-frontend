@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createChart, ColorType } from "lightweight-charts";
 import * as api from "../lib/api";
+import useIsMobile from "../hooks/useIsMobile";
 
 type KlineRow = { t: number; open: number; high: number; low: number; close: number; volume: number };
 type Ticker   = { price: number; change24h: number; high24h: number; low24h: number; volume24h: number };
@@ -50,6 +51,7 @@ export default function MarketChart() {
   const [klines, setKlines]   = useState<KlineRow[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const isMobile  = useIsMobile();
   const candleRef = useRef<HTMLDivElement>(null);
 
   // ── Fetchers ──────────────────────────────────────────────────────────────
@@ -196,12 +198,16 @@ export default function MarketChart() {
         </div>
       </div>
 
-      {/* ── Main: chart left (flex 1) + right panel (fixed 300px) ─────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 12, alignItems: "start" }}>
+      {/* ── Main: chart left + right panel (stacks on mobile) ─────────────── */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: isMobile ? "1fr" : "1fr 300px",
+        gap: 12, alignItems: "start",
+      }}>
 
         {/* Left: TF + chart */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ display: "flex", gap: 6 }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {TFS.map((t) => (
               <button key={t} onClick={() => setTf(t)} style={{
                 padding: "6px 16px", borderRadius: 8, fontWeight: 800, fontSize: 12, cursor: "pointer",
@@ -213,7 +219,10 @@ export default function MarketChart() {
           </div>
           <div style={{
             background: "rgba(9,15,30,0.92)", border: "1px solid rgba(255,255,255,0.07)",
-            borderRadius: 16, height: 500, overflow: "hidden",
+            borderRadius: 16,
+            height: isMobile ? 280 : "calc(100vh - 220px)",
+            minHeight: isMobile ? 280 : 480,
+            overflow: "hidden",
           }}>
             {loading && klines.length === 0
               ? <div style={{ padding: 24, opacity: 0.4 }}>Loading chart…</div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import * as api from "../lib/api";
+import useIsMobile from "../hooks/useIsMobile";
 
 // ── Supported pairs (OKX always available on backend) ──────────────────────
 const ALL_PAIRS = [
@@ -50,7 +51,8 @@ function saveFavs(f: string[]) { localStorage.setItem(FAV_KEY, JSON.stringify(f)
 
 // ── Component ────────────────────────────────────────────────────────────────
 export default function Market() {
-  const nav = useNavigate();
+  const nav      = useNavigate();
+  const isMobile = useIsMobile();
 
   const [tickers, setTickers]     = useState<Ticker[]>([]);
   const [query, setQuery]         = useState("");
@@ -174,7 +176,8 @@ export default function Market() {
       <div style={{ background: "rgba(9,15,30,0.92)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, overflow: "hidden" }}>
         {/* Table header */}
         <div style={{
-          display: "grid", gridTemplateColumns: "32px 2fr 1.4fr 1fr 1.3fr 100px",
+          display: "grid",
+          gridTemplateColumns: isMobile ? "32px 1fr 1fr 1fr" : "32px 2fr 1.4fr 1fr 1.3fr 100px",
           padding: "10px 16px",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
           fontSize: 11, fontWeight: 900, opacity: 0.45, textTransform: "uppercase", letterSpacing: 0.8,
@@ -182,10 +185,10 @@ export default function Market() {
         }}>
           <span></span>
           <span>Pair</span>
-          <span style={{ textAlign: "right" }}>Last Price</span>
-          <span style={{ textAlign: "right" }}>24h Change</span>
-          <span style={{ textAlign: "right" }}>24h Volume</span>
-          <span style={{ textAlign: "right" }}>Action</span>
+          <span style={{ textAlign: "right" }}>Price</span>
+          <span style={{ textAlign: "right" }}>24h %</span>
+          {!isMobile && <span style={{ textAlign: "right" }}>Volume</span>}
+          {!isMobile && <span style={{ textAlign: "right" }}>Action</span>}
         </div>
 
         {loading && tickers.length === 0 ? (
@@ -201,7 +204,8 @@ export default function Market() {
             <div
               key={t.symbol}
               style={{
-                display: "grid", gridTemplateColumns: "32px 2fr 1.4fr 1fr 1.3fr 100px",
+                display: "grid",
+                gridTemplateColumns: isMobile ? "32px 1fr 1fr 1fr" : "32px 2fr 1.4fr 1fr 1.3fr 100px",
                 padding: "12px 16px", alignItems: "center",
                 borderBottom: i < filtered.length - 1 ? "1px solid rgba(255,255,255,0.035)" : "none",
                 cursor: "pointer", transition: "background 0.12s",
@@ -268,24 +272,28 @@ export default function Market() {
                 </span>
               </div>
 
-              {/* Volume */}
-              <div style={{ textAlign: "right", fontSize: 12, opacity: 0.6, fontFamily: "monospace" }}>
-                {fmtVol(t.volume24h)}
-              </div>
+              {/* Volume — desktop only */}
+              {!isMobile && (
+                <div style={{ textAlign: "right", fontSize: 12, opacity: 0.6, fontFamily: "monospace" }}>
+                  {fmtVol(t.volume24h)}
+                </div>
+              )}
 
-              {/* Trade button */}
-              <div style={{ textAlign: "right" }}>
-                <button
-                  onClick={(e) => { e.stopPropagation(); nav(`/market/${t.symbol}`); }}
-                  style={{
-                    padding: "5px 12px", borderRadius: 8, fontSize: 12, fontWeight: 800,
-                    cursor: "pointer", border: "1px solid rgba(0,255,224,0.3)",
-                    background: "rgba(0,255,224,0.08)", color: "#00ffe0",
-                  }}
-                >
-                  Chart
-                </button>
-              </div>
+              {/* Trade button — desktop only */}
+              {!isMobile && (
+                <div style={{ textAlign: "right" }}>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); nav(`/market/${t.symbol}`); }}
+                    style={{
+                      padding: "5px 12px", borderRadius: 8, fontSize: 12, fontWeight: 800,
+                      cursor: "pointer", border: "1px solid rgba(0,255,224,0.3)",
+                      background: "rgba(0,255,224,0.08)", color: "#00ffe0",
+                    }}
+                  >
+                    Chart
+                  </button>
+                </div>
+              )}
             </div>
           );
         })}
