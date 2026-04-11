@@ -2,10 +2,12 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import * as api from "../lib/api";
 
-const PAIRS = [
-  "BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "BNBUSDT",
-  "DOGEUSDT", "ADAUSDT", "AVAXUSDT", "LINKUSDT", "MATICUSDT",
-  "DOTUSDT", "LTCUSDT", "UNIUSDT", "ATOMUSDT", "NEARUSDT",
+// ── Supported pairs (OKX always available on backend) ──────────────────────
+const ALL_PAIRS = [
+  "BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","BNBUSDT",
+  "DOGEUSDT","ADAUSDT","AVAXUSDT","LINKUSDT","MATICUSDT",
+  "DOTUSDT","LTCUSDT","UNIUSDT","ATOMUSDT","NEARUSDT",
+  "APTUSDT","ARBUSDT","OPUSDT","INJUSDT","SUIUSDT",
 ];
 
 type Ticker = {
@@ -17,235 +19,276 @@ type Ticker = {
   volume24h: number;
 };
 
-function fmtPrice(n: number) {
-  if (!n) return "—";
-  if (n >= 1000) return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
-  if (n >= 1) return n.toFixed(4);
-  return n.toFixed(6);
+type Tab = "all" | "hot" | "favorites";
+
+// ── Helpers ─────────────────────────────────────────────────────────────────
+function base(symbol: string) { return symbol.replace("USDT", ""); }
+
+function logoUrl(symbol: string) {
+  return `https://assets.coincap.io/assets/icons/${base(symbol).toLowerCase()}@2x.png`;
 }
 
+function fmtPrice(n: number) {
+  if (!n) return "—";
+  if (n >= 1000) return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (n >= 1)    return n.toFixed(4);
+  return n.toFixed(6);
+}
 function fmtVol(n: number) {
   if (!n) return "—";
   if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + "B";
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(2) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(2) + "K";
+  if (n >= 1_000_000)     return (n / 1_000_000).toFixed(2) + "M";
+  if (n >= 1_000)         return (n / 1_000).toFixed(1) + "K";
   return n.toFixed(2);
 }
 
-function baseName(symbol: string) {
-  return symbol.replace("USDT", "");
+const FAV_KEY = "asym:market:favorites";
+function loadFavs(): string[] {
+  try { return JSON.parse(localStorage.getItem(FAV_KEY) || "[]"); } catch { return []; }
 }
+function saveFavs(f: string[]) { localStorage.setItem(FAV_KEY, JSON.stringify(f)); }
 
+// ── Component ────────────────────────────────────────────────────────────────
 export default function Market() {
   const nav = useNavigate();
-  const [tickers, setTickers] = useState<Ticker[]>([]);
-  const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<"volume" | "change" | "price">("volume");
+
+  const [tickers, setTickers]     = useState<Ticker[]>([]);
+  const [query, setQuery]         = useState("");
+  const [tab, setTab]             = useState<Tab>("all");
+  const [loading, setLoading]     = useState(true);
+  const [favorites, setFavorites] = useState<string[]>(loadFavs);
+  const [exchange, setExchange]   = useState("okx");
+
+  // Detect user's connected exchange (for display label only — OKX data always used)
+  useEffect(() => {
+    api.apiRequest("/exchange/status", { method: "GET" })
+      .then((r: any) => { if (r?.connected && r?.exchange) setExchange(r.exchange.toLowerCase()); })
+      .catch(() => {});
+  }, []);
 
   const load = useCallback(async () => {
     try {
       const res = await api.apiRequest(
-        `/market/tickers?symbols=${PAIRS.join(",")}`,
+        `/market/tickers?symbols=${ALL_PAIRS.join(",")}`,
         { method: "GET" }
       ) as { tickers: Ticker[] };
       setTickers(res.tickers || []);
-    } catch {
-      // keep previous data on error
-    } finally {
-      setLoading(false);
-    }
+    } catch {}
+    finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    load();
-    const id = setInterval(load, 8000);
-    return () => clearInterval(id);
-  }, [load]);
+  useEffect(() => { load(); const id = setInterval(load, 8000); return () => clearInterval(id); }, [load]);
 
-  const filtered = tickers
-    .filter((t) => t.symbol.includes(query.trim().toUpperCase()))
-    .sort((a, b) => {
-      if (sortBy === "volume") return b.volume24h - a.volume24h;
-      if (sortBy === "change") return Math.abs(b.change24h) - Math.abs(a.change24h);
-      return b.price - a.price;
+  const toggleFav = (sym: string) => {
+    setFavorites((prev) => {
+      const next = prev.includes(sym) ? prev.filter((s) => s !== sym) : [...prev, sym];
+      saveFavs(next);
+      return next;
     });
+  };
+
+  // Sort + filter
+  const sorted = [...tickers].sort((a, b) =>
+    tab === "hot" ? Math.abs(b.change24h) - Math.abs(a.change24h) : b.volume24h - a.volume24h
+  );
+  const filtered = sorted.filter((t) => {
+    if (tab === "favorites" && !favorites.includes(t.symbol)) return false;
+    if (query.trim()) return t.symbol.includes(query.trim().toUpperCase());
+    return true;
+  });
 
   const topMovers = [...tickers]
     .sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h))
-    .slice(0, 3);
+    .slice(0, 4);
 
   return (
-    <div style={{ color: "white", maxWidth: 900 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 26, fontWeight: 950 }}>Market</div>
-        <div style={{ fontSize: 13, opacity: 0.6, marginTop: 2 }}>
-          Live prices via OKX · auto-refresh every 8s
+    <div style={{ color: "white", maxWidth: 860 }}>
+      {/* ── Header ── */}
+      <div style={{ marginBottom: 16 }}>
+        <div style={{ fontSize: 24, fontWeight: 950 }}>Market</div>
+        <div style={{ fontSize: 12, opacity: 0.5, marginTop: 2 }}>
+          Prices via OKX · connected exchange: <span style={{ color: "#00ffe0", textTransform: "uppercase" }}>{exchange}</span>
         </div>
       </div>
 
-      {/* Hot movers bar */}
-      {topMovers.length > 0 && (
-        <div style={{
-          display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap",
-        }}>
-          {topMovers.map((t) => (
-            <button
-              key={t.symbol}
-              onClick={() => nav(`/market/${t.symbol}`)}
-              style={{
-                display: "flex", alignItems: "center", gap: 10,
-                background: "rgba(9,15,30,0.92)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 14, padding: "10px 16px",
-                cursor: "pointer", color: "white",
-              }}
-            >
-              <span style={{
-                fontSize: 10, fontWeight: 900, padding: "2px 7px",
-                borderRadius: 999, background: "rgba(255,160,50,0.18)",
-                border: "1px solid rgba(255,160,50,0.35)", color: "#ffa032",
-              }}>HOT</span>
-              <span style={{ fontWeight: 900 }}>{baseName(t.symbol)}/USDT</span>
-              <span style={{ color: t.change24h >= 0 ? "#00ff9d" : "#ff5078", fontWeight: 900, fontSize: 13 }}>
-                {t.change24h >= 0 ? "+" : ""}{t.change24h.toFixed(2)}%
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Search + sort */}
-      <div style={{
-        display: "flex", gap: 10, marginBottom: 14, alignItems: "center", flexWrap: "wrap",
-      }}>
+      {/* ── Search ── */}
+      <div style={{ position: "relative", marginBottom: 14 }}>
+        <svg style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", opacity: 0.4 }}
+          width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search BTC, ETH, SOL..."
           style={{
-            flex: 1, minWidth: 180, padding: "10px 14px",
-            borderRadius: 12, border: "1px solid rgba(148,163,184,0.3)",
-            background: "rgba(15,23,42,0.85)", color: "white", fontSize: 14, outline: "none",
+            width: "100%", padding: "11px 14px 11px 38px",
+            borderRadius: 12, border: "1px solid rgba(148,163,184,0.2)",
+            background: "rgba(15,23,42,0.85)", color: "white",
+            fontSize: 14, outline: "none", boxSizing: "border-box",
           }}
         />
-        {(["volume", "change", "price"] as const).map((s) => (
-          <button
-            key={s}
-            onClick={() => setSortBy(s)}
-            style={{
-              padding: "8px 14px", borderRadius: 10, fontWeight: 800,
-              fontSize: 12, cursor: "pointer",
-              background: sortBy === s ? "rgba(0,255,224,0.12)" : "rgba(255,255,255,0.04)",
-              border: sortBy === s ? "1px solid rgba(0,255,224,0.3)" : "1px solid rgba(255,255,255,0.08)",
-              color: sortBy === s ? "#00ffe0" : "rgba(255,255,255,0.65)",
-            }}
-          >
-            Sort: {s.charAt(0).toUpperCase() + s.slice(1)}
+      </div>
+
+      {/* ── Tabs ── */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 14, borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 0 }}>
+        {(["all", "hot", "favorites"] as Tab[]).map((t) => (
+          <button key={t} onClick={() => setTab(t)} style={{
+            padding: "8px 16px", fontWeight: 800, fontSize: 13, cursor: "pointer",
+            background: "transparent", border: "none",
+            borderBottom: tab === t ? "2px solid #00ffe0" : "2px solid transparent",
+            color: tab === t ? "#00ffe0" : "rgba(255,255,255,0.5)",
+            textTransform: "capitalize", marginBottom: -1,
+          }}>
+            {t === "favorites" ? "★ Favorites" : t === "hot" ? "🔥 Hot" : "All Markets"}
           </button>
         ))}
       </div>
 
-      {/* Table */}
-      <div style={{
-        background: "rgba(9,15,30,0.92)",
-        border: "1px solid rgba(255,255,255,0.07)",
-        borderRadius: 18, overflow: "hidden",
-      }}>
+      {/* ── Hot movers strip (only on All tab) ── */}
+      {tab === "all" && !query && topMovers.length > 0 && (
+        <div style={{ display: "flex", gap: 8, marginBottom: 14, overflowX: "auto" }}>
+          {topMovers.map((t) => {
+            const pos = t.change24h >= 0;
+            return (
+              <button key={t.symbol} onClick={() => nav(`/market/${t.symbol}`)} style={{
+                display: "flex", alignItems: "center", gap: 8, flexShrink: 0,
+                background: "rgba(9,15,30,0.92)", border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 12, padding: "8px 14px", cursor: "pointer", color: "white",
+              }}>
+                <img src={logoUrl(t.symbol)} alt="" width={20} height={20}
+                  style={{ borderRadius: "50%" }}
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+                <span style={{ fontWeight: 900, fontSize: 13 }}>{base(t.symbol)}</span>
+                <span style={{ color: pos ? "#00ff9d" : "#ff5078", fontWeight: 800, fontSize: 12 }}>
+                  {pos ? "+" : ""}{t.change24h.toFixed(2)}%
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Table ── */}
+      <div style={{ background: "rgba(9,15,30,0.92)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 16, overflow: "hidden" }}>
         {/* Table header */}
         <div style={{
-          display: "grid",
-          gridTemplateColumns: "2fr 1.4fr 0.9fr 1.3fr",
-          padding: "12px 20px",
+          display: "grid", gridTemplateColumns: "32px 2fr 1.4fr 1fr 1.3fr 100px",
+          padding: "10px 16px",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
-          fontSize: 11, fontWeight: 900, opacity: 0.5, textTransform: "uppercase", letterSpacing: 1,
+          fontSize: 11, fontWeight: 900, opacity: 0.45, textTransform: "uppercase", letterSpacing: 0.8,
+          alignItems: "center",
         }}>
+          <span></span>
           <span>Pair</span>
-          <span style={{ textAlign: "right" }}>Price</span>
+          <span style={{ textAlign: "right" }}>Last Price</span>
           <span style={{ textAlign: "right" }}>24h Change</span>
           <span style={{ textAlign: "right" }}>24h Volume</span>
+          <span style={{ textAlign: "right" }}>Action</span>
         </div>
 
-        {/* Rows */}
         {loading && tickers.length === 0 ? (
-          <div style={{ padding: "30px 20px", opacity: 0.5, textAlign: "center" }}>Loading market data…</div>
+          <div style={{ padding: "40px 20px", opacity: 0.4, textAlign: "center" }}>Loading market data…</div>
         ) : filtered.length === 0 ? (
-          <div style={{ padding: "30px 20px", opacity: 0.5, textAlign: "center" }}>No results for "{query}"</div>
-        ) : (
-          filtered.map((t, i) => {
-            const isHot = topMovers.some((m) => m.symbol === t.symbol);
-            const positive = t.change24h >= 0;
-            return (
-              <div
-                key={t.symbol}
-                onClick={() => nav(`/market/${t.symbol}`)}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "2fr 1.4fr 0.9fr 1.3fr",
-                  padding: "14px 20px",
-                  borderBottom: i < filtered.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
-                  cursor: "pointer",
-                  transition: "background 0.15s",
-                  alignItems: "center",
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          <div style={{ padding: "40px 20px", opacity: 0.4, textAlign: "center" }}>
+            {tab === "favorites" ? "No favorites yet — click ★ to add" : `No results for "${query}"`}
+          </div>
+        ) : filtered.map((t, i) => {
+          const pos = t.change24h >= 0;
+          const isFav = favorites.includes(t.symbol);
+          return (
+            <div
+              key={t.symbol}
+              style={{
+                display: "grid", gridTemplateColumns: "32px 2fr 1.4fr 1fr 1.3fr 100px",
+                padding: "12px 16px", alignItems: "center",
+                borderBottom: i < filtered.length - 1 ? "1px solid rgba(255,255,255,0.035)" : "none",
+                cursor: "pointer", transition: "background 0.12s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.025)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              onClick={() => nav(`/market/${t.symbol}`)}
+            >
+              {/* Star */}
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleFav(t.symbol); }}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: 14,
+                  color: isFav ? "#ffa032" : "rgba(255,255,255,0.2)" }}
               >
-                {/* Pair */}
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {isFav ? "★" : "☆"}
+              </button>
+
+              {/* Pair + logo */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 32, height: 32, flexShrink: 0 }}>
+                  <img
+                    src={logoUrl(t.symbol)} alt={base(t.symbol)} width={32} height={32}
+                    style={{ borderRadius: "50%", display: "block" }}
+                    onError={(e) => {
+                      const el = e.target as HTMLImageElement;
+                      el.style.display = "none";
+                      const fb = el.nextElementSibling as HTMLElement | null;
+                      if (fb) fb.style.display = "flex";
+                    }}
+                  />
                   <div style={{
-                    width: 36, height: 36, borderRadius: "50%",
-                    background: "rgba(0,255,224,0.10)",
-                    border: "1px solid rgba(0,255,224,0.18)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 11, fontWeight: 900, color: "#00ffe0", flexShrink: 0,
+                    display: "none", width: 32, height: 32, borderRadius: "50%",
+                    background: "rgba(0,255,224,0.12)", border: "1px solid rgba(0,255,224,0.2)",
+                    alignItems: "center", justifyContent: "center",
+                    fontSize: 10, fontWeight: 900, color: "#00ffe0",
                   }}>
-                    {baseName(t.symbol).slice(0, 3)}
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 900, fontSize: 14, display: "flex", alignItems: "center", gap: 6 }}>
-                      {baseName(t.symbol)}<span style={{ opacity: 0.45, fontWeight: 600 }}>/USDT</span>
-                      {isHot && (
-                        <span style={{
-                          fontSize: 9, fontWeight: 900, padding: "1px 5px",
-                          borderRadius: 999, background: "rgba(255,160,50,0.18)",
-                          border: "1px solid rgba(255,160,50,0.3)", color: "#ffa032",
-                        }}>HOT</span>
-                      )}
-                    </div>
-                    <div style={{ fontSize: 11, opacity: 0.45, marginTop: 1 }}>
-                      H: ${fmtPrice(t.high24h)} · L: ${fmtPrice(t.low24h)}
-                    </div>
+                    {base(t.symbol).slice(0, 3)}
                   </div>
                 </div>
-
-                {/* Price */}
-                <div style={{ textAlign: "right", fontWeight: 900, fontSize: 15, fontFamily: "monospace" }}>
-                  ${fmtPrice(t.price)}
-                </div>
-
-                {/* Change */}
-                <div style={{
-                  textAlign: "right", fontWeight: 900, fontSize: 13,
-                  color: positive ? "#00ff9d" : "#ff5078",
-                }}>
-                  <span style={{
-                    padding: "3px 8px", borderRadius: 8,
-                    background: positive ? "rgba(0,255,157,0.10)" : "rgba(255,80,120,0.10)",
-                  }}>
-                    {positive ? "+" : ""}{t.change24h.toFixed(2)}%
-                  </span>
-                </div>
-
-                {/* Volume */}
-                <div style={{ textAlign: "right", fontSize: 13, opacity: 0.75, fontFamily: "monospace" }}>
-                  {fmtVol(t.volume24h)} USDT
+                <div>
+                  <div style={{ fontWeight: 900, fontSize: 14 }}>
+                    {base(t.symbol)}<span style={{ opacity: 0.4, fontWeight: 600, fontSize: 12 }}>/USDT</span>
+                  </div>
+                  <div style={{ fontSize: 10, opacity: 0.4, marginTop: 1 }}>
+                    H: {fmtPrice(t.high24h)} · L: {fmtPrice(t.low24h)}
+                  </div>
                 </div>
               </div>
-            );
-          })
-        )}
+
+              {/* Price */}
+              <div style={{ textAlign: "right", fontWeight: 900, fontSize: 14, fontFamily: "monospace" }}>
+                ${fmtPrice(t.price)}
+              </div>
+
+              {/* Change */}
+              <div style={{ textAlign: "right" }}>
+                <span style={{
+                  display: "inline-block", padding: "3px 8px", borderRadius: 6,
+                  fontWeight: 800, fontSize: 12,
+                  background: pos ? "rgba(0,255,157,0.10)" : "rgba(255,80,120,0.10)",
+                  color: pos ? "#00ff9d" : "#ff5078",
+                }}>
+                  {pos ? "+" : ""}{t.change24h.toFixed(2)}%
+                </span>
+              </div>
+
+              {/* Volume */}
+              <div style={{ textAlign: "right", fontSize: 12, opacity: 0.6, fontFamily: "monospace" }}>
+                {fmtVol(t.volume24h)}
+              </div>
+
+              {/* Trade button */}
+              <div style={{ textAlign: "right" }}>
+                <button
+                  onClick={(e) => { e.stopPropagation(); nav(`/market/${t.symbol}`); }}
+                  style={{
+                    padding: "5px 12px", borderRadius: 8, fontSize: 12, fontWeight: 800,
+                    cursor: "pointer", border: "1px solid rgba(0,255,224,0.3)",
+                    background: "rgba(0,255,224,0.08)", color: "#00ffe0",
+                  }}
+                >
+                  Chart
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
