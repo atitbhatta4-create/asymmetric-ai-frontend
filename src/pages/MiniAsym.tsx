@@ -125,6 +125,7 @@ export default function MiniAsym() {
     side?: string;
     blocked?: string | null;
     adaptive_strictness?: number;
+    signal_score?: number;
     pending_trade?: { entry_price: number; side: string; open_ts: number } | null;
     breakdown?: Record<string, { ok: boolean; reason?: string; [k: string]: any }>;
   } | null>(null);
@@ -516,6 +517,16 @@ export default function MiniAsym() {
               >
                 {signalData.side ?? "—"}
               </span>
+              {typeof signalData.signal_score === "number" && (
+                <span style={{
+                  padding: "3px 9px", borderRadius: 999, fontSize: 12, fontWeight: 800,
+                  background: signalData.signal_score >= 0.62 ? "rgba(0,255,157,0.12)" : "rgba(255,160,50,0.12)",
+                  border: signalData.signal_score >= 0.62 ? "1px solid rgba(0,255,157,0.28)" : "1px solid rgba(255,160,50,0.28)",
+                  color: signalData.signal_score >= 0.62 ? "#00ff9d" : "#ffa032",
+                }}>
+                  Score {(signalData.signal_score * 100).toFixed(0)}%
+                </span>
+              )}
               {signalData.mode === "MINI_ASYM" && typeof signalData.adaptive_strictness === "number" && (
                 <span style={{ opacity: 0.75, fontSize: 12 }}>
                   Strictness: {signalData.adaptive_strictness.toFixed(2)}×
