@@ -800,58 +800,54 @@ export default function Dashboard() {
           {/* LEFT: TRADE PANEL */}
           <section className="card exec">
 
-            {/* ── Section: AI TRADER ── */}
-            <div style={{
-              background: "rgba(0,255,224,0.04)", borderRadius: 14,
-              border: "1px solid rgba(0,255,224,0.12)", padding: "14px 16px", marginBottom: 14,
-            }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                <div>
-                  <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", color: "#00ffe0", opacity: 0.8 }}>AI Trader</div>
-                  <div style={{ fontSize: 11, opacity: 0.4, marginTop: 1 }}>SL/TP auto-calculated from ATR · Grade A/B entry filter</div>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button
-                    className="primary"
-                    type="button"
-                    onClick={startAI}
-                    disabled={!connected || aiRunning}
-                    style={{ padding: "8px 18px", fontSize: 13 }}
-                  >
-                    {aiRunning ? "Running…" : "Start AI"}
-                  </button>
-                  <button
-                    className="danger"
-                    type="button"
-                    onClick={stopAI}
-                    disabled={!aiRunning}
-                    style={{ padding: "8px 14px", fontSize: 13 }}
-                  >
-                    Stop
-                  </button>
-                </div>
-              </div>
+            {/* 1 ── Risk Mode */}
+            <div className="cardHead" style={{ marginBottom: 10 }}>
+              <div className="title">TRADE PANEL</div>
+              <div className="hint">Sandbox · manual disabled while AI runs</div>
+            </div>
+            <div className="modes">
+              {(["ULTRA_SAFE", "SAFE", "NORMAL", "MINI_ASYM", "AGGRESSIVE"] as RiskMode[]).map((m) => (
+                <button key={m} className={`pill ${mode === m ? "active" : ""}`} onClick={() => setMode(m)} type="button">
+                  {m === "MINI_ASYM" ? "Mini-Asym" : m.replace("_", " ")}
+                </button>
+              ))}
+            </div>
 
-              {/* Style cards */}
-              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+            {/* 2 ── Symbol */}
+            <div className="formRow" style={{ marginTop: 12 }}>
+              <label>Symbol</label>
+              <div className="rowInline">
+                <input className="input" value={symbolInput}
+                  onChange={(e) => setSymbolInput(e.target.value.toUpperCase())}
+                  placeholder="BTCUSDT" />
+                <button className="ghost" type="button"
+                  onClick={() => setLiveSymbol((symbolInput || activeSymbol).toUpperCase().trim())}>
+                  Track
+                </button>
+                <button className="ghost" type="button"
+                  onClick={() => nav(`/market/${encodeURIComponent((symbolInput || activeSymbol).toUpperCase().trim())}`)}>
+                  Chart
+                </button>
+              </div>
+            </div>
+
+            {/* 3 ── Trading Style */}
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", opacity: 0.4, marginBottom: 8 }}>Trading Style (AI)</div>
+              <div style={{ display: "flex", gap: 8 }}>
                 {([
-                  { id: "SCALP",     tf: "15m", sl: "0.8×ATR", tp: "1.6×ATR", freq: "~4–6 trades/day",  desc: "Fast scalp on 15m candles" },
-                  { id: "DAY_TRADE", tf: "1h",  sl: "1.0×ATR", tp: "2.0×ATR", freq: "~2–4 trades/day",  desc: "Intraday on 1h structure" },
-                  { id: "SWING",     tf: "4h",  sl: "1.5×ATR", tp: "3.0×ATR", freq: "~1–2 trades/day",  desc: "Multi-day 4h swing entry" },
-                ] as { id: TradeStyle; tf: string; sl: string; tp: string; freq: string; desc: string }[]).map((s) => {
+                  { id: "SCALP",     tf: "15m", sl: "0.8×ATR", tp: "1.6×ATR", freq: "~4–6 trades/day" },
+                  { id: "DAY_TRADE", tf: "1h",  sl: "1.0×ATR", tp: "2.0×ATR", freq: "~2–4 trades/day" },
+                  { id: "SWING",     tf: "4h",  sl: "1.5×ATR", tp: "3.0×ATR", freq: "~1–2 trades/day" },
+                ] as { id: TradeStyle; tf: string; sl: string; tp: string; freq: string }[]).map((s) => {
                   const active = tradeStyle === s.id;
                   return (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => setTradeStyle(s.id)}
-                      style={{
-                        flex: 1, padding: "10px 10px", borderRadius: 10, cursor: "pointer",
-                        border: active ? "1.5px solid rgba(0,255,224,0.55)" : "1px solid rgba(255,255,255,0.08)",
-                        background: active ? "rgba(0,255,224,0.10)" : "rgba(255,255,255,0.03)",
-                        color: "white", textAlign: "left", transition: "all 0.14s",
-                      }}
-                    >
+                    <button key={s.id} type="button" onClick={() => setTradeStyle(s.id)} style={{
+                      flex: 1, padding: "10px 10px", borderRadius: 10, cursor: "pointer", textAlign: "left",
+                      border: active ? "1.5px solid rgba(0,255,224,0.55)" : "1px solid rgba(255,255,255,0.08)",
+                      background: active ? "rgba(0,255,224,0.09)" : "rgba(255,255,255,0.03)",
+                      color: "white", transition: "all 0.14s",
+                    }}>
                       <div style={{ fontWeight: 900, fontSize: 13, color: active ? "#00ffe0" : "rgba(255,255,255,0.9)" }}>{s.id.replace("_", " ")}</div>
                       <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 3 }}>{s.tf} · SL {s.sl} · TP {s.tp}</div>
                       <div style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>{s.freq}</div>
@@ -859,188 +855,76 @@ export default function Dashboard() {
                   );
                 })}
               </div>
-
-              {/* AI config row */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
-                <div className="field">
-                  <label>Duration (days · 0=∞)</label>
-                  <input className="input" type="number" min={0} max={365} step={1}
-                    value={durationDays} onChange={(e) => setDurationDays(Number(e.target.value))} />
-                </div>
-                <div className="field">
-                  <label>Max trades/day (0=∞)</label>
-                  <input className="input" type="number" min={0} max={20} step={1}
-                    value={maxTradesPerDay} onChange={(e) => setMaxTradesPerDay(Number(e.target.value))} />
-                </div>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-                <div className="field">
-                  <label>Stop after bad trades</label>
-                  <input className="input" type="number" min={0} max={10} step={1}
-                    value={stopAfterBadTrades} onChange={(e) => setStopAfterBadTrades(Number(e.target.value))} />
-                </div>
-                <div className="field">
-                  <label>Chop filter sep %</label>
-                  <input className="input" type="number" min={0} max={0.2} step={0.001}
-                    value={chopMinSepPct} onChange={(e) => setChopMinSepPct(Number(e.target.value))} />
-                </div>
-                <div className="field" style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", marginBottom: 0 }}>
-                    <input type="checkbox" checked={trendFilter} onChange={(e) => setTrendFilter(e.target.checked)} />
-                    <span style={{ fontSize: 11 }}>Trend filter<br /><span style={{ opacity: 0.5 }}>EMA50/200</span></span>
-                  </label>
-                </div>
-              </div>
             </div>
 
-            {/* ── Divider: MANUAL TRADE ── */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
-              <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", opacity: 0.35 }}>Manual Trade</span>
-              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
-            </div>
-
-            <div className="modes">
-              {(
-                ["ULTRA_SAFE", "SAFE", "NORMAL", "MINI_ASYM", "AGGRESSIVE"] as RiskMode[]
-              ).map((m) => (
-                <button
-                  key={m}
-                  className={`pill ${mode === m ? "active" : ""}`}
-                  onClick={() => setMode(m)}
-                  type="button"
-                >
-                  {m === "MINI_ASYM" ? "Mini-Asym" : m.replace("_", " ")}
-                </button>
-              ))}
-            </div>
-
-            <div className="formRow">
-              <label>Symbol</label>
-              <div className="rowInline">
-                <input
-                  className="input"
-                  value={symbolInput}
-                  onChange={(e) =>
-                    setSymbolInput(e.target.value.toUpperCase())
-                  }
-                  placeholder="BTCUSDT"
-                />
-                <button
-                  className="ghost"
-                  type="button"
-                  onClick={() =>
-                    setLiveSymbol(
-                      (symbolInput || activeSymbol).toUpperCase().trim()
-                    )
-                  }
-                >
-                  Track
-                </button>
-                <button
-                  className="ghost"
-                  type="button"
-                  onClick={() =>
-                    nav(
-                      `/market/${encodeURIComponent(
-                        (symbolInput || activeSymbol).toUpperCase().trim()
-                      )}`
-                    )
-                  }
-                >
-                  Chart
-                </button>
-              </div>
-            </div>
-
-            <div className="grid4">
+            {/* 4 ── Duration + Size config */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginTop: 14 }}>
               <div className="field">
-                <label>Size %</label>
-                <input
-                  className="input"
-                  type="number"
-                  step="0.01"
-                  value={size}
-                  onChange={(e) => setSize(Number(e.target.value))}
-                />
+                <label>Duration (days)</label>
+                <input className="input" type="number" min={0} max={365} step={1}
+                  value={durationDays} onChange={(e) => setDurationDays(Number(e.target.value))} />
               </div>
               <div className="field">
-                <label>SL %</label>
-                <input
-                  className="input"
-                  type="number"
-                  step="0.01"
-                  value={sl}
-                  onChange={(e) => setSl(Number(e.target.value))}
-                />
+                <label>Max trades/day</label>
+                <input className="input" type="number" min={0} max={20} step={1}
+                  value={maxTradesPerDay} onChange={(e) => setMaxTradesPerDay(Number(e.target.value))} />
               </div>
               <div className="field">
-                <label>TP %</label>
-                <input
-                  className="input"
-                  type="number"
-                  step="0.01"
-                  value={tp}
-                  onChange={(e) => setTp(Number(e.target.value))}
-                />
+                <label>Stop after bad</label>
+                <input className="input" type="number" min={0} max={10} step={1}
+                  value={stopAfterBadTrades} onChange={(e) => setStopAfterBadTrades(Number(e.target.value))} />
               </div>
-              <div className="field">
-                <label>Leverage</label>
-                <input
-                  className="input"
-                  type="number"
-                  step="1"
-                  value={leverage}
-                  onChange={(e) => setLeverage(Number(e.target.value))}
-                />
+              <div className="field" style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 7, cursor: "pointer" }}>
+                  <input type="checkbox" checked={trendFilter} onChange={(e) => setTrendFilter(e.target.checked)} />
+                  <span style={{ fontSize: 11 }}>Trend filter<br /><span style={{ opacity: 0.45 }}>EMA50/200</span></span>
+                </label>
               </div>
             </div>
 
-            <div className="sideRow">
-              <button
-                className={`sideBtn long ${side === "LONG" ? "active" : ""}`}
-                type="button"
-                onClick={() => setSide("LONG")}
-              >
-                LONG
-              </button>
-              <button
-                className={`sideBtn short ${side === "SHORT" ? "active" : ""}`}
-                type="button"
-                onClick={() => setSide("SHORT")}
-              >
-                SHORT
-              </button>
+            {/* 5 ── Manual trade size/SL/TP/leverage */}
+            <div style={{ marginTop: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", opacity: 0.4, marginBottom: 8 }}>Size / SL / TP (manual trade)</div>
+              <div className="grid4">
+                <div className="field">
+                  <label>Size %</label>
+                  <input className="input" type="number" step="0.01" value={size} onChange={(e) => setSize(Number(e.target.value))} />
+                </div>
+                <div className="field">
+                  <label>SL %</label>
+                  <input className="input" type="number" step="0.01" value={sl} onChange={(e) => setSl(Number(e.target.value))} />
+                </div>
+                <div className="field">
+                  <label>TP %</label>
+                  <input className="input" type="number" step="0.01" value={tp} onChange={(e) => setTp(Number(e.target.value))} />
+                </div>
+                <div className="field">
+                  <label>Leverage</label>
+                  <input className="input" type="number" step="1" value={leverage} onChange={(e) => setLeverage(Number(e.target.value))} />
+                </div>
+              </div>
             </div>
 
-            <div
-              className="actions"
-              style={{ gap: 10, display: "flex", flexWrap: "wrap" }}
-            >
-              <button
-                className="primary"
-                type="button"
-                onClick={placeTrade}
-                disabled={placing || aiRunning}
-              >
-                {aiRunning
-                  ? "Manual Disabled (AI Running)"
-                  : placing
-                  ? "Placing…"
-                  : "Place Trade"}
-              </button>
+            {/* 6 ── Direction + Actions */}
+            <div className="sideRow" style={{ marginTop: 14 }}>
+              <button className={`sideBtn long ${side === "LONG" ? "active" : ""}`} type="button" onClick={() => setSide("LONG")}>LONG</button>
+              <button className={`sideBtn short ${side === "SHORT" ? "active" : ""}`} type="button" onClick={() => setSide("SHORT")}>SHORT</button>
+            </div>
 
-              <button className="danger" type="button" onClick={resetSandbox}>
-                Reset Sandbox
+            <div className="actions" style={{ gap: 8, display: "flex", flexWrap: "wrap", marginTop: 10 }}>
+              <button className="primary" type="button" onClick={startAI} disabled={!connected || aiRunning}>
+                {aiRunning ? "AI Running" : "Start AI"}
               </button>
-
-              <button
-                className="ghost"
-                type="button"
-                onClick={() => nav("/miniasym")}
-                style={{ borderRadius: 14 }}
-              >
+              <button className="danger" type="button" onClick={stopAI} disabled={!aiRunning}>Stop AI</button>
+              <button className="primary" type="button" onClick={placeTrade} disabled={placing || aiRunning}
+                style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "white" }}>
+                {aiRunning ? "Manual Disabled" : placing ? "Placing…" : "Place Trade"}
+              </button>
+              <button className="danger" type="button" onClick={resetSandbox}
+                style={{ background: "transparent", border: "1px solid rgba(255,80,120,0.3)" }}>
+                Reset
+              </button>
+              <button className="ghost" type="button" onClick={() => nav("/miniasym")} style={{ borderRadius: 14 }}>
                 Mini-Asym Panel
               </button>
             </div>
