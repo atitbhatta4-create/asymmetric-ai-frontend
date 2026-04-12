@@ -6,7 +6,7 @@ import { api } from "../lib/api";
 
 type RiskMode = "ULTRA_SAFE" | "SAFE" | "NORMAL" | "MINI_ASYM" | "AGGRESSIVE";
 type Side = "LONG" | "SHORT";
-type TF = "15m" | "1h" | "4h" | "1d";
+type TradeStyle = "SCALP" | "DAY_TRADE" | "SWING";
 
 type Trade = {
   id?: number;
@@ -53,6 +53,8 @@ type AutoStatus = {
   end_at?: string | null;
   trend_filter?: boolean | null;
   chop_min_sep_pct?: number | null;
+  trade_style?: string | null;
+  market_grade?: string | null;
 
   last_run_at?: string | null;
   last_trade_at?: string | null;
@@ -336,8 +338,7 @@ export default function Dashboard() {
   const [leverage, setLeverage] = useState(6);
 
   // Auto AI settings
-  const [tf, setTf] = useState<TF>("15m");
-  const [intervalSec, setIntervalSec] = useState<number>(60);
+  const [tradeStyle, setTradeStyle] = useState<TradeStyle>("DAY_TRADE");
 
   // Option B controls
   const [maxTradesPerDay, setMaxTradesPerDay] = useState<number>(3); // 0 = unlimited
@@ -615,8 +616,7 @@ export default function Dashboard() {
 
       await apiPost("/auto/start", {
         symbol,
-        tf,
-        interval_sec: Number(intervalSec),
+        trade_style: tradeStyle,
         mode,
         max_trades_per_day: Number(maxTradesPerDay),
         stop_after_bad_trades: Number(stopAfterBadTrades),
@@ -680,7 +680,10 @@ export default function Dashboard() {
         ? `ends ${autoStatus.duration_days}d`
         : "unlimited";
 
-    return `AI RUNNING (${autoStatus?.side || "-"}) • ${modeTxt} • ${sig}${blocked} • trades ${tradesToday} • bad ${badToday} • reset ${resetIn} • ${dur}`;
+    const styleTxt = autoStatus?.trade_style ? ` ${autoStatus.trade_style}` : "";
+    const gradeTxt = autoStatus?.market_grade && autoStatus.market_grade !== "-" ? ` Grade ${autoStatus.market_grade}` : "";
+
+    return `AI RUNNING (${autoStatus?.side || "-"}) • ${modeTxt}${styleTxt}${gradeTxt} • ${sig}${blocked} • trades ${tradesToday} • bad ${badToday} • reset ${resetIn} • ${dur}`;
   }, [aiRunning, autoStatus]);
 
   return (
@@ -899,32 +902,38 @@ export default function Dashboard() {
               </div>
             </div>
 
+            {/* Trading Style Cards */}
+            <div style={{ marginTop: 12, marginBottom: 4 }}>
+              <label style={{ fontSize: 11, opacity: 0.5, fontWeight: 900, textTransform: "uppercase", letterSpacing: 1 }}>Trading Style</label>
+              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                {([
+                  { id: "SCALP",     tf: "15m", interval: "15m checks", desc: "Quick entries, tight ATR SL/TP" },
+                  { id: "DAY_TRADE", tf: "1h",  interval: "1h checks",  desc: "Balanced risk, 1h timeframe" },
+                  { id: "SWING",     tf: "4h",  interval: "4h checks",  desc: "Wider ATR, multi-day swings" },
+                ] as { id: TradeStyle; tf: string; interval: string; desc: string }[]).map((s) => {
+                  const active = tradeStyle === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setTradeStyle(s.id)}
+                      style={{
+                        flex: 1, padding: "10px 8px", borderRadius: 12, cursor: "pointer",
+                        border: active ? "1.5px solid rgba(0,255,224,0.5)" : "1px solid rgba(255,255,255,0.10)",
+                        background: active ? "rgba(0,255,224,0.10)" : "rgba(255,255,255,0.04)",
+                        color: "white", textAlign: "left",
+                      }}
+                    >
+                      <div style={{ fontWeight: 900, fontSize: 13, color: active ? "#00ffe0" : "white" }}>{s.id}</div>
+                      <div style={{ fontSize: 10, opacity: 0.6, marginTop: 2 }}>{s.tf} · {s.interval}</div>
+                      <div style={{ fontSize: 10, opacity: 0.5, marginTop: 2 }}>{s.desc}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="grid4" style={{ marginTop: 10 }}>
-              <div className="field">
-                <label>Timeframe</label>
-                <select
-                  className="input"
-                  value={tf}
-                  onChange={(e) => setTf(e.target.value as TF)}
-                >
-                  <option value="15m">15m</option>
-                  <option value="1h">1h</option>
-                  <option value="4h">4h</option>
-                  <option value="1d">1d</option>
-                </select>
-              </div>
-              <div className="field">
-                <label>Interval (sec)</label>
-                <input
-                  className="input"
-                  type="number"
-                  min={5}
-                  max={3600}
-                  step={1}
-                  value={intervalSec}
-                  onChange={(e) => setIntervalSec(Number(e.target.value))}
-                />
-              </div>
               <div className="field">
                 <label>Duration (days)</label>
                 <input
