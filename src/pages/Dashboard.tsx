@@ -797,13 +797,108 @@ export default function Dashboard() {
         </div>
 
         <div className="mainGrid">
-          {/* LEFT: EXECUTE TRADE */}
+          {/* LEFT: TRADE PANEL */}
           <section className="card exec">
-            <div className="cardHead">
-              <div className="title">EXECUTE TRADE</div>
-              <div className="hint">
-                Sandbox only — manual disabled while AI runs
+
+            {/* ── Section: AI TRADER ── */}
+            <div style={{
+              background: "rgba(0,255,224,0.04)", borderRadius: 14,
+              border: "1px solid rgba(0,255,224,0.12)", padding: "14px 16px", marginBottom: 14,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", color: "#00ffe0", opacity: 0.8 }}>AI Trader</div>
+                  <div style={{ fontSize: 11, opacity: 0.4, marginTop: 1 }}>SL/TP auto-calculated from ATR · Grade A/B entry filter</div>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    className="primary"
+                    type="button"
+                    onClick={startAI}
+                    disabled={!connected || aiRunning}
+                    style={{ padding: "8px 18px", fontSize: 13 }}
+                  >
+                    {aiRunning ? "Running…" : "Start AI"}
+                  </button>
+                  <button
+                    className="danger"
+                    type="button"
+                    onClick={stopAI}
+                    disabled={!aiRunning}
+                    style={{ padding: "8px 14px", fontSize: 13 }}
+                  >
+                    Stop
+                  </button>
+                </div>
               </div>
+
+              {/* Style cards */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                {([
+                  { id: "SCALP",     tf: "15m", sl: "0.8×ATR", tp: "1.6×ATR", freq: "~4–6 trades/day",  desc: "Fast scalp on 15m candles" },
+                  { id: "DAY_TRADE", tf: "1h",  sl: "1.0×ATR", tp: "2.0×ATR", freq: "~2–4 trades/day",  desc: "Intraday on 1h structure" },
+                  { id: "SWING",     tf: "4h",  sl: "1.5×ATR", tp: "3.0×ATR", freq: "~1–2 trades/day",  desc: "Multi-day 4h swing entry" },
+                ] as { id: TradeStyle; tf: string; sl: string; tp: string; freq: string; desc: string }[]).map((s) => {
+                  const active = tradeStyle === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setTradeStyle(s.id)}
+                      style={{
+                        flex: 1, padding: "10px 10px", borderRadius: 10, cursor: "pointer",
+                        border: active ? "1.5px solid rgba(0,255,224,0.55)" : "1px solid rgba(255,255,255,0.08)",
+                        background: active ? "rgba(0,255,224,0.10)" : "rgba(255,255,255,0.03)",
+                        color: "white", textAlign: "left", transition: "all 0.14s",
+                      }}
+                    >
+                      <div style={{ fontWeight: 900, fontSize: 13, color: active ? "#00ffe0" : "rgba(255,255,255,0.9)" }}>{s.id.replace("_", " ")}</div>
+                      <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 3 }}>{s.tf} · SL {s.sl} · TP {s.tp}</div>
+                      <div style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>{s.freq}</div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* AI config row */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+                <div className="field">
+                  <label>Duration (days · 0=∞)</label>
+                  <input className="input" type="number" min={0} max={365} step={1}
+                    value={durationDays} onChange={(e) => setDurationDays(Number(e.target.value))} />
+                </div>
+                <div className="field">
+                  <label>Max trades/day (0=∞)</label>
+                  <input className="input" type="number" min={0} max={20} step={1}
+                    value={maxTradesPerDay} onChange={(e) => setMaxTradesPerDay(Number(e.target.value))} />
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                <div className="field">
+                  <label>Stop after bad trades</label>
+                  <input className="input" type="number" min={0} max={10} step={1}
+                    value={stopAfterBadTrades} onChange={(e) => setStopAfterBadTrades(Number(e.target.value))} />
+                </div>
+                <div className="field">
+                  <label>Chop filter sep %</label>
+                  <input className="input" type="number" min={0} max={0.2} step={0.001}
+                    value={chopMinSepPct} onChange={(e) => setChopMinSepPct(Number(e.target.value))} />
+                </div>
+                <div className="field" style={{ display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", marginBottom: 0 }}>
+                    <input type="checkbox" checked={trendFilter} onChange={(e) => setTrendFilter(e.target.checked)} />
+                    <span style={{ fontSize: 11 }}>Trend filter<br /><span style={{ opacity: 0.5 }}>EMA50/200</span></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Divider: MANUAL TRADE ── */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
+              <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", opacity: 0.35 }}>Manual Trade</span>
+              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.06)" }} />
             </div>
 
             <div className="modes">
@@ -899,132 +994,6 @@ export default function Dashboard() {
                   value={leverage}
                   onChange={(e) => setLeverage(Number(e.target.value))}
                 />
-              </div>
-            </div>
-
-            {/* Trading Style Cards */}
-            <div style={{ marginTop: 12, marginBottom: 4 }}>
-              <label style={{ fontSize: 11, opacity: 0.5, fontWeight: 900, textTransform: "uppercase", letterSpacing: 1 }}>Trading Style</label>
-              <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                {([
-                  { id: "SCALP",     tf: "15m", interval: "15m checks", desc: "Quick entries, tight ATR SL/TP" },
-                  { id: "DAY_TRADE", tf: "1h",  interval: "1h checks",  desc: "Balanced risk, 1h timeframe" },
-                  { id: "SWING",     tf: "4h",  interval: "4h checks",  desc: "Wider ATR, multi-day swings" },
-                ] as { id: TradeStyle; tf: string; interval: string; desc: string }[]).map((s) => {
-                  const active = tradeStyle === s.id;
-                  return (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => setTradeStyle(s.id)}
-                      style={{
-                        flex: 1, padding: "10px 8px", borderRadius: 12, cursor: "pointer",
-                        border: active ? "1.5px solid rgba(0,255,224,0.5)" : "1px solid rgba(255,255,255,0.10)",
-                        background: active ? "rgba(0,255,224,0.10)" : "rgba(255,255,255,0.04)",
-                        color: "white", textAlign: "left",
-                      }}
-                    >
-                      <div style={{ fontWeight: 900, fontSize: 13, color: active ? "#00ffe0" : "white" }}>{s.id}</div>
-                      <div style={{ fontSize: 10, opacity: 0.6, marginTop: 2 }}>{s.tf} · {s.interval}</div>
-                      <div style={{ fontSize: 10, opacity: 0.5, marginTop: 2 }}>{s.desc}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="grid4" style={{ marginTop: 10 }}>
-              <div className="field">
-                <label>Duration (days)</label>
-                <input
-                  className="input"
-                  type="number"
-                  min={0}
-                  max={365}
-                  step={1}
-                  value={durationDays}
-                  onChange={(e) => setDurationDays(Number(e.target.value))}
-                />
-              </div>
-              <div className="field">
-                <label>Max trades/day (0=∞)</label>
-                <input
-                  className="input"
-                  type="number"
-                  min={0}
-                  max={20}
-                  step={1}
-                  value={maxTradesPerDay}
-                  onChange={(e) => setMaxTradesPerDay(Number(e.target.value))}
-                />
-              </div>
-            </div>
-
-            <div className="grid4" style={{ marginTop: 10 }}>
-              <div className="field">
-                <label>Stop after bad trades</label>
-                <input
-                  className="input"
-                  type="number"
-                  min={0}
-                  max={10}
-                  step={1}
-                  value={stopAfterBadTrades}
-                  onChange={(e) => setStopAfterBadTrades(Number(e.target.value))}
-                />
-              </div>
-              <div className="field">
-                <label>Chop filter min sep %</label>
-                <input
-                  className="input"
-                  type="number"
-                  min={0}
-                  max={0.2}
-                  step={0.001}
-                  value={chopMinSepPct}
-                  onChange={(e) => setChopMinSepPct(Number(e.target.value))}
-                />
-              </div>
-
-              <div
-                className="field"
-                style={{ display: "flex", alignItems: "end", gap: 10 }}
-              >
-                <label style={{ width: "100%" }}>
-                  Trend filter (EMA50/EMA200)
-                  <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-                    <input
-                      type="checkbox"
-                      checked={trendFilter}
-                      onChange={(e) => setTrendFilter(e.target.checked)}
-                    />
-                    <span style={{ opacity: 0.8, fontSize: 12 }}>
-                      ON = fewer, higher quality trades
-                    </span>
-                  </div>
-                </label>
-              </div>
-
-              <div className="field">
-                <label>AI Trader</label>
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  <button
-                    className="primary"
-                    type="button"
-                    onClick={startAI}
-                    disabled={!connected || aiRunning}
-                  >
-                    {aiRunning ? "AI Running" : "Start AI"}
-                  </button>
-                  <button
-                    className="danger"
-                    type="button"
-                    onClick={stopAI}
-                    disabled={!aiRunning}
-                  >
-                    Stop AI
-                  </button>
-                </div>
               </div>
             </div>
 
