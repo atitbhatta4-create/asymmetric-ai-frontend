@@ -120,15 +120,15 @@ export default function App() {
 
   const linkStyle = (active: boolean): React.CSSProperties => ({
     display: "block",
-    padding: isMobile ? "14px 20px" : "11px 14px",
-    borderRadius: 14,
+    padding: isMobile ? "12px 16px" : "9px 11px",
+    borderRadius: 12,
     textDecoration: "none",
     color: "white",
     background: active ? "rgba(0,255,224,0.10)" : "transparent",
     border: active ? "1px solid rgba(0,255,224,0.22)" : "1px solid rgba(255,255,255,0.06)",
     fontWeight: 800,
-    marginBottom: isMobile ? 6 : 8,
-    fontSize: isMobile ? 15 : 14,
+    marginBottom: isMobile ? 5 : 6,
+    fontSize: isMobile ? 14 : 13,
   });
 
   const allNavItems = isAdmin
@@ -219,15 +219,15 @@ export default function App() {
   return (
     <div style={{
       minHeight: "100vh", background: "#050814", color: "white",
-      display: "grid", gridTemplateColumns: "240px 1fr",
+      display: "grid", gridTemplateColumns: "200px 1fr",
     }}>
       <aside style={{
         borderRight: "1px solid rgba(255,255,255,0.06)",
-        padding: 16, background: "rgba(9,15,30,0.92)",
+        padding: 12, background: "rgba(9,15,30,0.92)",
         position: "sticky", top: 0, height: "100vh", overflowY: "auto",
       }}>
-        <div style={{ fontSize: 16, fontWeight: 900, marginBottom: 2 }}>Asymmetric AI</div>
-        <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 16 }}>
+        <div style={{ fontSize: 14, fontWeight: 900, marginBottom: 2 }}>Asymmetric AI</div>
+        <div style={{ fontSize: 10, opacity: 0.55, marginBottom: 12 }}>
           <b>{session.email}</b>
         </div>
 
@@ -240,21 +240,21 @@ export default function App() {
         <button
           onClick={doLogout}
           style={{
-            marginTop: 12, width: "100%", borderRadius: 14,
+            marginTop: 10, width: "100%", borderRadius: 12,
             border: "1px solid rgba(255,255,255,0.10)",
             background: "rgba(255,255,255,0.04)", color: "white",
-            padding: "11px 14px", cursor: "pointer", fontWeight: 800,
+            padding: "9px 12px", cursor: "pointer", fontWeight: 800, fontSize: 13,
           }}
         >
           Logout
         </button>
 
-        <div style={{ marginTop: 12, fontSize: 11, opacity: 0.45 }}>
+        <div style={{ marginTop: 10, fontSize: 10, opacity: 0.45 }}>
           Demo mode · No real funds · Educational only
         </div>
       </aside>
 
-      <main style={{ padding: 22, minWidth: 0 }}>
+      <main style={{ padding: 16, minWidth: 0 }}>
         <Routes>
           <Route path="/"           element={<Dashboard />} />
           <Route path="/market"     element={<Market />} />

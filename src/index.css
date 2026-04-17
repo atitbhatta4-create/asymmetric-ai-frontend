@@ -19,7 +19,7 @@
 
 *{ box-sizing:border-box; }
 html, body{ height:100%; }
-html{ overflow-x:hidden; }
+html{ overflow-x:hidden; font-size:14px; }
 body{
   margin:0;
   overflow-x:hidden;

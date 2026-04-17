@@ -33,13 +33,13 @@
 .card{
   background: var(--card);
   border: 1px solid var(--stroke);
-  border-radius: 18px;
+  border-radius: 14px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(10px);
 }
 
 .cardHead{
-  padding: 12px 14px 10px;
+  padding: 10px 12px 8px;
   border-bottom: 1px solid var(--stroke2);
 }
 
@@ -73,8 +73,8 @@
   background: rgba(255,255,255,.03);
 }
 
-.brandName{ font-size: 22px; font-weight: 950; }
-.brandSub{ font-size: 12px; color: var(--muted); margin-top: 4px; }
+.brandName{ font-size: 18px; font-weight: 950; }
+.brandSub{ font-size: 11px; color: var(--muted); margin-top: 4px; }
 
 /* Top coins small boxes */
 .coinsRow{
@@ -261,8 +261,8 @@
   gap: 12px;
 }
 .stat .big{
-  padding: 10px 14px 14px;
-  font-size: 30px;
+  padding: 8px 12px 12px;
+  font-size: 26px;
   font-weight: 950;
 }
 
