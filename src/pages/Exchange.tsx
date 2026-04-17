@@ -1,6 +1,7 @@
 // src/pages/Exchange.tsx
 import React, { useEffect, useState } from "react";
 import { api } from "../lib/api";
+import useIsMobile from "../hooks/useIsMobile";
 
 type Status = {
   connected: boolean;
@@ -29,6 +30,7 @@ function isNotFound(err: any) {
 }
 
 export default function Exchange() {
+  const isMobile = useIsMobile();
   const [status, setStatus] = useState<Status | null>(null);
 
   const [exchange, setExchange] = useState<"binance" | "okx" | "bybit">("okx");
@@ -159,16 +161,16 @@ export default function Exchange() {
 
   return (
     <div style={{ maxWidth: 900 }}>
-      <div style={{ fontSize: 26, fontWeight: 950 }}>Exchange</div>
-      <div style={{ opacity: 0.7, marginTop: 6 }}>
+      <div style={{ fontSize: isMobile ? 20 : 26, fontWeight: 950 }}>Exchange</div>
+      <div style={{ opacity: 0.7, marginTop: 6, fontSize: isMobile ? 12 : 14 }}>
         Demo connection: saved in SQLite. (Real launch: encrypt keys + permissions.)
       </div>
 
       <div
         style={{
           marginTop: 14,
-          borderRadius: 18,
-          padding: 16,
+          borderRadius: 16,
+          padding: isMobile ? 12 : 16,
           background: "rgba(9, 15, 30, 0.92)",
           border: "1px solid rgba(255,255,255,0.08)",
         }}
@@ -367,8 +369,8 @@ export default function Exchange() {
         <div
           style={{
             marginTop: 14,
-            borderRadius: 18,
-            padding: 16,
+            borderRadius: 16,
+            padding: isMobile ? 12 : 16,
             background: "rgba(9, 15, 30, 0.92)",
             border: "1px solid rgba(255,255,255,0.08)",
           }}

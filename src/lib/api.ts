@@ -68,6 +68,20 @@ export const logout = () => apiRequest("/auth/logout", { method: "POST" });
 
 export const getTrades = () => apiRequest("/trades");
 
+// Forgot password
+export const forgotPassword = (email: string) =>
+  apiRequest("/auth/forgot-password", { method: "POST", body: { email } });
+
+export const resetPassword = (email: string, code: string, new_password: string) =>
+  apiRequest("/auth/reset-password", { method: "POST", body: { email, code, new_password } });
+
+// 2FA
+export const get2faStatus = () => apiRequest("/auth/2fa/status");
+export const setup2fa     = () => apiRequest("/auth/2fa/setup",   { method: "POST" });
+export const confirm2fa   = (code: string) => apiRequest("/auth/2fa/confirm",  { method: "POST", body: { code } });
+export const verify2fa    = (code: string) => apiRequest("/auth/2fa/verify",   { method: "POST", body: { code } });
+export const disable2fa   = (code: string) => apiRequest("/auth/2fa/disable",  { method: "POST", body: { code } });
+
 /**
  * api is BOTH:
  *  - callable: api("/path")

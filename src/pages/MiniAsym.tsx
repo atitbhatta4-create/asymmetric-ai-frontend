@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as api from "../lib/api";
+import useIsMobile from "../hooks/useIsMobile";
 
 type RiskMode = "ULTRA_SAFE" | "SAFE" | "NORMAL" | "MINI_ASYM" | "AGGRESSIVE";
 type Side = "LONG" | "SHORT";
@@ -92,6 +93,7 @@ function startOfTodayUTC(): Date {
 
 export default function MiniAsym() {
   const nav = useNavigate();
+  const isMobile = useIsMobile();
 
   // MVP constants (later configurable / pro)
   const DAILY_LOSS_LIMIT_PCT = -4;
@@ -298,171 +300,142 @@ export default function MiniAsym() {
   }
 
   return (
-    <div style={{ maxWidth: 1100 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", gap: 12 }}>
+    <div style={{ maxWidth: 1100, width: "100%", overflowX: "hidden" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontSize: 26, fontWeight: 950 }}>Mini-Asym Panel</div>
-          <div style={{ opacity: 0.7, marginTop: 6 }}>
-            Live risk monitor — shows protection status + today summary + what Mini-Asym is doing
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 950 }}>Mini-Asym</div>
+            <div style={{ padding: "4px 10px", borderRadius: 999, fontSize: 10, fontWeight: 900, letterSpacing: 1, background: "rgba(0,255,224,0.10)", border: "1px solid rgba(0,255,224,0.22)", color: "#00ffe0" }}>
+              RISK ENGINE
+            </div>
           </div>
+          {!isMobile && (
+            <div style={{ opacity: 0.5, marginTop: 4, fontSize: 13 }}>
+              4-layer signal analysis · live drawdown protection · trade discipline AI
+            </div>
+          )}
         </div>
 
-        <div style={{ display: "flex", gap: 10 }}>
-          <button
-            onClick={() => nav("/history")}
-            style={{
-              borderRadius: 14,
-              border: "1px solid rgba(255,255,255,0.10)",
-              background: "rgba(255,255,255,0.04)",
-              color: "white",
-              padding: "10px 14px",
-              fontWeight: 950,
-              cursor: "pointer",
-              height: 42,
-            }}
-          >
-            Open History
+        <div style={{ display: "flex", gap: 8 }}>
+          <button onClick={() => nav("/history")} style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.04)", color: "white", padding: "9px 12px", fontWeight: 800, cursor: "pointer", fontSize: 13 }}>
+            History
           </button>
-
-          <button
-            onClick={() => nav(`/market/${encodeURIComponent(symbol.toUpperCase().trim())}`)}
-            style={{
-              borderRadius: 14,
-              border: "1px solid rgba(255,255,255,0.10)",
-              background: "rgba(255,255,255,0.04)",
-              color: "white",
-              padding: "10px 14px",
-              fontWeight: 950,
-              cursor: "pointer",
-              height: 42,
-            }}
-          >
-            Open Chart
+          <button onClick={() => nav(`/market/${encodeURIComponent(symbol.toUpperCase().trim())}`)} style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.04)", color: "white", padding: "9px 12px", fontWeight: 800, cursor: "pointer", fontSize: 13 }}>
+            Chart
           </button>
         </div>
       </div>
 
-      {/* Status badge + action line */}
-      <div style={{ marginTop: 14, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-        <div
-          style={{
-            padding: "10px 12px",
-            borderRadius: 999,
-            border: `1px solid ${badge.br}`,
-            background: badge.bg,
-            fontWeight: 950,
-          }}
-        >
-          {badge.text}
+      {/* Status banner */}
+      <div style={{
+        marginTop: 10, padding: isMobile ? "10px 14px" : "12px 18px", borderRadius: 16,
+        border: `1px solid ${badge.br}`, background: badge.bg,
+        display: "flex", alignItems: "center", gap: 10,
+      }}>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: badge.br, boxShadow: `0 0 8px ${badge.br}`, flexShrink: 0 }} />
+        <div>
+          <div style={{ fontWeight: 950, fontSize: 14 }}>{badge.text}</div>
+          <div style={{ fontSize: 12, opacity: 0.75, marginTop: 2 }}>{miniAsymState.action}</div>
         </div>
-
-        <div style={{ opacity: 0.9, fontWeight: 800 }}>{miniAsymState.action}</div>
       </div>
 
       {/* Top stats */}
-      <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <div
-          style={{
-            borderRadius: 18,
-            padding: 14,
-            background: "rgba(9, 15, 30, 0.92)",
-            border: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
-          <div style={{ opacity: 0.7, fontWeight: 900 }}>EQUITY</div>
-          <div style={{ fontSize: 34, fontWeight: 950, marginTop: 6 }}>${fmtMoney(equity)}</div>
+      <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
+        {/* Equity card */}
+        <div style={{ borderRadius: 16, padding: isMobile ? "12px 14px" : "16px 18px", background: "rgba(9,15,30,0.92)", border: "1px solid rgba(255,255,255,0.08)", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 80% 20%, rgba(0,255,157,0.07), transparent 60%)", pointerEvents: "none" }} />
+          <div style={{ fontSize: 10, fontWeight: 900, opacity: 0.5, letterSpacing: 1, textTransform: "uppercase" }}>Account Equity</div>
+          <div style={{ fontSize: isMobile ? 26 : 34, fontWeight: 950, marginTop: 4, color: "#f1f5f9" }}>${fmtMoney(equity)}</div>
+          <div style={{ fontSize: 11, opacity: 0.45, marginTop: 3 }}>
+            Floor: ${fmtMoney(equity * 0.85)} · Peak protected
+          </div>
         </div>
 
-        <div
-          style={{
-            borderRadius: 18,
-            padding: 14,
-            background: "rgba(9, 15, 30, 0.92)",
-            border: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
-          <div style={{ opacity: 0.7, fontWeight: 900 }}>LIVE PRICE</div>
-          <div style={{ opacity: 0.7, marginTop: 6 }}>
-            Symbol: {symbol.toUpperCase().trim()} • refresh 5s
+        {/* Live price card */}
+        <div style={{ borderRadius: 16, padding: isMobile ? "12px 14px" : "16px 18px", background: "rgba(9,15,30,0.92)", border: "1px solid rgba(255,255,255,0.08)", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 20% 80%, rgba(0,210,255,0.06), transparent 60%)", pointerEvents: "none" }} />
+          <div style={{ fontSize: 10, fontWeight: 900, opacity: 0.5, letterSpacing: 1, textTransform: "uppercase" }}>Live Price</div>
+          <div style={{ fontSize: isMobile ? 26 : 34, fontWeight: 950, marginTop: 4, color: "#f1f5f9" }}>${fmtMoney(livePrice)}</div>
+          <div style={{ fontSize: 11, opacity: 0.45, marginTop: 3 }}>
+            {symbol.toUpperCase().trim()} · refreshes every 5s
           </div>
-          <div style={{ fontSize: 34, fontWeight: 950, marginTop: 6 }}>${fmtMoney(livePrice)}</div>
         </div>
       </div>
 
       {/* Today Summary + Risk Meter */}
       <div
         style={{
-          marginTop: 14,
-          borderRadius: 18,
-          padding: 14,
+          marginTop: 10,
+          borderRadius: 16,
+          padding: isMobile ? 10 : 14,
           background: "rgba(9, 15, 30, 0.92)",
           border: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        <div style={{ fontWeight: 950, marginBottom: 10 }}>Today’s Risk Summary</div>
+        <div style={{ fontWeight: 950, fontSize: isMobile ? 13 : 15, marginBottom: 8 }}>Today’s Risk Summary</div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(5, 1fr)", gap: 10 }}>
           <div
             style={{
-              padding: 12,
-              borderRadius: 16,
+              padding: isMobile ? 8 : 12,
+              borderRadius: 12,
               border: "1px solid rgba(255,255,255,0.08)",
               background: "rgba(15,23,42,0.55)",
             }}
           >
-            <div style={{ fontSize: 12, opacity: 0.7, fontWeight: 900 }}>Trades used</div>
-            <div style={{ fontSize: 18, fontWeight: 950, marginTop: 6 }}>
-              {today.tradesUsed} / {MAX_TRADES_PER_DAY}
+            <div style={{ fontSize: isMobile ? 10 : 11, opacity: 0.7, fontWeight: 900 }}>Trades</div>
+            <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 950, marginTop: 4 }}>
+              {today.tradesUsed}/{MAX_TRADES_PER_DAY}
             </div>
           </div>
 
           <div
             style={{
-              padding: 12,
-              borderRadius: 16,
+              padding: isMobile ? 8 : 12,
+              borderRadius: 12,
               border: "1px solid rgba(255,255,255,0.08)",
               background: "rgba(15,23,42,0.55)",
             }}
           >
-            <div style={{ fontSize: 12, opacity: 0.7, fontWeight: 900 }}>Today PnL</div>
-            <div style={{ fontSize: 18, fontWeight: 950, marginTop: 6 }}>{fmtNum(today.pnlPct, 2)}%</div>
+            <div style={{ fontSize: isMobile ? 10 : 11, opacity: 0.7, fontWeight: 900 }}>PnL</div>
+            <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 950, marginTop: 4 }}>{fmtNum(today.pnlPct, 2)}%</div>
           </div>
 
           <div
             style={{
-              padding: 12,
-              borderRadius: 16,
+              padding: isMobile ? 8 : 12,
+              borderRadius: 12,
               border: "1px solid rgba(255,255,255,0.08)",
               background: "rgba(15,23,42,0.55)",
             }}
           >
-            <div style={{ fontSize: 12, opacity: 0.7, fontWeight: 900 }}>Daily loss limit</div>
-            <div style={{ fontSize: 18, fontWeight: 950, marginTop: 6 }}>{DAILY_LOSS_LIMIT_PCT}%</div>
+            <div style={{ fontSize: isMobile ? 10 : 11, opacity: 0.7, fontWeight: 900 }}>Loss limit</div>
+            <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 950, marginTop: 4 }}>{DAILY_LOSS_LIMIT_PCT}%</div>
           </div>
 
           <div
             style={{
-              padding: 12,
-              borderRadius: 16,
+              padding: isMobile ? 8 : 12,
+              borderRadius: 12,
               border: "1px solid rgba(255,255,255,0.08)",
               background: "rgba(15,23,42,0.55)",
             }}
           >
-            <div style={{ fontSize: 12, opacity: 0.7, fontWeight: 900 }}>Profit target</div>
-            <div style={{ fontSize: 18, fontWeight: 950, marginTop: 6 }}>{DAILY_PROFIT_TARGET_PCT}%</div>
+            <div style={{ fontSize: isMobile ? 10 : 11, opacity: 0.7, fontWeight: 900 }}>Target</div>
+            <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 950, marginTop: 4 }}>{DAILY_PROFIT_TARGET_PCT}%</div>
           </div>
 
           <div
             style={{
-              padding: 12,
-              borderRadius: 16,
+              padding: isMobile ? 8 : 12,
+              borderRadius: 12,
               border: "1px solid rgba(255,255,255,0.08)",
               background: "rgba(15,23,42,0.55)",
             }}
           >
-            <div style={{ fontSize: 12, opacity: 0.7, fontWeight: 900 }}>Consecutive losses</div>
-            <div style={{ fontSize: 18, fontWeight: 950, marginTop: 6 }}>
-              {today.consecLoss} / {MAX_CONSEC_LOSSES}
+            <div style={{ fontSize: isMobile ? 10 : 11, opacity: 0.7, fontWeight: 900 }}>Losses</div>
+            <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 950, marginTop: 4 }}>
+              {today.consecLoss}/{MAX_CONSEC_LOSSES}
             </div>
           </div>
         </div>
@@ -493,116 +466,148 @@ export default function MiniAsym() {
       </div>
 
       {/* Live 4-Layer Signal Breakdown */}
-      {signalData?.running && (
-        <div
-          style={{
-            marginTop: 14,
-            borderRadius: 18,
-            padding: 14,
-            background: "rgba(9, 15, 30, 0.92)",
-            border: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-            <div style={{ fontWeight: 950 }}>Live Signal — 4-Layer Analysis</div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
-              <span style={{ opacity: 0.7 }}>{signalData.symbol}</span>
-              <span
-                style={{
-                  padding: "4px 10px", borderRadius: 999, fontWeight: 900,
+      {signalData?.running && (() => {
+        const score = signalData.signal_score ?? 0;
+        const isGradeA = score >= 0.78;
+        const isGradeB = score >= 0.65 && score < 0.78;
+        const gradeColor = isGradeA ? "#00ff9d" : isGradeB ? "#ffa032" : "#ff5078";
+        const gradeLabel = isGradeA ? "A" : isGradeB ? "B" : "C";
+        const gradeBg = isGradeA ? "rgba(0,255,157,0.12)" : isGradeB ? "rgba(255,160,50,0.12)" : "rgba(255,80,120,0.12)";
+        const gradeBorder = isGradeA ? "rgba(0,255,157,0.30)" : isGradeB ? "rgba(255,160,50,0.30)" : "rgba(255,80,120,0.30)";
+
+        const LAYER_META: Record<string, { icon: string; label: string; weight: string; desc: (l: any) => string }> = {
+          regime:    { icon: "⚡", label: "Regime",    weight: "25%", desc: (l) => `ADX ${l.adx ?? "—"} · ATR ${l.atr_pct ?? "—"}% · ${l.ok ? "Trending" : "Choppy"}` },
+          direction: { icon: "🧭", label: "Direction", weight: "30%", desc: (l) => `${l.htf_trend ?? "—"} trend · EMA ${l.ema9_momentum ?? "—"} · Spread ${l.ema_spread ?? "—"}` },
+          entry:     { icon: "🎯", label: "Entry",     weight: "30%", desc: (l) => `${l.price_vs_ema21_pct ?? "—"}% from EMA21 · RSI ${l.rsi ?? "—"} · ${l.candle_pattern ?? "—"}` },
+          momentum:  { icon: "🌊", label: "Momentum",  weight: "15%", desc: (l) => `Vol ${l.volume_ratio ?? "—"}× avg · ${l.candles_n ?? "—"} candle(s) aligned` },
+        };
+
+        return (
+          <div style={{ marginTop: 10, borderRadius: 16, background: "rgba(9,15,30,0.92)", border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden" }}>
+
+            {/* Header */}
+            <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
+              <div>
+                <div style={{ fontWeight: 950, fontSize: 15 }}>Mini-Asym Signal Engine</div>
+                {!isMobile && <div style={{ fontSize: 12, opacity: 0.5, marginTop: 2 }}>4-layer live analysis · updates every 5s</div>}
+              </div>
+              <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                {/* Symbol */}
+                <div style={{ fontSize: 13, fontWeight: 800, opacity: 0.7 }}>{signalData.symbol}</div>
+
+                {/* Side badge */}
+                <div style={{
+                  padding: "5px 12px", borderRadius: 999, fontWeight: 900, fontSize: 13,
                   background: signalData.side === "LONG" ? "rgba(0,255,157,0.15)" : "rgba(255,80,120,0.15)",
-                  border: signalData.side === "LONG" ? "1px solid rgba(0,255,157,0.3)" : "1px solid rgba(255,80,120,0.3)",
+                  border: `1px solid ${signalData.side === "LONG" ? "rgba(0,255,157,0.35)" : "rgba(255,80,120,0.35)"}`,
                   color: signalData.side === "LONG" ? "#00ff9d" : "#ff5078",
-                }}
-              >
-                {signalData.side ?? "—"}
-              </span>
-              {typeof signalData.signal_score === "number" && (
-                <span style={{
-                  padding: "3px 9px", borderRadius: 999, fontSize: 12, fontWeight: 800,
-                  background: signalData.signal_score >= 0.62 ? "rgba(0,255,157,0.12)" : "rgba(255,160,50,0.12)",
-                  border: signalData.signal_score >= 0.62 ? "1px solid rgba(0,255,157,0.28)" : "1px solid rgba(255,160,50,0.28)",
-                  color: signalData.signal_score >= 0.62 ? "#00ff9d" : "#ffa032",
                 }}>
-                  Score {(signalData.signal_score * 100).toFixed(0)}%
-                </span>
-              )}
-              {signalData.mode === "MINI_ASYM" && typeof signalData.adaptive_strictness === "number" && (
-                <span style={{ opacity: 0.75, fontSize: 12 }}>
-                  Strictness: {signalData.adaptive_strictness.toFixed(2)}×
-                </span>
-              )}
-            </div>
-          </div>
+                  {signalData.side === "LONG" ? "▲ LONG" : "▼ SHORT"}
+                </div>
 
-          {/* Pending trade indicator */}
-          {signalData.pending_trade && (
-            <div style={{
-              marginTop: 10, padding: "8px 12px", borderRadius: 12,
-              background: "rgba(255,200,0,0.10)", border: "1px solid rgba(255,200,0,0.25)",
-              fontSize: 13, fontWeight: 900,
-            }}>
-              Trade open @ {signalData.pending_trade.entry_price?.toFixed(2)} ({signalData.pending_trade.side}) — awaiting close price
-            </div>
-          )}
+                {/* Grade badge */}
+                <div style={{ padding: "5px 14px", borderRadius: 999, fontWeight: 950, fontSize: 14, background: gradeBg, border: `1px solid ${gradeBorder}`, color: gradeColor }}>
+                  Grade {gradeLabel} · {(score * 100).toFixed(0)}%
+                </div>
 
-          {/* Blocked reason */}
-          {signalData.blocked && !signalData.pending_trade && (
-            <div style={{
-              marginTop: 10, padding: "8px 12px", borderRadius: 12,
-              background: "rgba(220,38,38,0.10)", border: "1px solid rgba(248,113,113,0.3)",
-              fontSize: 12, opacity: 0.9,
-            }}>
-              {signalData.blocked}
-            </div>
-          )}
-
-          {/* 4 layers */}
-          {signalData.breakdown && Object.keys(signalData.breakdown).length > 0 && (
-            <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
-              {(["regime", "direction", "entry", "momentum"] as const).map((layer) => {
-                const l = signalData.breakdown![layer];
-                if (!l) return null;
-                const ok = l.ok;
-                return (
-                  <div
-                    key={layer}
-                    style={{
-                      padding: 12, borderRadius: 14,
-                      border: ok ? "1px solid rgba(0,255,157,0.20)" : "1px solid rgba(255,80,120,0.20)",
-                      background: ok ? "rgba(0,255,157,0.05)" : "rgba(255,80,120,0.05)",
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontWeight: 950, fontSize: 12, textTransform: "uppercase", opacity: 0.8 }}>
-                        {layer}
-                      </span>
-                      <span style={{
-                        fontSize: 11, fontWeight: 900, padding: "2px 8px", borderRadius: 999,
-                        background: ok ? "rgba(0,255,157,0.15)" : "rgba(255,80,120,0.15)",
-                        color: ok ? "#00ff9d" : "#ff5078",
-                      }}>
-                        {ok ? "PASS" : "FAIL"}
-                      </span>
-                    </div>
-                    <div style={{ marginTop: 6, fontSize: 12, opacity: 0.75, lineHeight: 1.4 }}>
-                      {ok
-                        ? layer === "regime"
-                          ? `ADX ${l.adx} (min ${l.adx_min}) · ATR ${l.atr_pct}%`
-                          : layer === "direction"
-                          ? `${l.trend} · ${l.signal}`
-                          : layer === "entry"
-                          ? `EMA21 dist ${l.price_vs_ema21_pct}% · RSI ${l.rsi}`
-                          : `${l.candles_n} candle(s) · vol ${l.volume_ratio}×`
-                        : (l.reason || "—")}
-                    </div>
+                {/* Adaptive strictness */}
+                {signalData.mode === "MINI_ASYM" && typeof signalData.adaptive_strictness === "number" && signalData.adaptive_strictness !== 1.0 && (
+                  <div style={{ fontSize: 12, opacity: 0.6, padding: "4px 10px", borderRadius: 999, border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.04)" }}>
+                    Strictness {signalData.adaptive_strictness.toFixed(2)}×
                   </div>
-                );
-              })}
+                )}
+              </div>
             </div>
-          )}
-        </div>
-      )}
+
+            {/* Score bar */}
+            <div style={{ padding: "12px 18px 0", display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ fontSize: 12, opacity: 0.55, minWidth: 80 }}>Signal score</div>
+              <div style={{ flex: 1, height: 6, borderRadius: 99, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${Math.min(100, score * 100)}%`, borderRadius: 99, background: `linear-gradient(90deg, ${gradeColor}, ${gradeColor}aa)`, transition: "width 0.6s ease" }} />
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 900, color: gradeColor, minWidth: 36 }}>{(score * 100).toFixed(0)}%</div>
+            </div>
+
+            {/* Pending trade */}
+            {signalData.pending_trade && (
+              <div style={{ margin: "12px 18px 0", padding: "10px 14px", borderRadius: 12, background: "rgba(255,200,0,0.08)", border: "1px solid rgba(255,200,0,0.25)", display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffd700", boxShadow: "0 0 8px #ffd700", flexShrink: 0 }} />
+                <div style={{ fontSize: 13, fontWeight: 900 }}>
+                  Trade open @ ${signalData.pending_trade.entry_price?.toFixed(2)} · {signalData.pending_trade.side} · awaiting next candle close
+                </div>
+              </div>
+            )}
+
+            {/* Blocked */}
+            {signalData.blocked && !signalData.pending_trade && (
+              <div style={{ margin: "12px 18px 0", padding: "10px 14px", borderRadius: 12, background: "rgba(220,38,38,0.08)", border: "1px solid rgba(248,113,113,0.25)", fontSize: 12, color: "#fca5a5", lineHeight: 1.5 }}>
+                <b style={{ color: "#ff5078" }}>Blocked — </b>{signalData.blocked.replace(/^BLOCKED \([^)]+\):\s*/, "")}
+              </div>
+            )}
+
+            {/* 4 layers */}
+            {signalData.breakdown && (
+              <div style={{ padding: 14, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2,1fr)", gap: 10 }}>
+                {(["regime", "direction", "entry", "momentum"] as const).map((key) => {
+                  const l = signalData.breakdown![key];
+                  if (!l) return null;
+                  const ok = !!l.ok;
+                  const layerScore = typeof l.score === "number" ? l.score : (ok ? 0.8 : 0.2);
+                  const meta = LAYER_META[key];
+                  const barColor = ok ? "#00ff9d" : "#ff5078";
+
+                  return (
+                    <div key={key} style={{
+                      borderRadius: 14, padding: "12px 14px",
+                      background: ok ? "rgba(0,255,157,0.04)" : "rgba(255,80,120,0.04)",
+                      border: `1px solid ${ok ? "rgba(0,255,157,0.15)" : "rgba(255,80,120,0.15)"}`,
+                    }}>
+                      {/* Layer title row */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontSize: 15 }}>{meta.icon}</span>
+                          <span style={{ fontWeight: 950, fontSize: 13 }}>{meta.label}</span>
+                          <span style={{ fontSize: 10, opacity: 0.45, fontWeight: 700 }}>({meta.weight})</span>
+                        </div>
+                        <div style={{
+                          fontSize: 11, fontWeight: 900, padding: "3px 9px", borderRadius: 999,
+                          background: ok ? "rgba(0,255,157,0.15)" : "rgba(255,80,120,0.15)",
+                          color: ok ? "#00ff9d" : "#ff5078",
+                          border: `1px solid ${ok ? "rgba(0,255,157,0.25)" : "rgba(255,80,120,0.25)"}`,
+                        }}>
+                          {ok ? "✓ PASS" : "✗ FAIL"}
+                        </div>
+                      </div>
+
+                      {/* Score bar */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                        <div style={{ flex: 1, height: 4, borderRadius: 99, background: "rgba(255,255,255,0.07)" }}>
+                          <div style={{ height: "100%", width: `${Math.min(100, layerScore * 100)}%`, borderRadius: 99, background: barColor, opacity: 0.85, transition: "width 0.5s ease" }} />
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 800, color: barColor, minWidth: 28, textAlign: "right" }}>{(layerScore * 100).toFixed(0)}%</span>
+                      </div>
+
+                      {/* Detail line */}
+                      <div style={{ fontSize: 11, color: ok ? "rgba(255,255,255,0.55)" : "#fca5a5", lineHeight: 1.5 }}>
+                        {ok ? meta.desc(l) : (l.reason || "—")}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Session quality footer */}
+            {signalData.breakdown?.session && (
+              <div style={{ padding: "10px 18px", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", gap: 16, fontSize: 12, opacity: 0.55 }}>
+                <span>Session: <b style={{ opacity: 1, color: "white" }}>{signalData.breakdown.session.label}</b></span>
+                <span>Quality: <b style={{ opacity: 1, color: "white" }}>{((signalData.breakdown.session.quality ?? 1) * 100).toFixed(0)}%</b></span>
+                <span>Raw score: <b style={{ opacity: 1, color: "white" }}>{((signalData.breakdown.session.raw_score ?? 0) * 100).toFixed(0)}%</b></span>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Risk Inputs + Preview Reason */}
       <div
@@ -616,7 +621,7 @@ export default function MiniAsym() {
       >
         <div style={{ fontWeight: 950 }}>Risk Inputs (Preview)</div>
 
-        <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
           <div>
             <div style={{ fontSize: 12, opacity: 0.75 }}>Symbol</div>
             <input
@@ -692,7 +697,7 @@ export default function MiniAsym() {
           </button>
         </div>
 
-        <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+        <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 10 }}>
           <div>
             <div style={{ fontSize: 12, opacity: 0.75 }}>Size %</div>
             <input

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as api from "../lib/api";
+import useIsMobile from "../hooks/useIsMobile";
 
 type RiskMode = "ULTRA_SAFE" | "SAFE" | "NORMAL" | "MINI_ASYM" | "AGGRESSIVE";
 type Side = "LONG" | "SHORT";
@@ -59,6 +60,7 @@ function toDateInputValue(d: Date) {
 
 export default function History() {
   const nav = useNavigate();
+  const isMobile = useIsMobile();
 
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
@@ -132,12 +134,14 @@ export default function History() {
 
   return (
     <div style={{ maxWidth: 1200 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", gap: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "end", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontSize: 26, fontWeight: 950 }}>History</div>
-          <div style={{ opacity: 0.7, marginTop: 6 }}>
-            Full history (persistent). Filter by date. Click a row to view reason. Click symbol to open chart.
-          </div>
+          <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 950 }}>History</div>
+          {!isMobile && (
+            <div style={{ opacity: 0.7, marginTop: 6 }}>
+              Full history (persistent). Filter by date. Click a row to view reason. Click symbol to open chart.
+            </div>
+          )}
         </div>
 
         <button
@@ -166,7 +170,7 @@ export default function History() {
           background: "rgba(9, 15, 30, 0.92)",
           border: "1px solid rgba(255,255,255,0.08)",
           display: "grid",
-          gridTemplateColumns: "1fr 220px 220px 180px 180px",
+          gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 200px 200px 160px 160px",
           gap: 10,
         }}
       >
@@ -304,80 +308,101 @@ export default function History() {
           </div>
         </div>
 
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead>
-              <tr style={{ textAlign: "left", opacity: 0.8 }}>
-                <th style={{ padding: 12 }}>Time</th>
-                <th style={{ padding: 12 }}>Symbol</th>
-                <th style={{ padding: 12 }}>Side</th>
-                <th style={{ padding: 12 }}>Mode</th>
-                <th style={{ padding: 12 }}>Size</th>
-                <th style={{ padding: 12 }}>SL</th>
-                <th style={{ padding: 12 }}>TP</th>
-                <th style={{ padding: 12 }}>Lev</th>
-                <th style={{ padding: 12 }}>Equity</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={9} style={{ padding: 16, opacity: 0.7 }}>
-                    No trades in this range.
-                  </td>
+        {isMobile ? (
+          /* Mobile: card list */
+          <div style={{ padding: "0 0 8px" }}>
+            {filtered.length === 0 ? (
+              <div style={{ padding: 16, opacity: 0.7 }}>No trades in this range.</div>
+            ) : (
+              filtered.slice(0, 500).map((t, i) => (
+                <div
+                  key={t.id ?? i}
+                  onClick={() => openReason(t)}
+                  style={{
+                    padding: "12px 14px",
+                    borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.06)",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                    <button
+                      onClick={(ev) => { ev.stopPropagation(); nav(`/market/${encodeURIComponent(t.symbol)}`); }}
+                      style={{ border: "1px solid rgba(0,255,224,0.22)", background: "rgba(0,255,224,0.08)", color: "white", padding: "5px 10px", borderRadius: 999, cursor: "pointer", fontWeight: 900, fontSize: 13 }}
+                    >
+                      {t.symbol}
+                    </button>
+                    <span style={{ fontWeight: 900, fontSize: 13, color: t.side === "LONG" ? "#00ffe0" : "#ff5078" }}>{t.side}</span>
+                    <span style={{ fontWeight: 950, fontSize: 13 }}>${fmtMoney(Number(t.equity_after ?? 0))}</span>
+                  </div>
+                  <div style={{ marginTop: 4, fontSize: 11, opacity: 0.5, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                    <span>{timeLabel(t)}</span>
+                    <span>{(t.mode || "MINI_ASYM").replace("_", " ")}</span>
+                    <span>Lev {fmtNum(Number(t.leverage ?? 0), 0)}×</span>
+                    <span>SL {fmtNum(Number(t.sl ?? 0), 2)}</span>
+                    <span>TP {fmtNum(Number(t.tp ?? 0), 2)}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        ) : (
+          /* Desktop: full table */
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ textAlign: "left", opacity: 0.8 }}>
+                  <th style={{ padding: 12 }}>Time</th>
+                  <th style={{ padding: 12 }}>Symbol</th>
+                  <th style={{ padding: 12 }}>Side</th>
+                  <th style={{ padding: 12 }}>Mode</th>
+                  <th style={{ padding: 12 }}>Size</th>
+                  <th style={{ padding: 12 }}>SL</th>
+                  <th style={{ padding: 12 }}>TP</th>
+                  <th style={{ padding: 12 }}>Lev</th>
+                  <th style={{ padding: 12 }}>Equity</th>
                 </tr>
-              ) : (
-                filtered.slice(0, 500).map((t, i) => (
-                  <tr
-                    key={t.id ?? i}
-                    onClick={() => openReason(t)}
-                    title="Click to view reason"
-                    style={{
-                      borderTop: "1px solid rgba(255,255,255,0.06)",
-                      cursor: "pointer",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                  >
-                    <td style={{ padding: 12, opacity: 0.9 }}>{timeLabel(t)}</td>
-
-                    <td style={{ padding: 12 }}>
-                      <button
-                        onClick={(ev) => {
-                          ev.stopPropagation();
-                          nav(`/market/${encodeURIComponent(t.symbol)}`);
-                        }}
-                        style={{
-                          border: "1px solid rgba(0,255,224,0.22)",
-                          background: "rgba(0,255,224,0.08)",
-                          color: "white",
-                          padding: "6px 10px",
-                          borderRadius: 999,
-                          cursor: "pointer",
-                          fontWeight: 900,
-                        }}
-                        title="Open chart"
-                      >
-                        {t.symbol}
-                      </button>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} style={{ padding: 16, opacity: 0.7 }}>
+                      No trades in this range.
                     </td>
-
-                    <td style={{ padding: 12, fontWeight: 900, color: t.side === "LONG" ? "#00ffe0" : "#ff5078" }}>
-                      {t.side}
-                    </td>
-
-                    <td style={{ padding: 12, opacity: 0.9 }}>{(t.mode || "MINI_ASYM").replace("_", " ")}</td>
-                    <td style={{ padding: 12 }}>{fmtNum(Number(t.size ?? 0), 2)}</td>
-                    <td style={{ padding: 12 }}>{fmtNum(Number(t.sl ?? 0), 2)}</td>
-                    <td style={{ padding: 12 }}>{fmtNum(Number(t.tp ?? 0), 2)}</td>
-                    <td style={{ padding: 12 }}>{fmtNum(Number(t.leverage ?? 0), 2)}</td>
-                    <td style={{ padding: 12, fontWeight: 950 }}>${fmtMoney(Number(t.equity_after ?? 0))}</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ) : (
+                  filtered.slice(0, 500).map((t, i) => (
+                    <tr
+                      key={t.id ?? i}
+                      onClick={() => openReason(t)}
+                      title="Click to view reason"
+                      style={{ borderTop: "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                    >
+                      <td style={{ padding: 12, opacity: 0.9 }}>{timeLabel(t)}</td>
+                      <td style={{ padding: 12 }}>
+                        <button
+                          onClick={(ev) => { ev.stopPropagation(); nav(`/market/${encodeURIComponent(t.symbol)}`); }}
+                          style={{ border: "1px solid rgba(0,255,224,0.22)", background: "rgba(0,255,224,0.08)", color: "white", padding: "6px 10px", borderRadius: 999, cursor: "pointer", fontWeight: 900 }}
+                          title="Open chart"
+                        >
+                          {t.symbol}
+                        </button>
+                      </td>
+                      <td style={{ padding: 12, fontWeight: 900, color: t.side === "LONG" ? "#00ffe0" : "#ff5078" }}>{t.side}</td>
+                      <td style={{ padding: 12, opacity: 0.9 }}>{(t.mode || "MINI_ASYM").replace("_", " ")}</td>
+                      <td style={{ padding: 12 }}>{fmtNum(Number(t.size ?? 0), 2)}</td>
+                      <td style={{ padding: 12 }}>{fmtNum(Number(t.sl ?? 0), 2)}</td>
+                      <td style={{ padding: 12 }}>{fmtNum(Number(t.tp ?? 0), 2)}</td>
+                      <td style={{ padding: 12 }}>{fmtNum(Number(t.leverage ?? 0), 2)}</td>
+                      <td style={{ padding: 12, fontWeight: 950 }}>${fmtMoney(Number(t.equity_after ?? 0))}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Modal */}

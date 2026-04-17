@@ -14,6 +14,7 @@ import AdminUser from "./pages/AdminUser";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
 import AcceptTerms from "./pages/AcceptTerms";
 import Terms from "./pages/Terms";
 import RiskDisclosure from "./pages/RiskDisclosure";
@@ -96,9 +97,10 @@ export default function App() {
   if (!authed) {
     return (
       <Routes>
-        <Route path="/login"  element={<Login onLoggedIn={loadSession} />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="*"       element={<Navigate to="/login" replace />} />
+        <Route path="/login"            element={<Login onLoggedIn={loadSession} />} />
+        <Route path="/signup"           element={<Signup />} />
+        <Route path="/forgot-password"  element={<ForgotPassword />} />
+        <Route path="*"                 element={<Navigate to="/login" replace />} />
       </Routes>
     );
   }
@@ -193,7 +195,7 @@ export default function App() {
         )}
 
         {/* Page content */}
-        <main style={{ padding: 14, paddingBottom: 24 }}>
+        <main style={{ padding: 10, paddingBottom: 20 }}>
           <Routes>
             <Route path="/"           element={<Dashboard />} />
             <Route path="/market"     element={<Market />} />

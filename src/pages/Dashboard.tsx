@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./dashboard.css";
 import { api } from "../lib/api";
+import useIsMobile from "../hooks/useIsMobile";
 
 type RiskMode = "ULTRA_SAFE" | "SAFE" | "NORMAL" | "MINI_ASYM" | "AGGRESSIVE";
 type Side = "LONG" | "SHORT";
@@ -320,6 +321,7 @@ function EquityCurveChart({
 
 export default function Dashboard() {
   const nav = useNavigate();
+  const isMobile = useIsMobile();
 
   const topCoins = useMemo(
     () => ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "BNBUSDT"],
@@ -716,31 +718,24 @@ export default function Dashboard() {
           style={{
             marginTop: 10,
             display: "flex",
-            gap: 10,
+            gap: 8,
             alignItems: "center",
             flexWrap: "wrap",
+            fontSize: isMobile ? 11 : 13,
           }}
         >
           <div
             style={{
-              padding: "8px 12px",
+              padding: isMobile ? "6px 10px" : "8px 12px",
               borderRadius: 999,
               border: "1px solid rgba(255,255,255,0.10)",
-              background: connected
-                ? "rgba(0,255,224,0.10)"
-                : "rgba(255,80,120,0.10)",
+              background: connected ? "rgba(0,255,224,0.10)" : "rgba(255,80,120,0.10)",
               fontWeight: 900,
             }}
           >
             Exchange:{" "}
             {connected ? (
-              <>
-                Connected (
-                <span style={{ opacity: 0.9 }}>{exStatus?.exchange}</span>){" "}
-                <span style={{ opacity: 0.7 }}>
-                  • {exStatus?.api_key_masked}
-                </span>
-              </>
+              <><span style={{ opacity: 0.9 }}>{exStatus?.exchange}</span></>
             ) : (
               "Not Connected"
             )}
@@ -750,29 +745,30 @@ export default function Dashboard() {
             <button
               onClick={() => nav("/exchange")}
               style={{
-                borderRadius: 14,
+                borderRadius: 12,
                 border: "1px solid rgba(0,255,224,0.22)",
                 background: "rgba(0,255,224,0.10)",
                 color: "white",
-                padding: "10px 12px",
+                padding: isMobile ? "6px 10px" : "10px 12px",
                 fontWeight: 950,
                 cursor: "pointer",
+                fontSize: isMobile ? 11 : 13,
               }}
             >
-              Connect Exchange First
+              Connect Exchange
             </button>
           )}
 
           <div
             style={{
-              padding: "8px 12px",
+              padding: isMobile ? "6px 10px" : "8px 12px",
               borderRadius: 999,
               border: "1px solid rgba(255,255,255,0.10)",
-              background: aiRunning
-                ? "rgba(0,255,224,0.10)"
-                : "rgba(255,255,255,0.04)",
+              background: aiRunning ? "rgba(0,255,224,0.10)" : "rgba(255,255,255,0.04)",
               fontWeight: 950,
               maxWidth: "100%",
+              fontSize: isMobile ? 10 : 12,
+              wordBreak: "break-word",
             }}
             title={aiTitle}
           >
@@ -783,13 +779,14 @@ export default function Dashboard() {
             type="button"
             onClick={() => setAiLogOpen(true)}
             style={{
-              borderRadius: 14,
+              borderRadius: 12,
               border: "1px solid rgba(255,255,255,0.10)",
               background: "rgba(255,255,255,0.04)",
               color: "white",
-              padding: "10px 12px",
+              padding: isMobile ? "6px 10px" : "10px 12px",
               fontWeight: 900,
               cursor: "pointer",
+              fontSize: isMobile ? 11 : 13,
             }}
           >
             AI Log
@@ -832,25 +829,24 @@ export default function Dashboard() {
             </div>
 
             {/* 3 ── Trading Style */}
-            <div style={{ marginTop: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", opacity: 0.4, marginBottom: 8 }}>Trading Style (AI)</div>
-              <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ marginTop: isMobile ? 10 : 14 }}>
+              <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", opacity: 0.4, marginBottom: 6 }}>Trading Style (AI)</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: isMobile ? 6 : 8 }}>
                 {([
-                  { id: "SCALP",     tf: "15m", sl: "0.8×ATR", tp: "1.6×ATR", freq: "~4–6 trades/day" },
-                  { id: "DAY_TRADE", tf: "1h",  sl: "1.0×ATR", tp: "2.0×ATR", freq: "~2–4 trades/day" },
-                  { id: "SWING",     tf: "4h",  sl: "1.5×ATR", tp: "3.0×ATR", freq: "~1–2 trades/day" },
+                  { id: "SCALP",     tf: "15m", sl: "0.8×ATR", tp: "1.6×ATR", freq: "~4–6/day" },
+                  { id: "DAY_TRADE", tf: "1h",  sl: "1.0×ATR", tp: "2.0×ATR", freq: "~2–4/day" },
+                  { id: "SWING",     tf: "4h",  sl: "1.5×ATR", tp: "3.0×ATR", freq: "~1–2/day" },
                 ] as { id: TradeStyle; tf: string; sl: string; tp: string; freq: string }[]).map((s) => {
                   const active = tradeStyle === s.id;
                   return (
                     <button key={s.id} type="button" onClick={() => setTradeStyle(s.id)} style={{
-                      flex: 1, padding: "10px 10px", borderRadius: 10, cursor: "pointer", textAlign: "left",
+                      padding: isMobile ? "7px 8px" : "10px 10px", borderRadius: 10, cursor: "pointer", textAlign: "left",
                       border: active ? "1.5px solid rgba(0,255,224,0.55)" : "1px solid rgba(255,255,255,0.08)",
                       background: active ? "rgba(0,255,224,0.09)" : "rgba(255,255,255,0.03)",
                       color: "white", transition: "all 0.14s",
                     }}>
-                      <div style={{ fontWeight: 900, fontSize: 13, color: active ? "#00ffe0" : "rgba(255,255,255,0.9)" }}>{s.id.replace("_", " ")}</div>
-                      <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 3 }}>{s.tf} · SL {s.sl} · TP {s.tp}</div>
-                      <div style={{ fontSize: 10, color: "#64748b", marginTop: 2 }}>{s.freq}</div>
+                      <div style={{ fontWeight: 900, fontSize: isMobile ? 11 : 13, color: active ? "#00ffe0" : "rgba(255,255,255,0.9)" }}>{s.id.replace("_", " ")}</div>
+                      <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 2 }}>{s.tf} · {s.freq}</div>
                     </button>
                   );
                 })}
@@ -858,7 +854,7 @@ export default function Dashboard() {
             </div>
 
             {/* 4 ── Duration + Size config */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginTop: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr 1fr", gap: 8, marginTop: isMobile ? 10 : 14 }}>
               <div className="field">
                 <label>Duration (days)</label>
                 <input className="input" type="number" min={0} max={365} step={1}
@@ -883,8 +879,8 @@ export default function Dashboard() {
             </div>
 
             {/* 5 ── Manual trade size/SL/TP/leverage */}
-            <div style={{ marginTop: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", opacity: 0.4, marginBottom: 8 }}>Size / SL / TP (manual trade)</div>
+            <div style={{ marginTop: isMobile ? 10 : 14 }}>
+              <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", opacity: 0.4, marginBottom: 6 }}>Size / SL / TP (manual trade)</div>
               <div className="grid4">
                 <div className="field">
                   <label>Size %</label>
@@ -911,7 +907,7 @@ export default function Dashboard() {
               <button className={`sideBtn short ${side === "SHORT" ? "active" : ""}`} type="button" onClick={() => setSide("SHORT")}>SHORT</button>
             </div>
 
-            <div className="actions" style={{ gap: 8, display: "flex", flexWrap: "wrap", marginTop: 10 }}>
+            <div className="actions" style={{ gap: 8, marginTop: isMobile ? 8 : 10 }}>
               <button className="primary" type="button" onClick={startAI} disabled={!connected || aiRunning}>
                 {aiRunning ? "AI Running" : "Start AI"}
               </button>
@@ -967,46 +963,51 @@ export default function Dashboard() {
             <div className="hint">{trades.length} total (current session)</div>
           </div>
 
-          <div className="tableWrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Symbol</th>
-                  <th>Side</th>
-                  <th>Mode</th>
-                  <th>Size</th>
-                  <th>SL</th>
-                  <th>TP</th>
-                  <th>Lev</th>
-                  <th>Equity</th>
-                  <th>Reason</th>
-                </tr>
-              </thead>
-              <tbody>
-                {trades.length === 0 ? (
+          {isMobile ? (
+            <div style={{ padding: "8px 12px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
+              {trades.length === 0 ? (
+                <div style={{ opacity: 0.55, fontSize: 12, padding: "10px 0" }}>No trades in this session (try Start AI).</div>
+              ) : trades.slice(0, 8).map((t, i) => {
+                const isWin = (t.equity_after ?? 0) > 0;
+                return (
+                  <div key={t.id ?? i} style={{
+                    borderRadius: 12, padding: "9px 12px",
+                    background: "rgba(255,255,255,0.03)",
+                    border: `1px solid ${t.side === "LONG" ? "rgba(0,255,209,0.15)" : "rgba(255,80,120,0.15)"}`,
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                  }}>
+                    <div>
+                      <span style={{ fontWeight: 950, fontSize: 13, color: t.side === "LONG" ? "#00ffd1" : "#ff5078" }}>{t.side}</span>
+                      <span style={{ fontSize: 12, opacity: 0.75, marginLeft: 8 }}>{t.symbol}</span>
+                      <div style={{ fontSize: 10, opacity: 0.5, marginTop: 2 }}>{((t.time || t.created_at) ?? "").toString().slice(0, 16)}</div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontWeight: 950, fontSize: 13 }}>${fmtMoney(Number(t.equity_after ?? 0))}</div>
+                      <div style={{ fontSize: 10, opacity: 0.6 }}>Lev {Number(t.leverage ?? 0).toFixed(1)}x</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="tableWrap">
+              <table className="table">
+                <thead>
                   <tr>
-                    <td colSpan={10} className="empty">
-                      No trades in this session (try Start AI).
-                    </td>
+                    <th>Time</th><th>Symbol</th><th>Side</th><th>Mode</th>
+                    <th>Size</th><th>SL</th><th>TP</th><th>Lev</th><th>Equity</th><th>Reason</th>
                   </tr>
-                ) : (
-                  trades.slice(0, 12).map((t, i) => {
+                </thead>
+                <tbody>
+                  {trades.length === 0 ? (
+                    <tr><td colSpan={10} className="empty">No trades in this session (try Start AI).</td></tr>
+                  ) : trades.slice(0, 12).map((t, i) => {
                     const when = ((t.time || t.created_at) ?? "-").toString();
-                    const shortReason =
-                      (t.reason || "")
-                        .split("\n")
-                        .slice(0, 2)
-                        .join(" • ")
-                        .slice(0, 90) || "-";
-
+                    const shortReason = (t.reason || "").split("\n").slice(0, 2).join(" • ").slice(0, 90) || "-";
                     return (
                       <tr key={t.id ?? i}>
-                        <td>{when}</td>
-                        <td>{t.symbol}</td>
-                        <td className={t.side === "LONG" ? "good" : "bad"}>
-                          {t.side}
-                        </td>
+                        <td>{when}</td><td>{t.symbol}</td>
+                        <td className={t.side === "LONG" ? "good" : "bad"}>{t.side}</td>
                         <td>{t.mode || "-"}</td>
                         <td>{Number(t.size ?? 0).toFixed(2)}</td>
                         <td>{Number(t.sl ?? 0).toFixed(2)}</td>
@@ -1015,37 +1016,18 @@ export default function Dashboard() {
                         <td>${fmtMoney(Number(t.equity_after ?? 0))}</td>
                         <td>
                           {t.reason ? (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setReasonText(t.reason || "");
-                                setReasonOpen(true);
-                              }}
-                              style={{
-                                borderRadius: 12,
-                                border: "1px solid rgba(255,255,255,0.10)",
-                                background: "rgba(255,255,255,0.04)",
-                                color: "white",
-                                padding: "8px 10px",
-                                cursor: "pointer",
-                                fontWeight: 850,
-                                maxWidth: 260,
-                              }}
-                              title="View full reason"
-                            >
-                              {shortReason}
-                            </button>
-                          ) : (
-                            <span style={{ opacity: 0.7 }}>-</span>
-                          )}
+                            <button type="button" onClick={() => { setReasonText(t.reason || ""); setReasonOpen(true); }}
+                              style={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.04)", color: "white", padding: "8px 10px", cursor: "pointer", fontWeight: 850, maxWidth: 260 }}
+                              title="View full reason">{shortReason}</button>
+                          ) : <span style={{ opacity: 0.7 }}>-</span>}
                         </td>
                       </tr>
                     );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         {/* AI Log modal */}
