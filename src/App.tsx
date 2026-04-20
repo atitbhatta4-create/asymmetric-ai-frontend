@@ -9,6 +9,7 @@ import MarketChart from "./pages/MarketChart";
 import Exchange from "./pages/Exchange";
 import History from "./pages/History";
 import MiniAsym from "./pages/MiniAsym";
+import Portfolio from "./pages/Portfolio";
 import Admin from "./pages/Admin";
 import AdminUser from "./pages/AdminUser";
 import Settings from "./pages/Settings";
@@ -26,12 +27,13 @@ function termsKey(email: string | null) {
 }
 
 const NAV_ITEMS = [
-  { to: "/",          label: "Dashboard" },
-  { to: "/market",    label: "Market"    },
-  { to: "/exchange",  label: "Exchange"  },
-  { to: "/history",   label: "History"   },
-  { to: "/mini-asym", label: "Mini-Asym" },
-  { to: "/settings",  label: "Settings"  },
+  { to: "/",           label: "Dashboard" },
+  { to: "/market",     label: "Market"    },
+  { to: "/exchange",   label: "Exchange"  },
+  { to: "/history",    label: "History"   },
+  { to: "/portfolio",  label: "Portfolio" },
+  { to: "/mini-asym",  label: "Mini-Asym" },
+  { to: "/settings",   label: "Settings"  },
 ];
 
 export default function App() {
@@ -203,6 +205,7 @@ export default function App() {
             <Route path="/exchange"   element={<Exchange />} />
             <Route path="/history"    element={<History />} />
             <Route path="/mini-asym"  element={<MiniAsym />} />
+            <Route path="/portfolio"  element={<Portfolio />} />
             <Route path="/settings"   element={<Settings />} />
             <Route path="/admin"      element={isAdmin ? <Admin /> : <Navigate to="/" replace />} />
             <Route path="/admin/user/:email" element={isAdmin ? <AdminUser /> : <Navigate to="/" replace />} />
@@ -262,6 +265,7 @@ export default function App() {
           <Route path="/exchange"   element={<Exchange />} />
           <Route path="/history"    element={<History />} />
           <Route path="/mini-asym"  element={<MiniAsym />} />
+          <Route path="/portfolio"  element={<Portfolio />} />
           <Route path="/settings"   element={<Settings />} />
           <Route path="/admin"      element={isAdmin ? <Admin /> : <Navigate to="/" replace />} />
           <Route path="/admin/user/:email" element={isAdmin ? <AdminUser /> : <Navigate to="/" replace />} />
