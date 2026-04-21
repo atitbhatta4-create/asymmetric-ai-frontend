@@ -77,7 +77,7 @@ function Hero({ onCTA }: { onCTA: () => void }) {
 
       <div style={{ position: "relative", maxWidth: 780 }}>
         <div style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: "clamp(13px,1.8vw,16px)", fontWeight: 950, color: T, letterSpacing: ".18em", textTransform: "uppercase", marginBottom: 14, opacity: 0.7 }}>Asymmetric AI</div>
+          <div style={{ fontSize: "clamp(18px,2.8vw,26px)", fontWeight: 950, color: T, letterSpacing: ".18em", textTransform: "uppercase", marginBottom: 14, opacity: 0.7 }}>Asymmetric AI</div>
           <Chip>Non-Custodial · Your Keys Always</Chip>
         </div>
 
