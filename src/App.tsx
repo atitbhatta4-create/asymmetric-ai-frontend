@@ -13,6 +13,7 @@ import Portfolio from "./pages/Portfolio";
 import Admin from "./pages/Admin";
 import AdminUser from "./pages/AdminUser";
 import Settings from "./pages/Settings";
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -99,10 +100,11 @@ export default function App() {
   if (!authed) {
     return (
       <Routes>
+        <Route path="/"                 element={<Landing />} />
         <Route path="/login"            element={<Login onLoggedIn={loadSession} />} />
         <Route path="/signup"           element={<Signup />} />
         <Route path="/forgot-password"  element={<ForgotPassword />} />
-        <Route path="*"                 element={<Navigate to="/login" replace />} />
+        <Route path="*"                 element={<Navigate to="/" replace />} />
       </Routes>
     );
   }
