@@ -181,50 +181,128 @@ function Problem() {
 
 // ── engine section ────────────────────────────────────────────────────────────
 function Engine() {
+  const [active, setActive] = useState(0);
+
   const layers = [
-    { n: "01", name: "Regime", q: "Is there a trend worth trading?", checks: ["ADX ≥ 16 (real trend strength)", "ATR in safe volatility range", "Not choppy sideways market"], color: GN },
-    { n: "02", name: "Direction", q: "Which way is the big money moving?", checks: ["4h EMA21 vs EMA50 alignment", "EMA spread widening confirmation", "Higher timeframe trend agree"], color: "#00b8ff" },
-    { n: "03", name: "Entry", q: "Is NOW the right moment?", checks: ["Price in pullback zone from EMA21", "Candle pattern quality (pin bar, engulf)", "RSI not overbought/oversold"], color: "rgba(120,90,255,.95)" },
-    { n: "04", name: "Momentum", q: "Is the move actually starting?", checks: ["Last N candles aligned with direction", "Volume ≥ 0.15× 20-candle average", "No fake/whale manipulation detected"], color: YL },
+    {
+      n: "01", name: "Regime", icon: "📡",
+      q: "Is there a trend worth trading?",
+      desc: "The engine first checks if the market is in a real trend — not choppy sideways noise. If the market isn't moving with conviction, no trade is taken. Capital is preserved for better conditions.",
+      checks: ["ADX ≥ 16 — real trend strength confirmed", "ATR in safe volatility range", "Choppy/ranging market detected → skip"],
+      color: GN, score: 94,
+    },
+    {
+      n: "02", name: "Direction", icon: "🧭",
+      q: "Which way is the big money moving?",
+      desc: "Once a trend is confirmed, the engine identifies the dominant direction using higher timeframe EMA alignment. It only trades with the trend — never against it.",
+      checks: ["4h EMA21 above/below EMA50", "EMA spread widening (trend accelerating)", "Higher timeframe agrees with local signal"],
+      color: "#00b8ff", score: 88,
+    },
+    {
+      n: "03", name: "Entry", icon: "🎯",
+      q: "Is this the right moment to enter?",
+      desc: "Even in a strong trend, entries matter. The engine waits for a pullback to the EMA21 with a quality candle pattern — pin bar, engulfing, or reversal. No chasing breakouts.",
+      checks: ["Price pulled back to EMA21 zone", "Candle pattern: pin bar / engulfing", "RSI not overbought or oversold"],
+      color: "#7c5aff", score: 76,
+    },
+    {
+      n: "04", name: "Momentum", icon: "⚡",
+      q: "Is the move actually starting now?",
+      desc: "The final gate. The engine checks that real momentum is behind the move — not a fake spike. Volume must confirm the direction and recent candles must align. No whale traps.",
+      checks: ["Recent candles aligned with direction", "Volume ≥ 0.15× 20-candle average", "No fake spike / manipulation pattern"],
+      color: YL, score: 81,
+    },
   ];
+
+  const l = layers[active];
+
   return (
     <section id="how" style={{ padding: "80px 24px", maxWidth: 1080, margin: "0 auto" }}>
       <div style={{ textAlign: "center", marginBottom: 56 }}>
         <Chip>The Mini-Asym Engine</Chip>
         <h2 style={h2Style}>4 Layers. All Must Pass.</h2>
-        <p style={subStyle}>If any single layer fails, no trade is taken. Capital stays safe.</p>
+        <p style={subStyle}>If any single layer fails, no trade is taken. Your capital stays safe until conditions are right.</p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(230px,1fr))", gap: 14 }}>
-        {layers.map((l, i) => (
-          <div key={l.n} style={{ ...cardStyle(), padding: "22px 20px", borderColor: `${l.color}33` }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: `${l.color}18`, border: `1px solid ${l.color}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 900, color: l.color }}>L{i+1}</div>
-              <span style={{ fontSize: 14, fontWeight: 900, color: T }}>{l.name}</span>
+      {/* layer selector tabs */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 20 }}>
+        {layers.map((layer, i) => (
+          <button key={i} onClick={() => setActive(i)} style={{
+            padding: "14px 12px", borderRadius: 12, cursor: "pointer", textAlign: "left",
+            border: `1px solid ${active === i ? `${layer.color}55` : BDR2}`,
+            background: active === i ? `${layer.color}10` : "rgba(255,255,255,.02)",
+            transition: "all .18s ease",
+          }}>
+            <div style={{ fontSize: 18, marginBottom: 6 }}>{layer.icon}</div>
+            <div style={{ fontSize: 10, fontWeight: 900, color: S, letterSpacing: ".08em", marginBottom: 3 }}>LAYER {layer.n}</div>
+            <div style={{ fontSize: 13, fontWeight: 900, color: active === i ? layer.color : T }}>{layer.name}</div>
+            {/* score bar */}
+            <div style={{ marginTop: 10, height: 3, borderRadius: 99, background: "rgba(255,255,255,.08)" }}>
+              <div style={{ height: "100%", borderRadius: 99, width: `${layer.score}%`, background: layer.color, opacity: active === i ? 1 : 0.4 }} />
             </div>
-            <div style={{ fontSize: 12, color: l.color, fontWeight: 800, marginBottom: 10 }}>{l.q}</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {l.checks.map(c => (
-                <div key={c} style={{ display: "flex", gap: 8, fontSize: 11, color: M }}>
-                  <span style={{ color: l.color, flexShrink: 0 }}>✓</span>
-                  <span>{c}</span>
-                </div>
-              ))}
-            </div>
-            {i < layers.length - 1 && (
-              <div style={{ marginTop: 16, fontSize: 10, color: S, textAlign: "center" }}>
-                passes → Layer {i + 2}
-              </div>
-            )}
-          </div>
+          </button>
         ))}
       </div>
 
-      <div style={{ marginTop: 20, ...cardStyle(), padding: "16px 20px", borderColor: `${GN}33`, background: `${GN}06`, textAlign: "center" }}>
-        <span style={{ fontSize: 13, color: GN, fontWeight: 900 }}>All 4 pass → </span>
-        <span style={{ fontSize: 13, color: T, fontWeight: 800 }}>Grade A (full size) or Grade B (split T1+T2) — trade opens</span>
-        <span style={{ fontSize: 13, color: M }}> · Any layer fails → </span>
-        <span style={{ fontSize: 13, color: RD, fontWeight: 900 }}>No trade. Wait.</span>
+      {/* active layer detail */}
+      <div style={{ ...cardStyle(), borderColor: `${l.color}33`, background: `${l.color}06`, padding: "28px 28px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
+        {/* left */}
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: `${l.color}18`, border: `1px solid ${l.color}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>{l.icon}</div>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 900, color: S, letterSpacing: ".10em" }}>LAYER {l.n}</div>
+              <div style={{ fontSize: 20, fontWeight: 950, color: l.color }}>{l.name}</div>
+            </div>
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 900, color: T, marginBottom: 12, lineHeight: 1.4 }}>{l.q}</div>
+          <div style={{ fontSize: 13, color: M, lineHeight: 1.8 }}>{l.desc}</div>
+        </div>
+
+        {/* right — checks + signal score */}
+        <div>
+          <div style={{ fontSize: 10, fontWeight: 900, color: S, letterSpacing: ".10em", marginBottom: 14 }}>WHAT IT CHECKS</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+            {l.checks.map((c, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <div style={{ width: 20, height: 20, borderRadius: 6, background: `${l.color}18`, border: `1px solid ${l.color}33`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                  <span style={{ fontSize: 10, color: l.color, fontWeight: 900 }}>✓</span>
+                </div>
+                <span style={{ fontSize: 13, color: T, lineHeight: 1.5 }}>{c}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* signal strength meter */}
+          <div style={{ padding: "14px 16px", borderRadius: 10, background: "rgba(0,0,0,.22)", border: `1px solid ${BDR2}` }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+              <span style={{ fontSize: 10, fontWeight: 900, color: S, letterSpacing: ".08em" }}>LAYER SIGNAL STRENGTH</span>
+              <span style={{ fontSize: 12, fontWeight: 900, color: l.color }}>{l.score}%</span>
+            </div>
+            <div style={{ height: 6, borderRadius: 99, background: "rgba(255,255,255,.08)" }}>
+              <div style={{ height: "100%", borderRadius: 99, width: `${l.score}%`, background: `linear-gradient(90deg,${l.color},${l.color}88)` }} />
+            </div>
+            <div style={{ marginTop: 8, fontSize: 10, color: S }}>Passes this layer — signal forwarded to next</div>
+          </div>
+        </div>
+      </div>
+
+      {/* outcome row */}
+      <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <div style={{ ...cardStyle(), padding: "16px 20px", borderColor: `${GN}33`, background: `${GN}06`, display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ fontSize: 28 }}>✅</div>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 900, color: GN }}>All 4 pass → Trade Opens</div>
+            <div style={{ fontSize: 12, color: M, marginTop: 4 }}>Grade A = full position · Grade B = split T1 + T2 targets</div>
+          </div>
+        </div>
+        <div style={{ ...cardStyle(), padding: "16px 20px", borderColor: `${RD}33`, background: `${RD}06`, display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ fontSize: 28 }}>🚫</div>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 900, color: RD }}>Any layer fails → No Trade</div>
+            <div style={{ fontSize: 12, color: M, marginTop: 4 }}>Engine waits. Capital stays safe. No FOMO.</div>
+          </div>
+        </div>
       </div>
     </section>
   );
