@@ -85,9 +85,13 @@ function Hero({ onCTA }: { onCTA: () => void }) {
           <span style={{ color: GN }}>Not an Emotion.</span>
         </h1>
 
+        <p style={{ fontSize: "clamp(13px,1.5vw,16px)", color: GN, fontWeight: 800, marginBottom: 10, letterSpacing: ".02em" }}>
+          An AI trading system that follows rules, not emotions — so you don't have to.
+        </p>
+
         <p style={{ fontSize: "clamp(15px,2vw,20px)", color: M, lineHeight: 1.7, margin: "0 auto 36px", maxWidth: 620 }}>
           Asymmetric AI applies 4-layer institutional signal analysis and automatic
-          capital protection to your Bybit or OKX account — 24/7, discipline-first,
+          capital protection to your Binance, Bybit, or OKX account — 24/7, discipline-first,
           no guessing.
         </p>
 
@@ -275,7 +279,7 @@ function Protection() {
 function NonCustodial() {
   const points = [
     { icon: "🔑", title: "Trade-Only API Key", body: "You connect a read+trade API key. Withdrawals are always disabled at the exchange level. We physically cannot move your funds." },
-    { icon: "🏦", title: "Stays on Your Exchange", body: "Your crypto never leaves Bybit or OKX. We send trade instructions. Your exchange executes them. Your account, your custody." },
+    { icon: "🏦", title: "Stays on Your Exchange", body: "Your crypto never leaves Binance, Bybit, or OKX. We send trade instructions. Your exchange executes them. Your account, your custody." },
     { icon: "🔒", title: "Encrypted Storage", body: "Your API keys are encrypted with AES-128 (Fernet) at rest. Never stored in plain text. Never shared. Ever." },
   ];
   return (
@@ -339,7 +343,7 @@ function Returns() {
 function HowToStart({ onCTA }: { onCTA: () => void }) {
   const steps = [
     { n: "01", title: "Create Account", body: "Sign up with email. Takes 30 seconds." },
-    { n: "02", title: "Connect Exchange", body: "Add a trade-only API key from Bybit or OKX. Read+trade permissions only, withdrawals always blocked." },
+    { n: "02", title: "Connect Exchange", body: "Add a trade-only API key from Binance, Bybit, or OKX. Read+trade permissions only, withdrawals always blocked." },
     { n: "03", title: "Choose Your Mode", body: "ULTRA_SAFE to AGGRESSIVE. Pick based on your risk tolerance. You can change anytime." },
     { n: "04", title: "AI Runs 24/7", body: "Mini-Asym monitors the market every interval. Only trades when all 4 layers align. You watch the dashboard." },
   ];
@@ -371,46 +375,84 @@ function HowToStart({ onCTA }: { onCTA: () => void }) {
   );
 }
 
+// ── exchange logos strip ──────────────────────────────────────────────────────
+function Exchanges() {
+  const exchanges = [
+    { name: "Binance",  color: "#F0B90B", letter: "B", sub: "Supported" },
+    { name: "Bybit",    color: "#F7A600", letter: "B", sub: "Supported" },
+    { name: "OKX",      color: "#FFFFFF", letter: "O", sub: "Supported" },
+  ];
+  return (
+    <section style={{ padding: "48px 24px" }}>
+      <div style={{ maxWidth: 1080, margin: "0 auto", textAlign: "center" }}>
+        <div style={{ fontSize: 11, fontWeight: 900, color: S, letterSpacing: ".12em", textTransform: "uppercase", marginBottom: 28 }}>
+          Connect Your Exchange
+        </div>
+        <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
+          {exchanges.map(ex => (
+            <div key={ex.name} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 28px", borderRadius: 14, border: `1px solid ${BDR}`, background: "rgba(255,255,255,.03)" }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: `${ex.color}22`, border: `1px solid ${ex.color}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, color: ex.color }}>{ex.letter}</div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 900, color: T }}>{ex.name}</div>
+                <div style={{ fontSize: 10, color: GN, fontWeight: 800 }}>{ex.sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 16, fontSize: 12, color: S }}>
+          Trade-only API key · Withdrawals always disabled · Your funds never leave your exchange
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── modes section ─────────────────────────────────────────────────────────────
 function Modes() {
   const modes = [
-    { name: "ULTRA_SAFE",  size: "30%", lev: "2×", trades: "1/day",  score: "0.75", color: GN },
-    { name: "SAFE",        size: "45%", lev: "3×", trades: "2/day",  score: "0.68", color: GN },
-    { name: "NORMAL",      size: "60%", lev: "5×", trades: "3/day",  score: "0.62", color: YL },
-    { name: "MINI_ASYM",   size: "65%", lev: "6×", trades: "3/day",  score: "0.65", color: YL, flagship: true },
-    { name: "AGGRESSIVE",  size: "85%", lev: "8×", trades: "5/day",  score: "0.58", color: RD },
+    { icon: "🛡️", name: "ULTRA SAFE",  tagline: "I want maximum protection.", sub: "Grow slowly, never blow up.", best: "First time users",     color: GN,                     flagship: false },
+    { icon: "⚖️", name: "SAFE",        tagline: "I want steady growth with strong protection.", sub: "", best: "Conservative traders",  color: "#00d4ff",              flagship: false },
+    { icon: "🎯", name: "NORMAL",      tagline: "Balanced approach.", sub: "Good returns, managed risk.", best: "Most users",             color: YL,                     flagship: false },
+    { icon: "⚡", name: "MINI_ASYM",   tagline: "The flagship mode. Built for serious traders who trust the system.", sub: "", best: "Experienced traders",  color: GN, flagship: true  },
+    { icon: "🔥", name: "AGGRESSIVE",  tagline: "Maximum opportunity.", sub: "Higher risk, higher reward.", best: "Risk tolerant only",   color: RD,                     flagship: false },
   ];
   return (
     <section style={{ padding: "80px 24px", background: "rgba(0,0,0,.18)" }}>
       <div style={{ maxWidth: 1080, margin: "0 auto" }}>
         <div style={{ textAlign: "center", marginBottom: 48 }}>
           <Chip>Risk Modes</Chip>
-          <h2 style={h2Style}>You Control the Risk Level</h2>
+          <h2 style={h2Style}>Choose Your Risk Personality</h2>
           <p style={subStyle}>5 modes from ultra conservative to aggressive. Switch anytime.</p>
         </div>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 560 }}>
-            <thead>
-              <tr>
-                {["Mode", "Position Size", "Leverage", "Max Trades/Day", "Min Signal Score"].map(h => (
-                  <th key={h} style={{ textAlign: "left", fontSize: 10, fontWeight: 900, color: M, padding: "8px 14px", borderBottom: `1px solid ${BDR2}`, letterSpacing: ".06em", textTransform: "uppercase" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {modes.map(m => (
-                <tr key={m.name} style={{ background: m.flagship ? `${GN}07` : "transparent" }}>
-                  <td style={{ padding: "12px 14px", fontSize: 13, fontWeight: 900, color: m.color, borderBottom: `1px solid ${BDR2}` }}>
-                    {m.name} {m.flagship && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 999, background: `${GN}22`, color: GN, marginLeft: 6 }}>FLAGSHIP</span>}
-                  </td>
-                  <td style={{ padding: "12px 14px", fontSize: 13, color: T, borderBottom: `1px solid ${BDR2}` }}>{m.size}</td>
-                  <td style={{ padding: "12px 14px", fontSize: 13, color: T, borderBottom: `1px solid ${BDR2}` }}>{m.lev}</td>
-                  <td style={{ padding: "12px 14px", fontSize: 13, color: T, borderBottom: `1px solid ${BDR2}` }}>{m.trades}</td>
-                  <td style={{ padding: "12px 14px", fontSize: 13, color: T, borderBottom: `1px solid ${BDR2}` }}>{m.score}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 14 }}>
+          {modes.map(m => (
+            <div key={m.name} style={{
+              ...cardStyle(),
+              padding: "24px 20px",
+              borderColor: m.flagship ? `${GN}55` : `${m.color}22`,
+              background: m.flagship ? `${GN}07` : CARD,
+              position: "relative",
+            }}>
+              {m.flagship && (
+                <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", padding: "3px 12px", borderRadius: 999, background: GN, color: "#050814", fontSize: 9, fontWeight: 900, letterSpacing: ".08em", whiteSpace: "nowrap" }}>
+                  ★ FLAGSHIP
+                </div>
+              )}
+              <div style={{ fontSize: 28, marginBottom: 12 }}>{m.icon}</div>
+              <div style={{ fontSize: 14, fontWeight: 950, color: m.color, marginBottom: 8 }}>{m.name}</div>
+              <div style={{ fontSize: 13, color: T, fontWeight: 800, lineHeight: 1.5, marginBottom: 4 }}>{m.tagline}</div>
+              {m.sub && <div style={{ fontSize: 12, color: M, marginBottom: 10 }}>{m.sub}</div>}
+              <div style={{ marginTop: 14, paddingTop: 12, borderTop: `1px solid ${BDR2}` }}>
+                <span style={{ fontSize: 10, color: S, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase" }}>Best for  </span>
+                <span style={{ fontSize: 11, color: m.color, fontWeight: 900 }}>{m.best}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ marginTop: 20, textAlign: "center", fontSize: 12, color: S }}>
+          Full technical specs available after signup.
         </div>
       </div>
     </section>
@@ -423,7 +465,7 @@ function FAQ() {
   const items = [
     { q: "Is my money safe?", a: "Your funds never leave your exchange. You connect a trade-only API key with withdrawals disabled. We send trade signals — your exchange executes them. We cannot access, move, or withdraw your funds under any circumstance." },
     { q: "Can I lose money?", a: "Yes. Crypto trading involves real risk of loss. The engine is designed to limit losses through drawdown tiers, position sizing, and hard stops — but no system guarantees profits. Only trade with capital you can afford to lose." },
-    { q: "Which exchanges are supported?", a: "Currently Bybit and OKX. More exchanges will be added as the platform grows." },
+    { q: "Which exchanges are supported?", a: "Currently Binance, Bybit, and OKX. More exchanges will be added as the platform grows." },
     { q: "What returns can I realistically expect?", a: "Average month: +8% to +15%. Strong trending month: +20% to +30%. Choppy market: -5% to +5%. We do not promise specific returns. The engine protects capital first, grows it second." },
     { q: "What happens if the AI keeps losing?", a: "After 2 consecutive bad trades, the engine raises signal strictness automatically. At -15% drawdown from peak, it stops completely and will not trade again until you restart — protecting your remaining capital." },
     { q: "Is this real-money trading right now?", a: "Currently in demo mode (paper trading with real market data). Real-money execution is launching soon after paper validation is complete." },
@@ -491,7 +533,7 @@ function Footer() {
       </div>
       <div style={{ fontSize: 11, color: "rgba(255,255,255,.20)", textAlign: "center" }}>
         Demo mode only · No real funds at risk currently · Educational purposes<br />
-        © 2025 Asymmetric AI · asymetricai.com
+        © 2026 Asymmetric AI · asymetricai.com
       </div>
     </footer>
   );
@@ -520,6 +562,8 @@ export default function Landing() {
     <div style={{ background: BG, color: T, fontFamily: ff, minHeight: "100vh" }}>
       <Nav onLogin={() => nav("/login")} />
       <Hero onCTA={goSignup} />
+      <Divider />
+      <Exchanges />
       <Divider />
       <Problem />
       <Divider />
