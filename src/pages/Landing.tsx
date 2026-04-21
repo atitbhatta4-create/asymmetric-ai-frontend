@@ -540,7 +540,134 @@ function Footer() {
   );
 }
 
-// ── shared styles ─────────────────────────────────────────────────────────────
+// ── dashboard mockup ──────────────────────────────────────────────────────────
+function DashboardMockup() {
+  // mini equity curve data
+  const pts = [1000,1018,1012,1034,1028,1052,1044,1068,1060,1088,1082,1106,1098,1124,1140];
+  const W = 340, H = 70, P = 6;
+  const min = Math.min(...pts), max = Math.max(...pts), range = max - min;
+  const tx = (i: number) => P + (i / (pts.length - 1)) * (W - P * 2);
+  const ty = (v: number) => H - P - ((v - min) / range) * (H - P * 2);
+  const pStr = pts.map((v, i) => `${tx(i).toFixed(1)},${ty(v).toFixed(1)}`).join(" ");
+  const fillD = `M${tx(0)},${H-P} L${pStr} L${tx(pts.length-1)},${H-P} Z`;
+
+  const trades = [
+    { sym: "BTC/USDT", side: "LONG",  grade: "A", pnl: "+$142.80", time: "2h ago", win: true },
+    { sym: "ETH/USDT", side: "LONG",  grade: "B", pnl: "+$68.20",  time: "5h ago", win: true },
+    { sym: "SOL/USDT", side: "SHORT", grade: "B", pnl: "-$31.40",  time: "8h ago", win: false },
+  ];
+
+  return (
+    <section style={{ padding: "80px 24px", background: "rgba(0,0,0,.22)" }}>
+      <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
+          <Chip>Live Dashboard</Chip>
+          <h2 style={h2Style}>Everything in One View</h2>
+          <p style={subStyle}>Monitor your AI, track performance, and stay in control — all from a clean dashboard.</p>
+        </div>
+
+        {/* browser chrome */}
+        <div style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${BDR}`, boxShadow: `0 40px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04)` }}>
+          {/* browser top bar */}
+          <div style={{ background: "rgba(9,13,26,1)", padding: "10px 16px", display: "flex", alignItems: "center", gap: 10, borderBottom: `1px solid ${BDR2}` }}>
+            <div style={{ display: "flex", gap: 6 }}>
+              {["#ff5f57","#febc2e","#28c840"].map(c => <div key={c} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />)}
+            </div>
+            <div style={{ flex: 1, background: "rgba(255,255,255,.06)", borderRadius: 6, padding: "4px 12px", fontSize: 10, color: S, textAlign: "center" }}>
+              asymetricai.com/dashboard
+            </div>
+          </div>
+
+          {/* dashboard body */}
+          <div style={{ background: "#070a14", display: "grid", gridTemplateColumns: "160px 1fr", minHeight: 420 }}>
+            {/* sidebar */}
+            <div style={{ background: "rgba(9,15,30,.92)", borderRight: `1px solid ${BDR2}`, padding: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 900, color: T, marginBottom: 2 }}>Asymmetric AI</div>
+              <div style={{ fontSize: 9, color: S, marginBottom: 14 }}>user@email.com</div>
+              {[["Dashboard","active"],["Market",""],["Exchange",""],["History",""],["Portfolio",""],["Mini-Asym",""],["Settings",""]].map(([label, active]) => (
+                <div key={label} style={{ padding: "7px 10px", borderRadius: 8, marginBottom: 4, fontSize: 11, fontWeight: 800, color: active ? GN : M, background: active ? `${GN}12` : "transparent", border: `1px solid ${active ? `${GN}33` : "rgba(255,255,255,.05)"}` }}>
+                  {label}
+                </div>
+              ))}
+            </div>
+
+            {/* main content */}
+            <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
+
+              {/* stat cards row */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
+                {[
+                  { label: "Equity", value: "$11,406", sub: "+14.06%", color: GN },
+                  { label: "Today P&L", value: "+$210.60", sub: "2 trades", color: GN },
+                  { label: "Win Rate", value: "72%", sub: "18W / 7L", color: GN },
+                  { label: "Drawdown", value: "-2.1%", sub: "Safe zone", color: YL },
+                ].map(s => (
+                  <div key={s.label} style={{ background: CARD, border: `1px solid ${BDR2}`, borderRadius: 10, padding: "10px 12px" }}>
+                    <div style={{ fontSize: 9, fontWeight: 900, color: S, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>{s.label}</div>
+                    <div style={{ fontSize: 18, fontWeight: 950, color: s.color }}>{s.value}</div>
+                    <div style={{ fontSize: 9, color: M, marginTop: 2 }}>{s.sub}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* equity curve + trades */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                {/* equity curve */}
+                <div style={{ background: CARD, border: `1px solid ${BDR2}`, borderRadius: 10, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 9, fontWeight: 900, color: S, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 8 }}>Equity Curve</div>
+                  <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: H }}>
+                    <defs>
+                      <linearGradient id="mock-g" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={GN} stopOpacity=".20" />
+                        <stop offset="100%" stopColor={GN} stopOpacity=".00" />
+                      </linearGradient>
+                    </defs>
+                    <path d={fillD} fill="url(#mock-g)" />
+                    <polyline points={pStr} fill="none" stroke={GN} strokeWidth="1.8" />
+                    <circle cx={tx(pts.length-1)} cy={ty(pts[pts.length-1])} r="3.5" fill={GN} />
+                  </svg>
+                </div>
+
+                {/* recent trades */}
+                <div style={{ background: CARD, border: `1px solid ${BDR2}`, borderRadius: 10, padding: "10px 12px" }}>
+                  <div style={{ fontSize: 9, fontWeight: 900, color: S, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 10 }}>Recent Trades</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {trades.map((t, i) => (
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 7, borderBottom: i < trades.length-1 ? `1px solid ${BDR2}` : "none" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ width: 22, height: 22, borderRadius: 6, background: t.win ? `${GN}18` : `${RD}18`, border: `1px solid ${t.win ? `${GN}33` : `${RD}33`}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 900, color: t.win ? GN : RD }}>{t.grade}</div>
+                          <div>
+                            <div style={{ fontSize: 10, fontWeight: 900, color: T }}>{t.sym}</div>
+                            <div style={{ fontSize: 8, color: t.side === "LONG" ? GN : RD, fontWeight: 800 }}>{t.side} · {t.time}</div>
+                          </div>
+                        </div>
+                        <div style={{ fontSize: 11, fontWeight: 900, color: t.win ? GN : RD }}>{t.pnl}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* AI status bar */}
+              <div style={{ background: `${GN}08`, border: `1px solid ${GN}22`, borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: GN, boxShadow: `0 0 6px ${GN}` }} />
+                  <span style={{ fontSize: 10, fontWeight: 900, color: GN }}>AI RUNNING · MINI_ASYM MODE</span>
+                </div>
+                <div style={{ fontSize: 9, color: M }}>Monitoring BTC/USDT · Next check in 4m</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <div style={{ textAlign: "center", marginTop: 20, fontSize: 12, color: S }}>
+          Simulated dashboard — real data shown after you connect your exchange
+        </div>
+      </div>
+    </section>
+  );
+}
 const cardStyle = (): React.CSSProperties => ({
   background: CARD, border: `1px solid ${BDR}`, borderRadius: 16,
   backdropFilter: "blur(10px)",
@@ -575,6 +702,8 @@ export default function Landing() {
       <NonCustodial />
       <Divider />
       <Returns />
+      <Divider />
+      <DashboardMockup />
       <Divider />
       <Modes />
       <Divider />
