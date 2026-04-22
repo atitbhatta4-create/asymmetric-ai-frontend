@@ -1159,62 +1159,85 @@ export default function Landing() {
   return (
     <div style={{ background: BG, color: T, fontFamily: ff, minHeight: "100vh" }}>
       <style>{`
-        /* ── MOBILE LAYOUT (≤768px) ── */
-        @media (max-width: 768px) {
-          /* hero */
-          .land-hero { padding: 80px 16px 40px !important; }
-          .land-hero h1 { font-size: 28px !important; }
-          .land-hero p.sub { font-size: 14px !important; }
-          .land-hero .cta-row { flex-direction: column !important; align-items: stretch !important; }
-          .land-hero .cta-row a, .land-hero .cta-row button { text-align: center !important; }
-          .land-hero .preview { margin-top: 32px !important; }
-          .land-brand-name { font-size: 16px !important; }
+        html { scroll-behavior: smooth; }
 
-          /* exchanges */
-          .land-exchanges { padding: 32px 16px !important; flex-wrap: wrap !important; gap: 10px !important; }
-          .land-exchange-chip { padding: 10px 16px !important; }
+        /* ── MOBILE (≤768px) ── */
+        @media (max-width: 768px) {
+
+          /* global font + spacing scale-down */
+          body { font-size: 13px !important; }
+
+          /* hero */
+          .land-hero { padding: 70px 14px 32px !important; min-height: auto !important; }
+          .land-hero h1 { font-size: 22px !important; line-height: 1.2 !important; margin-bottom: 12px !important; }
+          .land-hero p { font-size: 13px !important; margin-bottom: 20px !important; }
+          .land-hero .cta-row { flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
+          .land-hero .cta-row a,
+          .land-hero .cta-row button { font-size: 13px !important; padding: 11px 16px !important; text-align: center !important; }
+          .land-hero .preview { margin-top: 24px !important; }
+          .land-brand-name { font-size: 14px !important; letter-spacing: .10em !important; }
+
+          /* section headings */
+          h2 { font-size: 20px !important; margin-bottom: 8px !important; }
+          h2 + p, section > div > p { font-size: 13px !important; }
 
           /* section padding */
-          .land-section { padding: 48px 16px !important; }
+          section { padding-top: 40px !important; padding-bottom: 40px !important; padding-left: 14px !important; padding-right: 14px !important; }
 
-          /* problem / engine / protection cards — single col */
-          .land-grid-auto { grid-template-columns: 1fr !important; }
+          /* chips */
+          span[style*="border-radius: 999"] { font-size: 9px !important; padding: 2px 8px !important; }
 
-          /* engine tabs — 2x2 */
-          .land-engine-tabs { grid-template-columns: 1fr 1fr !important; }
-          /* engine detail — stack */
-          .land-engine-detail { grid-template-columns: 1fr !important; gap: 20px !important; }
+          /* cards */
+          div[style*="border-radius: 16px"], div[style*="border-radius: 14px"] { border-radius: 10px !important; }
 
-          /* dashboard mockup — hide 3d tilt, show simplified */
-          .land-dash-tilt { transform: none !important; width: 100% !important; }
+          /* exchanges */
+          .land-exchanges { flex-wrap: wrap !important; gap: 8px !important; justify-content: center !important; }
+          .land-exchange-chip { padding: 8px 12px !important; font-size: 11px !important; }
+
+          /* grids — single col */
+          .land-grid-auto { grid-template-columns: 1fr !important; gap: 10px !important; }
+          .land-engine-tabs { grid-template-columns: 1fr 1fr !important; gap: 6px !important; }
+          .land-engine-detail { grid-template-columns: 1fr !important; gap: 16px !important; }
+          .land-engine-tabs button { padding: 10px 8px !important; }
+          .land-engine-tabs button div:first-child { font-size: 14px !important; }
+          .land-engine-tabs button div:nth-child(3) { font-size: 11px !important; }
+
+          /* dashboard mockup */
+          .land-dash-tilt { transform: none !important; width: 100% !important; box-shadow: 0 20px 40px rgba(0,0,0,.5) !important; }
           .land-dash-phone { display: none !important; }
           .land-dash-badge { display: none !important; }
 
-          /* modes cards — 2 col */
-          .land-modes-grid { grid-template-columns: 1fr 1fr !important; }
+          /* modes */
+          .land-modes-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+          .land-modes-grid > div { padding: 14px 12px !important; }
+          .land-modes-grid .flagship-badge { font-size: 7px !important; padding: 2px 8px !important; }
 
-          /* FAQ — stack phone below */
-          .land-faq-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+          /* FAQ */
+          .land-faq-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
           .land-faq-phone { display: none !important; }
 
-          /* how to start */
-          .land-steps-grid { grid-template-columns: 1fr 1fr !important; }
+          /* steps */
+          .land-steps-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+          .land-steps-grid > div { padding: 14px 12px !important; }
 
-          /* footer grid */
-          .footer-grid { grid-template-columns: 1fr 1fr !important; }
+          /* protection */
+          .land-protection-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+          .land-protection-bottom { grid-template-columns: 1fr !important; gap: 8px !important; }
+
+          /* returns */
+          .land-returns-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
+
+          /* footer */
+          .footer-grid { grid-template-columns: 1fr 1fr !important; gap: 20px 16px !important; }
           .footer-grid > div:first-child { grid-column: 1 / -1 !important; }
-
-          /* returns grid */
-          .land-returns-grid { grid-template-columns: 1fr !important; }
-
-          /* protection grid */
-          .land-protection-grid { grid-template-columns: 1fr 1fr !important; }
-          .land-protection-bottom { grid-template-columns: 1fr !important; }
+          footer { padding: 32px 14px 24px !important; }
+          footer p { font-size: 11px !important; }
         }
 
+        /* ── SMALL PHONES (≤480px) ── */
         @media (max-width: 480px) {
-          .land-hero h1 { font-size: 24px !important; }
-          .land-engine-tabs { grid-template-columns: 1fr !important; }
+          .land-hero h1 { font-size: 20px !important; }
+          .land-engine-tabs { grid-template-columns: 1fr 1fr !important; }
           .land-modes-grid { grid-template-columns: 1fr !important; }
           .land-steps-grid { grid-template-columns: 1fr !important; }
           .land-protection-grid { grid-template-columns: 1fr !important; }
