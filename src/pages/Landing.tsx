@@ -620,6 +620,17 @@ function IconTikTok({ size = 20, color = "currentColor" }: { size?: number; colo
 function Footer({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => void }) {
   const [igHover, setIgHover] = React.useState(false);
   const [ttHover, setTtHover] = React.useState(false);
+  const [faqOpen, setFaqOpen] = React.useState(false);
+  const [faqItem, setFaqItem] = React.useState<number | null>(null);
+
+  const faqItems = [
+    { q: "Is my money safe?", a: "Your funds never leave your exchange. You connect a trade-only API key with withdrawals disabled. We send trade signals — your exchange executes them. We cannot access, move, or withdraw your funds." },
+    { q: "Can I lose money?", a: "Yes. Crypto trading involves real risk. The engine limits losses through drawdown tiers and hard stops — but no system guarantees profits. Only trade with capital you can afford to lose." },
+    { q: "Which exchanges are supported?", a: "Currently Binance, Bybit, and OKX. More exchanges will be added as the platform grows." },
+    { q: "What returns can I expect?", a: "Average month: +8% to +15%. Strong trending month: +20% to +30%. Choppy market: -5% to +5%. The engine protects capital first, grows it second." },
+    { q: "What if the AI keeps losing?", a: "After 2 consecutive bad trades, the engine raises signal strictness automatically. At -15% drawdown it stops completely — protecting your remaining capital." },
+    { q: "Is this real-money trading now?", a: "Currently in demo mode (paper trading with real market data). Real-money execution launches soon after paper validation is complete." },
+  ];
 
   const colTitle: React.CSSProperties = {
     fontSize: 11, fontWeight: 900, color: T,
@@ -700,10 +711,44 @@ function Footer({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
           {/* col 3 — connect */}
           <div>
             <div style={colTitle}>Connect</div>
-            <a href="#faq" style={link} onMouseEnter={e => (e.currentTarget.style.color = GN)} onMouseLeave={e => (e.currentTarget.style.color = M)}>FAQ</a>
+            <span
+              style={{ ...link, display: "flex", alignItems: "center", gap: 6, userSelect: "none" }}
+              onClick={() => setFaqOpen(o => !o)}
+              onMouseEnter={e => (e.currentTarget.style.color = GN)}
+              onMouseLeave={e => (e.currentTarget.style.color = M)}
+            >
+              FAQ
+              <span style={{ fontSize: 11, color: GN }}>{faqOpen ? "▲" : "▼"}</span>
+            </span>
             <a href="mailto:support.asymetricai@gmail.com" style={link} onMouseEnter={e => (e.currentTarget.style.color = GN)} onMouseLeave={e => (e.currentTarget.style.color = M)}>Contact</a>
           </div>
         </div>
+
+        {/* ── inline FAQ accordion (opens below columns when FAQ clicked) ── */}
+        {faqOpen && (
+          <div style={{ marginBottom: 28, border: `1px solid ${BDR2}`, borderRadius: 14, overflow: "hidden" }}>
+            <div style={{ padding: "12px 20px", borderBottom: `1px solid ${BDR2}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontSize: 12, fontWeight: 900, color: GN, letterSpacing: ".08em", textTransform: "uppercase" }}>Common Questions</span>
+              <button onClick={() => setFaqOpen(false)} style={{ background: "none", border: "none", color: S, cursor: "pointer", fontSize: 16, lineHeight: 1 }}>✕</button>
+            </div>
+            {faqItems.map((item, i) => (
+              <div key={i} style={{ borderBottom: i < faqItems.length - 1 ? `1px solid ${BDR2}` : "none" }}>
+                <button
+                  onClick={() => setFaqItem(faqItem === i ? null : i)}
+                  style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 20px", background: "transparent", border: "none", color: T, fontSize: 13, fontWeight: 800, cursor: "pointer", textAlign: "left", gap: 12 }}
+                >
+                  <span>{item.q}</span>
+                  <span style={{ color: GN, flexShrink: 0, fontSize: 16 }}>{faqItem === i ? "−" : "+"}</span>
+                </button>
+                {faqItem === i && (
+                  <div style={{ padding: "0 20px 14px", fontSize: 12, color: M, lineHeight: 1.8, borderTop: `1px solid ${BDR2}`, paddingTop: 10 }}>
+                    {item.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* ── social icons row (right-aligned) ──────────────────────── */}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginBottom: 28 }}>
