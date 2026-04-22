@@ -620,9 +620,8 @@ function Footer() {
 
 // ── dashboard mockup ──────────────────────────────────────────────────────────
 function DashboardMockup() {
-  // mini equity curve data
   const pts = [1000,1018,1012,1034,1028,1052,1044,1068,1060,1088,1082,1106,1098,1124,1140];
-  const W = 340, H = 70, P = 6;
+  const W = 320, H = 60, P = 6;
   const min = Math.min(...pts), max = Math.max(...pts), range = max - min;
   const tx = (i: number) => P + (i / (pts.length - 1)) * (W - P * 2);
   const ty = (v: number) => H - P - ((v - min) / range) * (H - P * 2);
@@ -630,117 +629,184 @@ function DashboardMockup() {
   const fillD = `M${tx(0)},${H-P} L${pStr} L${tx(pts.length-1)},${H-P} Z`;
 
   const trades = [
-    { sym: "BTC/USDT", side: "LONG",  grade: "A", pnl: "+$142.80", time: "2h ago", win: true },
-    { sym: "ETH/USDT", side: "LONG",  grade: "B", pnl: "+$68.20",  time: "5h ago", win: true },
-    { sym: "SOL/USDT", side: "SHORT", grade: "B", pnl: "-$31.40",  time: "8h ago", win: false },
+    { sym: "BTC/USDT", side: "LONG",  grade: "A", pnl: "+$142.80", win: true },
+    { sym: "ETH/USDT", side: "LONG",  grade: "B", pnl: "+$68.20",  win: true },
+    { sym: "SOL/USDT", side: "SHORT", grade: "B", pnl: "-$31.40",  win: false },
   ];
 
   return (
-    <section style={{ padding: "80px 24px", background: "rgba(0,0,0,.22)" }}>
-      <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
+    <section style={{ padding: "100px 24px", position: "relative", overflow: "hidden" }}>
+      {/* background glow */}
+      <div style={{ position: "absolute", top: "30%", left: "50%", transform: "translateX(-50%)", width: 800, height: 400, background: `radial-gradient(ellipse,${GN}0f,transparent 65%)`, pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: "20%", right: "5%", width: 400, height: 300, background: "radial-gradient(ellipse,rgba(120,90,255,.10),transparent 65%)", pointerEvents: "none" }} />
+
+      <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+        {/* heading */}
+        <div style={{ textAlign: "center", marginBottom: 64 }}>
           <Chip>Live Dashboard</Chip>
           <h2 style={h2Style}>Everything in One View</h2>
-          <p style={subStyle}>Monitor your AI, track performance, and stay in control — all from a clean dashboard.</p>
+          <p style={subStyle}>Monitor your AI, track every trade, and stay in full control — from desktop or phone.</p>
         </div>
 
-        {/* browser chrome */}
-        <div style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${BDR}`, boxShadow: `0 40px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04)` }}>
-          {/* browser top bar */}
-          <div style={{ background: "rgba(9,13,26,1)", padding: "10px 16px", display: "flex", alignItems: "center", gap: 10, borderBottom: `1px solid ${BDR2}` }}>
-            <div style={{ display: "flex", gap: 6 }}>
-              {["#ff5f57","#febc2e","#28c840"].map(c => <div key={c} style={{ width: 10, height: 10, borderRadius: "50%", background: c }} />)}
-            </div>
-            <div style={{ flex: 1, background: "rgba(255,255,255,.06)", borderRadius: 6, padding: "4px 12px", fontSize: 10, color: S, textAlign: "center" }}>
-              asymetricai.com/dashboard
-            </div>
-          </div>
+        {/* mockup stage */}
+        <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
 
-          {/* dashboard body */}
-          <div style={{ background: "#070a14", display: "grid", gridTemplateColumns: "160px 1fr", minHeight: 420 }}>
-            {/* sidebar */}
-            <div style={{ background: "rgba(9,15,30,.92)", borderRight: `1px solid ${BDR2}`, padding: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 900, color: T, marginBottom: 2 }}>Asymmetric AI</div>
-              <div style={{ fontSize: 9, color: S, marginBottom: 14 }}>user@email.com</div>
-              {[["Dashboard","active"],["Market",""],["Exchange",""],["History",""],["Portfolio",""],["Mini-Asym",""],["Settings",""]].map(([label, active]) => (
-                <div key={label} style={{ padding: "7px 10px", borderRadius: 8, marginBottom: 4, fontSize: 11, fontWeight: 800, color: active ? GN : M, background: active ? `${GN}12` : "transparent", border: `1px solid ${active ? `${GN}33` : "rgba(255,255,255,.05)"}` }}>
-                  {label}
-                </div>
-              ))}
+          {/* ── DESKTOP BROWSER (tilted 3D) ───────────────────────────────── */}
+          <div style={{
+            width: "min(780px, 90vw)",
+            transform: "perspective(1400px) rotateX(4deg) rotateY(-6deg) rotateZ(1deg)",
+            transformOrigin: "center center",
+            borderRadius: 16,
+            overflow: "hidden",
+            border: `1px solid rgba(255,255,255,.12)`,
+            boxShadow: `0 60px 120px rgba(0,0,0,.7), 0 0 80px ${GN}18, 0 0 0 1px rgba(255,255,255,.05)`,
+            flexShrink: 0,
+          }}>
+            {/* browser bar */}
+            <div style={{ background: "rgba(7,10,22,1)", padding: "9px 14px", display: "flex", alignItems: "center", gap: 10, borderBottom: `1px solid rgba(255,255,255,.07)` }}>
+              <div style={{ display: "flex", gap: 5 }}>
+                {["#ff5f57","#febc2e","#28c840"].map(c => <div key={c} style={{ width: 9, height: 9, borderRadius: "50%", background: c }} />)}
+              </div>
+              <div style={{ flex: 1, background: "rgba(255,255,255,.05)", borderRadius: 5, padding: "3px 10px", fontSize: 9, color: S, textAlign: "center" }}>
+                asymetricai.com/dashboard
+              </div>
             </div>
 
-            {/* main content */}
-            <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 12 }}>
-
-              {/* stat cards row */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10 }}>
-                {[
-                  { label: "Equity", value: "$11,406", sub: "+14.06%", color: GN },
-                  { label: "Today P&L", value: "+$210.60", sub: "2 trades", color: GN },
-                  { label: "Win Rate", value: "72%", sub: "18W / 7L", color: GN },
-                  { label: "Drawdown", value: "-2.1%", sub: "Safe zone", color: YL },
-                ].map(s => (
-                  <div key={s.label} style={{ background: CARD, border: `1px solid ${BDR2}`, borderRadius: 10, padding: "10px 12px" }}>
-                    <div style={{ fontSize: 9, fontWeight: 900, color: S, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 4 }}>{s.label}</div>
-                    <div style={{ fontSize: 18, fontWeight: 950, color: s.color }}>{s.value}</div>
-                    <div style={{ fontSize: 9, color: M, marginTop: 2 }}>{s.sub}</div>
+            {/* app body */}
+            <div style={{ background: "#070a14", display: "grid", gridTemplateColumns: "140px 1fr" }}>
+              {/* sidebar */}
+              <div style={{ background: "rgba(9,15,30,.95)", borderRight: `1px solid rgba(255,255,255,.06)`, padding: 10 }}>
+                <div style={{ fontSize: 10, fontWeight: 900, color: GN, marginBottom: 1 }}>Asymmetric AI</div>
+                <div style={{ fontSize: 8, color: S, marginBottom: 12 }}>user@email.com</div>
+                {[["Dashboard", true],["Market",false],["Exchange",false],["History",false],["Portfolio",false],["Mini-Asym",false]].map(([label, active]) => (
+                  <div key={String(label)} style={{ padding: "6px 9px", borderRadius: 7, marginBottom: 3, fontSize: 9, fontWeight: 800, color: active ? GN : M, background: active ? `${GN}12` : "transparent", border: `1px solid ${active ? `${GN}30` : "rgba(255,255,255,.04)"}` }}>
+                    {label}
                   </div>
                 ))}
               </div>
 
-              {/* equity curve + trades */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                {/* equity curve */}
-                <div style={{ background: CARD, border: `1px solid ${BDR2}`, borderRadius: 10, padding: "10px 12px" }}>
-                  <div style={{ fontSize: 9, fontWeight: 900, color: S, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 8 }}>Equity Curve</div>
-                  <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: H }}>
-                    <defs>
-                      <linearGradient id="mock-g" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={GN} stopOpacity=".20" />
-                        <stop offset="100%" stopColor={GN} stopOpacity=".00" />
-                      </linearGradient>
-                    </defs>
-                    <path d={fillD} fill="url(#mock-g)" />
-                    <polyline points={pStr} fill="none" stroke={GN} strokeWidth="1.8" />
-                    <circle cx={tx(pts.length-1)} cy={ty(pts[pts.length-1])} r="3.5" fill={GN} />
-                  </svg>
+              {/* content */}
+              <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+                {/* stats */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
+                  {[
+                    { label: "Equity",     value: "$11,406", sub: "+14.06%", color: GN  },
+                    { label: "Today P&L",  value: "+$210",   sub: "2 trades", color: GN  },
+                    { label: "Win Rate",   value: "72%",     sub: "18W / 7L", color: GN  },
+                    { label: "Drawdown",   value: "-2.1%",   sub: "Safe",    color: YL  },
+                  ].map(s => (
+                    <div key={s.label} style={{ background: CARD, border: `1px solid ${BDR2}`, borderRadius: 9, padding: "9px 10px" }}>
+                      <div style={{ fontSize: 7, fontWeight: 900, color: S, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 3 }}>{s.label}</div>
+                      <div style={{ fontSize: 15, fontWeight: 950, color: s.color }}>{s.value}</div>
+                      <div style={{ fontSize: 7, color: M, marginTop: 1 }}>{s.sub}</div>
+                    </div>
+                  ))}
                 </div>
 
-                {/* recent trades */}
-                <div style={{ background: CARD, border: `1px solid ${BDR2}`, borderRadius: 10, padding: "10px 12px" }}>
-                  <div style={{ fontSize: 9, fontWeight: 900, color: S, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 10 }}>Recent Trades</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {/* curve + trades */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <div style={{ background: CARD, border: `1px solid ${BDR2}`, borderRadius: 9, padding: "9px 10px" }}>
+                    <div style={{ fontSize: 7, fontWeight: 900, color: S, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 6 }}>Equity Curve</div>
+                    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: H }}>
+                      <defs>
+                        <linearGradient id="mock-g" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor={GN} stopOpacity=".22" />
+                          <stop offset="100%" stopColor={GN} stopOpacity=".00" />
+                        </linearGradient>
+                      </defs>
+                      <path d={fillD} fill="url(#mock-g)" />
+                      <polyline points={pStr} fill="none" stroke={GN} strokeWidth="1.6" />
+                      <circle cx={tx(pts.length-1)} cy={ty(pts[pts.length-1])} r="3" fill={GN} />
+                    </svg>
+                  </div>
+                  <div style={{ background: CARD, border: `1px solid ${BDR2}`, borderRadius: 9, padding: "9px 10px" }}>
+                    <div style={{ fontSize: 7, fontWeight: 900, color: S, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 8 }}>Recent Trades</div>
                     {trades.map((t, i) => (
-                      <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 7, borderBottom: i < trades.length-1 ? `1px solid ${BDR2}` : "none" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <div style={{ width: 22, height: 22, borderRadius: 6, background: t.win ? `${GN}18` : `${RD}18`, border: `1px solid ${t.win ? `${GN}33` : `${RD}33`}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 900, color: t.win ? GN : RD }}>{t.grade}</div>
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 6, marginBottom: 6, borderBottom: i < trades.length-1 ? `1px solid ${BDR2}` : "none" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <div style={{ width: 18, height: 18, borderRadius: 5, background: t.win ? `${GN}18` : `${RD}18`, border: `1px solid ${t.win ? `${GN}33` : `${RD}33`}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7, fontWeight: 900, color: t.win ? GN : RD }}>{t.grade}</div>
                           <div>
-                            <div style={{ fontSize: 10, fontWeight: 900, color: T }}>{t.sym}</div>
-                            <div style={{ fontSize: 8, color: t.side === "LONG" ? GN : RD, fontWeight: 800 }}>{t.side} · {t.time}</div>
+                            <div style={{ fontSize: 8, fontWeight: 900, color: T }}>{t.sym}</div>
+                            <div style={{ fontSize: 7, color: t.side === "LONG" ? GN : RD, fontWeight: 800 }}>{t.side}</div>
                           </div>
                         </div>
-                        <div style={{ fontSize: 11, fontWeight: 900, color: t.win ? GN : RD }}>{t.pnl}</div>
+                        <div style={{ fontSize: 9, fontWeight: 900, color: t.win ? GN : RD }}>{t.pnl}</div>
                       </div>
                     ))}
                   </div>
                 </div>
-              </div>
 
-              {/* AI status bar */}
-              <div style={{ background: `${GN}08`, border: `1px solid ${GN}22`, borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: GN, boxShadow: `0 0 6px ${GN}` }} />
-                  <span style={{ fontSize: 10, fontWeight: 900, color: GN }}>AI RUNNING · MINI_ASYM MODE</span>
+                {/* AI status */}
+                <div style={{ background: `${GN}08`, border: `1px solid ${GN}20`, borderRadius: 9, padding: "8px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: GN, boxShadow: `0 0 5px ${GN}` }} />
+                    <span style={{ fontSize: 8, fontWeight: 900, color: GN }}>AI RUNNING · MINI_ASYM MODE</span>
+                  </div>
+                  <span style={{ fontSize: 7, color: M }}>BTC/USDT · Next check 4m</span>
                 </div>
-                <div style={{ fontSize: 9, color: M }}>Monitoring BTC/USDT · Next check in 4m</div>
               </div>
-
             </div>
+          </div>
+
+          {/* ── PHONE MOCKUP (overlapping right side) ─────────────────────── */}
+          <div style={{
+            position: "absolute",
+            right: "calc(50% - 520px)",
+            bottom: -30,
+            width: 140,
+            transform: "perspective(800px) rotateX(2deg) rotateY(-4deg)",
+            borderRadius: 22,
+            overflow: "hidden",
+            border: `1.5px solid rgba(255,255,255,.14)`,
+            boxShadow: `0 40px 80px rgba(0,0,0,.7), 0 0 40px ${GN}14`,
+            background: "#070a14",
+          }}>
+            {/* phone notch */}
+            <div style={{ background: "rgba(7,10,22,1)", padding: "10px 0 6px", display: "flex", justifyContent: "center", borderBottom: `1px solid rgba(255,255,255,.06)` }}>
+              <div style={{ width: 40, height: 5, borderRadius: 99, background: "rgba(255,255,255,.15)" }} />
+            </div>
+            {/* phone content */}
+            <div style={{ padding: 8 }}>
+              <div style={{ fontSize: 7, fontWeight: 900, color: GN, marginBottom: 6 }}>Asymmetric AI</div>
+              {[
+                { label: "Equity",    value: "$11,406", color: GN },
+                { label: "Today",     value: "+$210",   color: GN },
+                { label: "Win Rate",  value: "72%",     color: GN },
+              ].map(s => (
+                <div key={s.label} style={{ background: CARD, border: `1px solid ${BDR2}`, borderRadius: 7, padding: "6px 8px", marginBottom: 5 }}>
+                  <div style={{ fontSize: 6, color: S, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".06em" }}>{s.label}</div>
+                  <div style={{ fontSize: 13, fontWeight: 950, color: s.color }}>{s.value}</div>
+                </div>
+              ))}
+              <div style={{ background: `${GN}08`, border: `1px solid ${GN}22`, borderRadius: 7, padding: "6px 8px", marginTop: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: GN, boxShadow: `0 0 4px ${GN}` }} />
+                  <span style={{ fontSize: 6, fontWeight: 900, color: GN }}>AI RUNNING</span>
+                </div>
+                <div style={{ fontSize: 6, color: M, marginTop: 2 }}>MINI_ASYM · BTC/USDT</div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── FLOATING STAT BADGES ──────────────────────────────────────── */}
+          <div style={{ position: "absolute", top: -20, left: "calc(50% - 480px)", background: CARD, border: `1px solid ${GN}33`, borderRadius: 12, padding: "10px 14px", boxShadow: `0 8px 24px rgba(0,0,0,.4)` }}>
+            <div style={{ fontSize: 9, color: S, fontWeight: 800, marginBottom: 2 }}>THIS MONTH</div>
+            <div style={{ fontSize: 18, fontWeight: 950, color: GN }}>+14.2%</div>
+          </div>
+
+          <div style={{ position: "absolute", top: 60, left: "calc(50% - 510px)", background: CARD, border: `1px solid ${BDR}`, borderRadius: 12, padding: "10px 14px", boxShadow: `0 8px 24px rgba(0,0,0,.4)` }}>
+            <div style={{ fontSize: 9, color: S, fontWeight: 800, marginBottom: 2 }}>WIN RATE</div>
+            <div style={{ fontSize: 18, fontWeight: 950, color: GN }}>72%</div>
+          </div>
+
+          <div style={{ position: "absolute", bottom: 20, left: "calc(50% - 490px)", background: CARD, border: `1px solid rgba(120,90,255,.35)`, borderRadius: 12, padding: "10px 14px", boxShadow: `0 8px 24px rgba(0,0,0,.4)` }}>
+            <div style={{ fontSize: 9, color: S, fontWeight: 800, marginBottom: 2 }}>DRAWDOWN</div>
+            <div style={{ fontSize: 18, fontWeight: 950, color: YL }}>-2.1%</div>
           </div>
         </div>
 
-        <div style={{ textAlign: "center", marginTop: 20, fontSize: 12, color: S }}>
-          Simulated dashboard — real data shown after you connect your exchange
+        <div style={{ textAlign: "center", marginTop: 48, fontSize: 12, color: S }}>
+          Simulated dashboard preview · Real data shown after connecting your exchange
         </div>
       </div>
     </section>
