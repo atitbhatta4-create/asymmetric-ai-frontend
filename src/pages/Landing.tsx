@@ -550,7 +550,7 @@ function FAQ() {
     { q: "Is this real-money trading right now?", a: "Currently in demo mode (paper trading with real market data). Real-money execution is launching soon after paper validation is complete." },
   ];
   return (
-    <section style={{ padding: "80px 24px", maxWidth: 760, margin: "0 auto" }}>
+    <section id="faq" style={{ padding: "80px 24px", maxWidth: 760, margin: "0 auto" }}>
       <div style={{ textAlign: "center", marginBottom: 48 }}>
         <Chip>FAQ</Chip>
         <h2 style={h2Style}>Common Questions</h2>
@@ -676,33 +676,9 @@ function Footer({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
               <div style={{ width: 28, height: 28, borderRadius: 8, background: `linear-gradient(135deg,${GN},#00b8ff)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 900, color: "#050814" }}>A</div>
               <span style={{ fontSize: 15, fontWeight: 900, color: T }}>Asymmetric AI</span>
             </div>
-            <p style={{ fontSize: 12, color: S, lineHeight: 1.7, maxWidth: 220 }}>
+            <p style={{ fontSize: 13, color: S, lineHeight: 1.7, maxWidth: 240 }}>
               4-layer AI signal engine with automatic capital protection. Non-custodial. Your keys, always.
             </p>
-
-            {/* social icons */}
-            <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
-              {socials.map(s => (
-                <a
-                  key={s.label}
-                  href={s.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={s.label}
-                  onMouseEnter={() => s.setHovered(true)}
-                  onMouseLeave={() => s.setHovered(false)}
-                  style={{
-                    width: 38, height: 38, borderRadius: 10,
-                    border: `1px solid ${s.hovered ? `${GN}44` : "rgba(255,255,255,.10)"}`,
-                    background: s.hovered ? `${GN}10` : "rgba(255,255,255,.04)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    transition: "all .18s ease", textDecoration: "none",
-                  }}
-                >
-                  {s.icon(s.hovered)}
-                </a>
-              ))}
-            </div>
           </div>
 
           {/* col 1 — product */}
@@ -729,11 +705,36 @@ function Footer({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
           </div>
         </div>
 
+        {/* ── social icons row (right-aligned) ──────────────────────── */}
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginBottom: 28 }}>
+          <span style={{ fontSize: 12, color: S, alignSelf: "center", marginRight: 4 }}>Follow us</span>
+          {socials.map(s => (
+            <a
+              key={s.label}
+              href={s.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={s.label}
+              onMouseEnter={() => s.setHovered(true)}
+              onMouseLeave={() => s.setHovered(false)}
+              style={{
+                width: 40, height: 40, borderRadius: 10,
+                border: `1px solid ${s.hovered ? `${GN}44` : "rgba(255,255,255,.10)"}`,
+                background: s.hovered ? `${GN}10` : "rgba(255,255,255,.04)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all .18s ease", textDecoration: "none",
+              }}
+            >
+              {s.icon(s.hovered)}
+            </a>
+          ))}
+        </div>
+
         {/* ── divider ───────────────────────────────────────────────── */}
         <div style={{ height: 1, background: "rgba(255,255,255,.07)", marginBottom: 24 }} />
 
         {/* ── risk disclosure ───────────────────────────────────────── */}
-        <p style={{ fontSize: 11, color: "rgba(255,255,255,.28)", lineHeight: 1.8, marginBottom: 20, maxWidth: 860 }}>
+        <p style={{ fontSize: 13, color: "rgba(255,255,255,.35)", lineHeight: 1.9, marginBottom: 20, maxWidth: 900 }}>
           Trading cryptocurrency involves substantial risk of loss. Past performance is not indicative of future results.
           Asymmetric AI is an automated software tool — not financial advice. Only trade with capital you can afford to lose.
           You are solely responsible for all trading decisions. This platform is currently in demo mode — no real funds are at risk.
@@ -741,17 +742,18 @@ function Footer({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
 
         {/* ── copyright ─────────────────────────────────────────────── */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
-          <span style={{ fontSize: 11, color: "rgba(255,255,255,.22)" }}>
+          <span style={{ fontSize: 13, color: "rgba(255,255,255,.30)", fontWeight: 700 }}>
             © 2026 Asymmetric AI · asymetricai.com
           </span>
-          <span style={{ fontSize: 11, color: "rgba(255,255,255,.22)" }}>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,.25)" }}>
             Demo mode only · No real funds at risk · Non-custodial · Your keys always yours
           </span>
         </div>
       </div>
 
-      {/* mobile responsive style */}
+      {/* mobile responsive + smooth scroll */}
       <style>{`
+        html { scroll-behavior: smooth; }
         @media (max-width: 768px) {
           .footer-grid {
             grid-template-columns: 1fr 1fr !important;
