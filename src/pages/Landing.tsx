@@ -540,36 +540,116 @@ function Modes() {
 
 // ── faq ───────────────────────────────────────────────────────────────────────
 function FAQ() {
-  const [open, setOpen] = useState<number | null>(null);
+  const [open, setOpen] = useState<number | null>(0);
   const items = [
-    { q: "Is my money safe?", a: "Your funds never leave your exchange. You connect a trade-only API key with withdrawals disabled. We send trade signals — your exchange executes them. We cannot access, move, or withdraw your funds under any circumstance." },
-    { q: "Can I lose money?", a: "Yes. Crypto trading involves real risk of loss. The engine is designed to limit losses through drawdown tiers, position sizing, and hard stops — but no system guarantees profits. Only trade with capital you can afford to lose." },
-    { q: "Which exchanges are supported?", a: "Currently Binance, Bybit, and OKX. More exchanges will be added as the platform grows." },
-    { q: "What returns can I realistically expect?", a: "Average month: +8% to +15%. Strong trending month: +20% to +30%. Choppy market: -5% to +5%. We do not promise specific returns. The engine protects capital first, grows it second." },
-    { q: "What happens if the AI keeps losing?", a: "After 2 consecutive bad trades, the engine raises signal strictness automatically. At -15% drawdown from peak, it stops completely and will not trade again until you restart — protecting your remaining capital." },
-    { q: "Is this real-money trading right now?", a: "Currently in demo mode (paper trading with real market data). Real-money execution is launching soon after paper validation is complete." },
+    { q: "Is my money safe?", a: "Your funds never leave your exchange. You connect a trade-only API key with withdrawals disabled. We send trade signals — your exchange executes them. We cannot access, move, or withdraw your funds." },
+    { q: "Can I lose money?", a: "Yes. Crypto trading involves real risk. The engine limits losses through drawdown tiers and hard stops — but no system guarantees profits. Only trade with capital you can afford to lose." },
+    { q: "Which exchanges are supported?", a: "Currently Binance, Bybit, and OKX. More exchanges coming as the platform grows." },
+    { q: "What returns can I expect?", a: "Average month: +8% to +15%. Strong trending month: +20% to +30%. Choppy market: -5% to +5%. The engine protects capital first, grows it second." },
+    { q: "What if the AI keeps losing?", a: "After 2 bad trades, the engine raises strictness automatically. At -15% drawdown it stops completely — protecting your remaining capital." },
+    { q: "Is this real-money trading now?", a: "Demo mode only — paper trading with real market data. Real-money execution launches soon after validation is complete." },
   ];
+
   return (
-    <section id="faq" style={{ padding: "80px 24px", maxWidth: 760, margin: "0 auto" }}>
-      <div style={{ textAlign: "center", marginBottom: 48 }}>
-        <Chip>FAQ</Chip>
-        <h2 style={h2Style}>Common Questions</h2>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {items.map((item, i) => (
-          <div key={i} style={{ ...cardStyle(), overflow: "hidden" }}>
-            <button onClick={() => setOpen(open === i ? null : i)} style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", background: "transparent", border: "none", color: T, fontSize: 14, fontWeight: 800, cursor: "pointer", textAlign: "left", gap: 12 }}>
-              <span>{item.q}</span>
-              <span style={{ color: GN, flexShrink: 0, fontSize: 18 }}>{open === i ? "−" : "+"}</span>
-            </button>
-            {open === i && (
-              <div style={{ padding: "0 20px 18px", fontSize: 13, color: M, lineHeight: 1.7, borderTop: `1px solid ${BDR2}`, paddingTop: 14 }}>
-                {item.a}
+    <section id="faq" style={{ padding: "80px 24px" }}>
+      <div style={{ maxWidth: 1080, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60, alignItems: "center" }}>
+
+        {/* left — text */}
+        <div>
+          <Chip>FAQ</Chip>
+          <h2 style={{ ...h2Style, marginTop: 16 }}>Got Questions?<br /><span style={{ color: GN }}>We've Got Answers.</span></h2>
+          <p style={{ fontSize: 15, color: M, lineHeight: 1.8, marginBottom: 32 }}>
+            Everything you need to know about how Asymmetric AI works, what it costs, and how your funds are protected.
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {items.map((item, i) => (
+              <div key={i} style={{ borderRadius: 12, border: `1px solid ${open === i ? `${GN}33` : BDR2}`, overflow: "hidden", background: open === i ? `${GN}05` : "transparent", transition: "all .18s" }}>
+                <button
+                  onClick={() => setOpen(open === i ? null : i)}
+                  style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px", background: "transparent", border: "none", color: T, fontSize: 13, fontWeight: 800, cursor: "pointer", textAlign: "left", gap: 12 }}
+                >
+                  <span>{item.q}</span>
+                  <span style={{ color: GN, flexShrink: 0, fontSize: 18, lineHeight: 1 }}>{open === i ? "−" : "+"}</span>
+                </button>
+                {open === i && (
+                  <div style={{ padding: "0 18px 14px", fontSize: 13, color: M, lineHeight: 1.75, borderTop: `1px solid ${BDR2}`, paddingTop: 12 }}>
+                    {item.a}
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </div>
-        ))}
+        </div>
+
+        {/* right — phone mockup */}
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{
+            width: 220, borderRadius: 36, overflow: "hidden",
+            border: "1.5px solid rgba(255,255,255,.15)",
+            boxShadow: `0 40px 80px rgba(0,0,0,.6), 0 0 60px ${GN}12`,
+            background: "#070a14",
+            position: "relative",
+          }}>
+            {/* notch */}
+            <div style={{ background: "#070a14", padding: "14px 0 8px", display: "flex", justifyContent: "center" }}>
+              <div style={{ width: 50, height: 5, borderRadius: 99, background: "rgba(255,255,255,.18)" }} />
+            </div>
+
+            {/* phone screen */}
+            <div style={{ padding: "10px 12px 20px" }}>
+              {/* top bar */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                <span style={{ fontSize: 10, fontWeight: 900, color: GN }}>Asymmetric AI</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: GN, boxShadow: `0 0 4px ${GN}` }} />
+                  <span style={{ fontSize: 8, color: GN, fontWeight: 800 }}>LIVE</span>
+                </div>
+              </div>
+
+              {/* stat pills */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 12 }}>
+                {[["Equity","$11,406",GN],[" Win Rate","72%",GN],["Drawdown","-2.1%",YL],["Trades","18W / 7L",M]].map(([l,v,c])=>(
+                  <div key={String(l)} style={{ background: "rgba(255,255,255,.04)", border: `1px solid rgba(255,255,255,.07)`, borderRadius: 8, padding: "7px 8px" }}>
+                    <div style={{ fontSize: 7, color: S, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".06em" }}>{l}</div>
+                    <div style={{ fontSize: 13, fontWeight: 950, color: String(c) }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* faq list inside phone */}
+              <div style={{ fontSize: 8, fontWeight: 900, color: S, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 8 }}>Common Questions</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                {items.map((item, i) => (
+                  <div key={i} style={{
+                    borderRadius: 8, border: `1px solid ${i === open ? `${GN}44` : "rgba(255,255,255,.07)"}`,
+                    background: i === open ? `${GN}08` : "rgba(255,255,255,.03)",
+                    padding: "7px 9px", cursor: "pointer", transition: "all .15s",
+                  }} onClick={() => setOpen(i === open ? null : i)}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: i === open ? GN : T, lineHeight: 1.3, flex: 1, marginRight: 4 }}>{item.q}</span>
+                      <span style={{ fontSize: 10, color: GN, flexShrink: 0 }}>{i === open ? "−" : "+"}</span>
+                    </div>
+                    {i === open && (
+                      <div style={{ fontSize: 8, color: M, lineHeight: 1.6, marginTop: 5, paddingTop: 5, borderTop: `1px solid rgba(255,255,255,.07)` }}>
+                        {item.a}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* home bar */}
+            <div style={{ padding: "8px 0 14px", display: "flex", justifyContent: "center" }}>
+              <div style={{ width: 60, height: 4, borderRadius: 99, background: "rgba(255,255,255,.2)" }} />
+            </div>
+          </div>
+        </div>
+
       </div>
+
+      {/* mobile: stack vertically */}
+      <style>{`.faq-grid-mobile { } @media(max-width:768px){ #faq .faq-two-col { grid-template-columns: 1fr !important; } }`}</style>
     </section>
   );
 }
