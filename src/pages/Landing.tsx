@@ -597,23 +597,175 @@ function FooterCTA({ onCTA }: { onCTA: () => void }) {
   );
 }
 
-// ── footer ────────────────────────────────────────────────────────────────────
-function Footer() {
+// ── social icon svgs ─────────────────────────────────────────────────────────
+function IconInstagram({ size = 20, color = "currentColor" }: { size?: number; color?: string }) {
   return (
-    <footer style={{ padding: "28px 24px", borderTop: `1px solid ${BDR2}`, display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <div style={{ width: 20, height: 20, borderRadius: 5, background: `linear-gradient(135deg,${GN},#00b8ff)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 900, color: "#050814" }}>A</div>
-        <span style={{ fontSize: 13, fontWeight: 900, color: M }}>Asymmetric AI</span>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+      <circle cx="12" cy="12" r="4"/>
+      <circle cx="17.5" cy="6.5" r="1" fill={color} stroke="none"/>
+    </svg>
+  );
+}
+
+function IconTikTok({ size = 20, color = "currentColor" }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z"/>
+    </svg>
+  );
+}
+
+// ── footer ────────────────────────────────────────────────────────────────────
+function Footer({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => void }) {
+  const [igHover, setIgHover] = React.useState(false);
+  const [ttHover, setTtHover] = React.useState(false);
+
+  const colTitle: React.CSSProperties = {
+    fontSize: 11, fontWeight: 900, color: T,
+    letterSpacing: ".10em", textTransform: "uppercase", marginBottom: 16,
+  };
+  const link: React.CSSProperties = {
+    display: "block", fontSize: 13, color: M, textDecoration: "none",
+    marginBottom: 10, cursor: "pointer", transition: "color .15s",
+  };
+
+  const socials = [
+    {
+      label: "Instagram",
+      url: "https://www.instagram.com/asymmetric_ai",
+      icon: (hovered: boolean) => <IconInstagram size={20} color={hovered ? GN : "rgba(255,255,255,.65)"} />,
+      hovered: igHover,
+      setHovered: setIgHover,
+    },
+    {
+      label: "TikTok",
+      url: "https://www.tiktok.com/@asymmetric_ai",
+      icon: (hovered: boolean) => <IconTikTok size={20} color={hovered ? GN : "rgba(255,255,255,.65)"} />,
+      hovered: ttHover,
+      setHovered: setTtHover,
+    },
+    // ── add more social icons here before launch ──────────────────────────
+    // { label: "X",        url: "https://x.com/asymmetric_ai",        icon: ... },
+    // { label: "Telegram", url: "https://t.me/asymmetricai",          icon: ... },
+    // { label: "Discord",  url: "https://discord.gg/asymmetricai",    icon: ... },
+    // { label: "LinkedIn", url: "https://linkedin.com/company/...",   icon: ... },
+    // { label: "YouTube",  url: "https://youtube.com/@asymmetricai",  icon: ... },
+  ];
+
+  return (
+    <footer style={{
+      background: "#0d1117",
+      borderTop: "1px solid rgba(255,255,255,.08)",
+      padding: "48px 24px 32px",
+      fontFamily: ff,
+    }}>
+      <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+
+        {/* ── top: logo + 3-col links ───────────────────────────────── */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1fr repeat(3, auto)",
+          gap: "32px 48px",
+          marginBottom: 40,
+        }} className="footer-grid">
+
+          {/* brand */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: `linear-gradient(135deg,${GN},#00b8ff)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 900, color: "#050814" }}>A</div>
+              <span style={{ fontSize: 15, fontWeight: 900, color: T }}>Asymmetric AI</span>
+            </div>
+            <p style={{ fontSize: 12, color: S, lineHeight: 1.7, maxWidth: 220 }}>
+              4-layer AI signal engine with automatic capital protection. Non-custodial. Your keys, always.
+            </p>
+
+            {/* social icons */}
+            <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
+              {socials.map(s => (
+                <a
+                  key={s.label}
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={s.label}
+                  onMouseEnter={() => s.setHovered(true)}
+                  onMouseLeave={() => s.setHovered(false)}
+                  style={{
+                    width: 38, height: 38, borderRadius: 10,
+                    border: `1px solid ${s.hovered ? `${GN}44` : "rgba(255,255,255,.10)"}`,
+                    background: s.hovered ? `${GN}10` : "rgba(255,255,255,.04)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    transition: "all .18s ease", textDecoration: "none",
+                  }}
+                >
+                  {s.icon(s.hovered)}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* col 1 — product */}
+          <div>
+            <div style={colTitle}>Product</div>
+            <a href="#how" style={link} onMouseEnter={e => (e.currentTarget.style.color = GN)} onMouseLeave={e => (e.currentTarget.style.color = M)}>How It Works</a>
+            <span style={link} onClick={onLogin} onMouseEnter={e => (e.currentTarget.style.color = GN)} onMouseLeave={e => (e.currentTarget.style.color = M)}>Log In</span>
+            <span style={{ ...link, color: GN, fontWeight: 800 }} onClick={onSignup} onMouseEnter={e => (e.currentTarget.style.color = "white")} onMouseLeave={e => (e.currentTarget.style.color = GN)}>Get Early Access →</span>
+          </div>
+
+          {/* col 2 — legal */}
+          <div>
+            <div style={colTitle}>Legal</div>
+            <a href="/terms" style={link} onMouseEnter={e => (e.currentTarget.style.color = GN)} onMouseLeave={e => (e.currentTarget.style.color = M)}>Terms of Service</a>
+            <a href="/privacy" style={link} onMouseEnter={e => (e.currentTarget.style.color = GN)} onMouseLeave={e => (e.currentTarget.style.color = M)}>Privacy Policy</a>
+            <a href="/risk" style={link} onMouseEnter={e => (e.currentTarget.style.color = GN)} onMouseLeave={e => (e.currentTarget.style.color = M)}>Risk Disclosure</a>
+          </div>
+
+          {/* col 3 — connect */}
+          <div>
+            <div style={colTitle}>Connect</div>
+            <a href="#faq" style={link} onMouseEnter={e => (e.currentTarget.style.color = GN)} onMouseLeave={e => (e.currentTarget.style.color = M)}>FAQ</a>
+            <a href="mailto:support.asymetricai@gmail.com" style={link} onMouseEnter={e => (e.currentTarget.style.color = GN)} onMouseLeave={e => (e.currentTarget.style.color = M)}>Contact</a>
+          </div>
+        </div>
+
+        {/* ── divider ───────────────────────────────────────────────── */}
+        <div style={{ height: 1, background: "rgba(255,255,255,.07)", marginBottom: 24 }} />
+
+        {/* ── risk disclosure ───────────────────────────────────────── */}
+        <p style={{ fontSize: 11, color: "rgba(255,255,255,.28)", lineHeight: 1.8, marginBottom: 20, maxWidth: 860 }}>
+          Trading cryptocurrency involves substantial risk of loss. Past performance is not indicative of future results.
+          Asymmetric AI is an automated software tool — not financial advice. Only trade with capital you can afford to lose.
+          You are solely responsible for all trading decisions. This platform is currently in demo mode — no real funds are at risk.
+        </p>
+
+        {/* ── copyright ─────────────────────────────────────────────── */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,.22)" }}>
+            © 2026 Asymmetric AI · asymetricai.com
+          </span>
+          <span style={{ fontSize: 11, color: "rgba(255,255,255,.22)" }}>
+            Demo mode only · No real funds at risk · Non-custodial · Your keys always yours
+          </span>
+        </div>
       </div>
-      <div style={{ display: "flex", gap: 20, fontSize: 12, color: S }}>
-        <a href="/terms" style={{ color: S, textDecoration: "none" }}>Terms</a>
-        <a href="/risk"  style={{ color: S, textDecoration: "none" }}>Risk Disclosure</a>
-        <a href="/login" style={{ color: S, textDecoration: "none" }}>Log In</a>
-      </div>
-      <div style={{ fontSize: 11, color: "rgba(255,255,255,.20)", textAlign: "center" }}>
-        Demo mode only · No real funds at risk currently · Educational purposes<br />
-        © 2026 Asymmetric AI · asymetricai.com
-      </div>
+
+      {/* mobile responsive style */}
+      <style>{`
+        @media (max-width: 768px) {
+          .footer-grid {
+            grid-template-columns: 1fr 1fr !important;
+          }
+          .footer-grid > div:first-child {
+            grid-column: 1 / -1;
+          }
+        }
+        @media (max-width: 480px) {
+          .footer-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </footer>
   );
 }
@@ -856,7 +1008,7 @@ export default function Landing() {
       <FAQ />
       <Divider />
       <FooterCTA onCTA={goSignup} />
-      <Footer />
+      <Footer onLogin={() => nav("/login")} onSignup={goSignup} />
     </div>
   );
 }
