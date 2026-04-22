@@ -622,6 +622,8 @@ function Footer({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
   const [ttHover, setTtHover] = React.useState(false);
   const [faqOpen, setFaqOpen] = React.useState(false);
   const [faqItem, setFaqItem] = React.useState<number | null>(null);
+  const [howOpen, setHowOpen] = React.useState(false);
+  const [contactOpen, setContactOpen] = React.useState(false);
 
   const faqItems = [
     { q: "Is my money safe?", a: "Your funds never leave your exchange. You connect a trade-only API key with withdrawals disabled. We send trade signals — your exchange executes them. We cannot access, move, or withdraw your funds." },
@@ -695,7 +697,32 @@ function Footer({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
           {/* col 1 — product */}
           <div>
             <div style={colTitle}>Product</div>
-            <a href="#how" style={link} onMouseEnter={e => (e.currentTarget.style.color = GN)} onMouseLeave={e => (e.currentTarget.style.color = M)}>How It Works</a>
+
+            {/* How It Works — inline dropdown */}
+            <span
+              style={{ ...link, display: "flex", alignItems: "center", gap: 6, userSelect: "none" }}
+              onClick={() => setHowOpen(o => !o)}
+              onMouseEnter={e => (e.currentTarget.style.color = GN)}
+              onMouseLeave={e => (e.currentTarget.style.color = M)}
+            >
+              How It Works <span style={{ fontSize: 10, color: GN }}>{howOpen ? "▲" : "▼"}</span>
+            </span>
+            {howOpen && (
+              <div style={{ marginBottom: 8, borderRadius: 10, border: `1px solid ${BDR2}`, overflow: "hidden", width: 260 }}>
+                {[
+                  { step: "01", title: "Connect Your Exchange", body: "Link your Binance, Bybit, or OKX account with a trade-only API key. Withdrawals are always blocked — your funds never leave your exchange." },
+                  { step: "02", title: "4-Layer Signal Engine", body: "Every cycle, the AI runs 4 filters: Regime (is there a trend?), Direction (which way?), Entry (right moment?), Momentum (is it starting?). All 4 must pass." },
+                  { step: "03", title: "Grade A or B Trade Opens", body: "Grade A = full position. Grade B = split into T1 (60%) and T2 (40%) with separate take-profit targets. The engine sizes the trade based on your mode." },
+                  { step: "04", title: "Automatic Protection", body: "Trailing stops move to breakeven at 40% of TP. At -15% drawdown the engine stops completely. Capital protection runs 24/7, no action needed from you." },
+                ].map((s, i) => (
+                  <div key={i} style={{ padding: "10px 12px", borderBottom: i < 3 ? `1px solid ${BDR2}` : "none", background: "rgba(0,0,0,.15)" }}>
+                    <div style={{ fontSize: 9, fontWeight: 900, color: GN, letterSpacing: ".08em", marginBottom: 3 }}>STEP {s.step} — {s.title}</div>
+                    <div style={{ fontSize: 11, color: M, lineHeight: 1.6 }}>{s.body}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <span style={link} onClick={onLogin} onMouseEnter={e => (e.currentTarget.style.color = GN)} onMouseLeave={e => (e.currentTarget.style.color = M)}>Log In</span>
             <span style={{ ...link, color: GN, fontWeight: 800 }} onClick={onSignup} onMouseEnter={e => (e.currentTarget.style.color = "white")} onMouseLeave={e => (e.currentTarget.style.color = GN)}>Get Early Access →</span>
           </div>
@@ -742,7 +769,31 @@ function Footer({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
               </div>
             )}
 
-            <a href="mailto:support.asymetricai@gmail.com" style={link} onMouseEnter={e => (e.currentTarget.style.color = GN)} onMouseLeave={e => (e.currentTarget.style.color = M)}>Contact</a>
+            {/* Contact — inline dropdown */}
+            <span
+              style={{ ...link, display: "flex", alignItems: "center", gap: 6, userSelect: "none" }}
+              onClick={() => setContactOpen(o => !o)}
+              onMouseEnter={e => (e.currentTarget.style.color = GN)}
+              onMouseLeave={e => (e.currentTarget.style.color = M)}
+            >
+              Contact <span style={{ fontSize: 10, color: GN }}>{contactOpen ? "▲" : "▼"}</span>
+            </span>
+            {contactOpen && (
+              <div style={{ marginBottom: 8, borderRadius: 10, border: `1px solid ${BDR2}`, padding: "14px", background: "rgba(0,0,0,.2)", width: 260 }}>
+                <div style={{ fontSize: 11, fontWeight: 900, color: GN, marginBottom: 8 }}>Get in Touch</div>
+                <div style={{ fontSize: 11, color: M, lineHeight: 1.7, marginBottom: 10 }}>
+                  For support, questions, or partnership enquiries — reach us on Instagram or TikTok. We typically respond within 24 hours.
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <a href="https://www.instagram.com/asymmetric_ai" target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 8, border: `1px solid ${BDR2}`, background: "rgba(255,255,255,.04)", color: M, fontSize: 11, textDecoration: "none", fontWeight: 700 }}>
+                    <IconInstagram size={13} color={GN} /> Instagram
+                  </a>
+                  <a href="https://www.tiktok.com/@asymmetric_ai" target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 8, border: `1px solid ${BDR2}`, background: "rgba(255,255,255,.04)", color: M, fontSize: 11, textDecoration: "none", fontWeight: 700 }}>
+                    <IconTikTok size={13} color={GN} /> TikTok
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
