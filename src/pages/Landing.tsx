@@ -713,42 +713,38 @@ function Footer({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
             <div style={colTitle}>Connect</div>
             <span
               style={{ ...link, display: "flex", alignItems: "center", gap: 6, userSelect: "none" }}
-              onClick={() => setFaqOpen(o => !o)}
+              onClick={() => { setFaqOpen(o => !o); setFaqItem(null); }}
               onMouseEnter={e => (e.currentTarget.style.color = GN)}
               onMouseLeave={e => (e.currentTarget.style.color = M)}
             >
-              FAQ
-              <span style={{ fontSize: 11, color: GN }}>{faqOpen ? "▲" : "▼"}</span>
+              FAQ <span style={{ fontSize: 10, color: GN }}>{faqOpen ? "▲" : "▼"}</span>
             </span>
+
+            {/* FAQ drops down right here inside the column */}
+            {faqOpen && (
+              <div style={{ marginBottom: 8, borderRadius: 10, border: `1px solid ${BDR2}`, overflow: "hidden", width: 260 }}>
+                {faqItems.map((item, i) => (
+                  <div key={i} style={{ borderBottom: i < faqItems.length - 1 ? `1px solid ${BDR2}` : "none" }}>
+                    <button
+                      onClick={() => setFaqItem(faqItem === i ? null : i)}
+                      style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", background: faqItem === i ? `${GN}08` : "transparent", border: "none", color: T, fontSize: 11, fontWeight: 800, cursor: "pointer", textAlign: "left", gap: 8 }}
+                    >
+                      <span>{item.q}</span>
+                      <span style={{ color: GN, flexShrink: 0 }}>{faqItem === i ? "−" : "+"}</span>
+                    </button>
+                    {faqItem === i && (
+                      <div style={{ padding: "8px 12px 10px", fontSize: 11, color: M, lineHeight: 1.7, borderTop: `1px solid ${BDR2}`, background: "rgba(0,0,0,.2)" }}>
+                        {item.a}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
             <a href="mailto:support.asymetricai@gmail.com" style={link} onMouseEnter={e => (e.currentTarget.style.color = GN)} onMouseLeave={e => (e.currentTarget.style.color = M)}>Contact</a>
           </div>
         </div>
-
-        {/* ── inline FAQ accordion (opens below columns when FAQ clicked) ── */}
-        {faqOpen && (
-          <div style={{ marginBottom: 28, border: `1px solid ${BDR2}`, borderRadius: 14, overflow: "hidden" }}>
-            <div style={{ padding: "12px 20px", borderBottom: `1px solid ${BDR2}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 12, fontWeight: 900, color: GN, letterSpacing: ".08em", textTransform: "uppercase" }}>Common Questions</span>
-              <button onClick={() => setFaqOpen(false)} style={{ background: "none", border: "none", color: S, cursor: "pointer", fontSize: 16, lineHeight: 1 }}>✕</button>
-            </div>
-            {faqItems.map((item, i) => (
-              <div key={i} style={{ borderBottom: i < faqItems.length - 1 ? `1px solid ${BDR2}` : "none" }}>
-                <button
-                  onClick={() => setFaqItem(faqItem === i ? null : i)}
-                  style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 20px", background: "transparent", border: "none", color: T, fontSize: 13, fontWeight: 800, cursor: "pointer", textAlign: "left", gap: 12 }}
-                >
-                  <span>{item.q}</span>
-                  <span style={{ color: GN, flexShrink: 0, fontSize: 16 }}>{faqItem === i ? "−" : "+"}</span>
-                </button>
-                {faqItem === i && (
-                  <div style={{ padding: "0 20px 14px", fontSize: 12, color: M, lineHeight: 1.8, borderTop: `1px solid ${BDR2}`, paddingTop: 10 }}>
-                    {item.a}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
 
         {/* ── social icons row (right-aligned) ──────────────────────── */}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginBottom: 28 }}>

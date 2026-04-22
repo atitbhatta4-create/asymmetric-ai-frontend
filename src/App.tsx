@@ -20,6 +20,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import AcceptTerms from "./pages/AcceptTerms";
 import Terms from "./pages/Terms";
 import RiskDisclosure from "./pages/RiskDisclosure";
+import Privacy from "./pages/Privacy";
 
 type SessionOut = { ok: boolean; email: string | null };
 
@@ -104,6 +105,9 @@ export default function App() {
         <Route path="/login"            element={<Login onLoggedIn={loadSession} />} />
         <Route path="/signup"           element={<Signup />} />
         <Route path="/forgot-password"  element={<ForgotPassword />} />
+        <Route path="/privacy"          element={<Privacy />} />
+        <Route path="/terms"            element={<Terms />} />
+        <Route path="/risk"             element={<RiskDisclosure />} />
         <Route path="*"                 element={<Navigate to="/" replace />} />
       </Routes>
     );
@@ -212,6 +216,7 @@ export default function App() {
             <Route path="/admin"      element={isAdmin ? <Admin /> : <Navigate to="/" replace />} />
             <Route path="/admin/user/:email" element={isAdmin ? <AdminUser /> : <Navigate to="/" replace />} />
             <Route path="/terms"      element={<Terms />} />
+            <Route path="/privacy"    element={<Privacy />} />
             <Route path="/risk"       element={<RiskDisclosure />} />
             <Route path="*"           element={<Dashboard />} />
           </Routes>
