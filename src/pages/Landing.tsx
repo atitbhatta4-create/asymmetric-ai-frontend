@@ -66,7 +66,7 @@ function Nav({ onLogin }: { onLogin: () => void }) {
 // ── hero ──────────────────────────────────────────────────────────────────────
 function Hero({ onCTA }: { onCTA: () => void }) {
   return (
-    <section style={{
+    <section className="land-hero" style={{
       minHeight: "100vh", display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center", textAlign: "center",
       padding: "100px 24px 60px", position: "relative", overflow: "hidden",
@@ -96,7 +96,7 @@ function Hero({ onCTA }: { onCTA: () => void }) {
           no guessing.
         </p>
 
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+        <div className="cta-row" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
           <button onClick={onCTA} style={{ padding: "14px 32px", borderRadius: 14, border: `1px solid ${GN}55`, background: `linear-gradient(90deg,${GN}28,${GN}10)`, color: GN, fontSize: 15, fontWeight: 950, cursor: "pointer", letterSpacing: ".02em" }}>
             Get Early Access →
           </button>
@@ -111,7 +111,7 @@ function Hero({ onCTA }: { onCTA: () => void }) {
       </div>
 
       {/* floating equity curve preview */}
-      <div style={{ position: "relative", marginTop: 60, width: "100%", maxWidth: 720 }}>
+      <div className="preview" style={{ position: "relative", marginTop: 60, width: "100%", maxWidth: 720 }}>
         <div style={{ ...cardStyle(), padding: "16px 20px 20px" }}>
           <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: ".10em", textTransform: "uppercase", color: M, marginBottom: 10 }}>Live AI Signal Preview</div>
           <MiniEquityPreview />
@@ -225,7 +225,7 @@ function Engine() {
       </div>
 
       {/* layer selector tabs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 20 }}>
+      <div className="land-engine-tabs" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 20 }}>
         {layers.map((layer, i) => (
           <button key={i} onClick={() => setActive(i)} style={{
             padding: "14px 12px", borderRadius: 12, cursor: "pointer", textAlign: "left",
@@ -245,7 +245,7 @@ function Engine() {
       </div>
 
       {/* active layer detail */}
-      <div style={{ ...cardStyle(), borderColor: `${l.color}33`, background: `${l.color}06`, padding: "28px 28px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
+      <div className="land-engine-detail" style={{ ...cardStyle(), borderColor: `${l.color}33`, background: `${l.color}06`, padding: "28px 28px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 28 }}>
         {/* left */}
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
@@ -504,7 +504,7 @@ function Modes() {
           <p style={subStyle}>5 modes from ultra conservative to aggressive. Switch anytime.</p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 14 }}>
+        <div className="land-modes-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 14 }}>
           {modes.map(m => (
             <div key={m.name} style={{
               ...cardStyle(),
@@ -552,7 +552,7 @@ function FAQ() {
 
   return (
     <section id="faq" style={{ padding: "80px 24px" }}>
-      <div style={{ maxWidth: 1080, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60, alignItems: "center" }}>
+      <div className="land-faq-grid" style={{ maxWidth: 1080, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 60, alignItems: "center" }}>
 
         {/* left — text */}
         <div>
@@ -582,7 +582,7 @@ function FAQ() {
         </div>
 
         {/* right — phone mockup */}
-        <div style={{ display: "flex", justifyContent: "center" }}>
+        <div className="land-faq-phone" style={{ display: "flex", justifyContent: "center" }}>
           <div style={{
             width: 220, borderRadius: 36, overflow: "hidden",
             border: "1.5px solid rgba(255,255,255,.15)",
@@ -978,7 +978,7 @@ function DashboardMockup() {
         <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
 
           {/* ── DESKTOP BROWSER (tilted 3D) ───────────────────────────────── */}
-          <div style={{
+          <div className="land-dash-tilt" style={{
             width: "min(780px, 90vw)",
             transform: "perspective(1400px) rotateX(4deg) rotateY(-6deg) rotateZ(1deg)",
             transformOrigin: "center center",
@@ -1075,7 +1075,7 @@ function DashboardMockup() {
           </div>
 
           {/* ── PHONE MOCKUP (overlapping right side) ─────────────────────── */}
-          <div style={{
+          <div className="land-dash-phone" style={{
             position: "absolute",
             right: "calc(50% - 520px)",
             bottom: -30,
@@ -1115,7 +1115,7 @@ function DashboardMockup() {
           </div>
 
           {/* ── FLOATING STAT BADGES ──────────────────────────────────────── */}
-          <div style={{ position: "absolute", top: -20, left: "calc(50% - 480px)", background: CARD, border: `1px solid ${GN}33`, borderRadius: 12, padding: "10px 14px", boxShadow: `0 8px 24px rgba(0,0,0,.4)` }}>
+          <div className="land-dash-badge" style={{ position: "absolute", top: -20, left: "calc(50% - 480px)", background: CARD, border: `1px solid ${GN}33`, borderRadius: 12, padding: "10px 14px", boxShadow: `0 8px 24px rgba(0,0,0,.4)` }}>
             <div style={{ fontSize: 9, color: S, fontWeight: 800, marginBottom: 2 }}>THIS MONTH</div>
             <div style={{ fontSize: 18, fontWeight: 950, color: GN }}>+14.2%</div>
           </div>
@@ -1158,6 +1158,69 @@ export default function Landing() {
 
   return (
     <div style={{ background: BG, color: T, fontFamily: ff, minHeight: "100vh" }}>
+      <style>{`
+        /* ── MOBILE LAYOUT (≤768px) ── */
+        @media (max-width: 768px) {
+          /* hero */
+          .land-hero { padding: 80px 16px 40px !important; }
+          .land-hero h1 { font-size: 28px !important; }
+          .land-hero p.sub { font-size: 14px !important; }
+          .land-hero .cta-row { flex-direction: column !important; align-items: stretch !important; }
+          .land-hero .cta-row a, .land-hero .cta-row button { text-align: center !important; }
+          .land-hero .preview { margin-top: 32px !important; }
+          .land-brand-name { font-size: 16px !important; }
+
+          /* exchanges */
+          .land-exchanges { padding: 32px 16px !important; flex-wrap: wrap !important; gap: 10px !important; }
+          .land-exchange-chip { padding: 10px 16px !important; }
+
+          /* section padding */
+          .land-section { padding: 48px 16px !important; }
+
+          /* problem / engine / protection cards — single col */
+          .land-grid-auto { grid-template-columns: 1fr !important; }
+
+          /* engine tabs — 2x2 */
+          .land-engine-tabs { grid-template-columns: 1fr 1fr !important; }
+          /* engine detail — stack */
+          .land-engine-detail { grid-template-columns: 1fr !important; gap: 20px !important; }
+
+          /* dashboard mockup — hide 3d tilt, show simplified */
+          .land-dash-tilt { transform: none !important; width: 100% !important; }
+          .land-dash-phone { display: none !important; }
+          .land-dash-badge { display: none !important; }
+
+          /* modes cards — 2 col */
+          .land-modes-grid { grid-template-columns: 1fr 1fr !important; }
+
+          /* FAQ — stack phone below */
+          .land-faq-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+          .land-faq-phone { display: none !important; }
+
+          /* how to start */
+          .land-steps-grid { grid-template-columns: 1fr 1fr !important; }
+
+          /* footer grid */
+          .footer-grid { grid-template-columns: 1fr 1fr !important; }
+          .footer-grid > div:first-child { grid-column: 1 / -1 !important; }
+
+          /* returns grid */
+          .land-returns-grid { grid-template-columns: 1fr !important; }
+
+          /* protection grid */
+          .land-protection-grid { grid-template-columns: 1fr 1fr !important; }
+          .land-protection-bottom { grid-template-columns: 1fr !important; }
+        }
+
+        @media (max-width: 480px) {
+          .land-hero h1 { font-size: 24px !important; }
+          .land-engine-tabs { grid-template-columns: 1fr !important; }
+          .land-modes-grid { grid-template-columns: 1fr !important; }
+          .land-steps-grid { grid-template-columns: 1fr !important; }
+          .land-protection-grid { grid-template-columns: 1fr !important; }
+          .footer-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       <Nav onLogin={() => nav("/login")} />
       <Hero onCTA={goSignup} />
       <Divider />
