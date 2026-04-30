@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import * as api from "../lib/api";
-import useIsMobile from "../hooks/useIsMobile";
 
 // ── types ────────────────────────────────────────────────────────────────────
 type MonthlyPnl  = { month: string; pnl: number; trades: number; wins: number };
@@ -380,7 +379,6 @@ function TradeCard({ trade, isBest }: { trade: TradeRec; isBest: boolean }) {
 
 // ── main page ─────────────────────────────────────────────────────────────────
 export default function Portfolio() {
-  const isMobile = useIsMobile();
   const [stats, setStats]   = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]   = useState<string | null>(null);
@@ -451,21 +449,21 @@ export default function Portfolio() {
         {/* ── header ── */}
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
           <div>
-            <div style={{ fontSize: isMobile ? 16 : 20, fontWeight:900 }}>Portfolio Analytics</div>
-            <div style={{ fontSize: isMobile ? 10 : 11, color:M, marginTop:3 }}>{summary.total_trades} trades · all time</div>
+            <div style={{ fontSize:20, fontWeight:900 }}>Portfolio Analytics</div>
+            <div style={{ fontSize:11, color:M, marginTop:3 }}>{summary.total_trades} trades · all time</div>
           </div>
-          <button onClick={load} style={{ padding: isMobile ? "6px 10px" : "8px 14px", borderRadius:10, border:`1px solid ${BORDER}`, background:"rgba(255,255,255,.04)", color:T, fontSize: isMobile ? 11 : 12, fontWeight:800, cursor:"pointer" }}>
+          <button onClick={load} style={{ padding:"8px 14px", borderRadius:10, border:`1px solid ${BORDER}`, background:"rgba(255,255,255,.04)", color:T, fontSize:12, fontWeight:800, cursor:"pointer" }}>
             Refresh
           </button>
         </div>
 
         {/* ── summary cards (streak card has extended sub text) ── */}
-        <div style={{ display:"grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(7,1fr)", gap: isMobile ? 8 : G }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:G }}>
           {summaryCards.map(c => (
-            <div key={c.label} style={{ ...card(), padding: isMobile ? "9px 10px" : "12px 14px" }}>
-              <div style={{ fontSize: isMobile ? 8 : 9, fontWeight:900, letterSpacing:".10em", textTransform:"uppercase", color:M, marginBottom: isMobile ? 4 : 6 }}>{c.label}</div>
-              <div style={{ fontSize: isMobile ? 14 : 18, fontWeight:900, color:c.color, lineHeight:1.1 }}>{c.value}</div>
-              <div style={{ fontSize: isMobile ? 9 : 10, color: c.label === "Streak" && summary.current_streak.type === "L" ? RD : S, marginTop: isMobile ? 3 : 4, lineHeight:1.4 }}>{c.sub}</div>
+            <div key={c.label} style={{ ...card(), padding:"12px 14px" }}>
+              <div style={{ fontSize:9, fontWeight:900, letterSpacing:".10em", textTransform:"uppercase", color:M, marginBottom:6 }}>{c.label}</div>
+              <div style={{ fontSize:18, fontWeight:900, color:c.color, lineHeight:1.1 }}>{c.value}</div>
+              <div style={{ fontSize:10, color: c.label === "Streak" && summary.current_streak.type === "L" ? RD : S, marginTop:4, lineHeight:1.4 }}>{c.sub}</div>
             </div>
           ))}
         </div>
@@ -476,7 +474,7 @@ export default function Portfolio() {
         </div>
 
         {/* ── equity + drawdown (with tier lines) ── */}
-        <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 8 : G }}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:G }}>
           <div style={card()}>
             <Head label="Equity Curve — Full History" />
             <div style={{ padding:"10px 14px 14px", height:160 }}><EquityCurve data={equity_curve} /></div>
