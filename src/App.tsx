@@ -227,10 +227,13 @@ export default function App() {
 
   // ── DESKTOP LAYOUT ────────────────────────────────────────────────────────
   return (
-    <div style={{
-      minHeight: "100vh", background: "#050814", color: "white",
-      display: "grid", gridTemplateColumns: "200px 1fr",
-    }}>
+    <div
+      className="app-desktop-shell"
+      style={{
+        minHeight: "100vh", background: "#050814", color: "white",
+        display: "grid", gridTemplateColumns: "200px 1fr",
+      }}
+    >
       <aside style={{
         borderRight: "1px solid rgba(255,255,255,0.06)",
         padding: 12, background: "rgba(9,15,30,0.92)",

@@ -66,4 +66,24 @@ button, input, select{ font:inherit; }
     padding: 9px 11px !important;
   }
 
+  /* ── CRITICAL: collapse desktop 2-column sidebar+content grid on mobile ──
+     The JS isMobile check renders the correct layout, but this CSS is a
+     safety net so the grid NEVER splits the screen even if JS is slow. */
+  .app-desktop-shell {
+    display: block !important;
+    grid-template-columns: unset !important;
+  }
+  .app-desktop-shell > aside {
+    display: none !important;
+  }
+  .app-desktop-shell > main {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 8px !important;
+  }
+
+  /* ── History table: hide Mode column on mobile (4th col) ── */
+  .hist-mode-col {
+    display: none !important;
+  }
 }

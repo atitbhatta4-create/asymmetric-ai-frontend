@@ -354,7 +354,7 @@ export default function History() {
                   <th style={{ padding: 12 }}>Time</th>
                   <th style={{ padding: 12 }}>Symbol</th>
                   <th style={{ padding: 12 }}>Side</th>
-                  <th style={{ padding: 12 }}>Mode</th>
+                  <th className="hist-mode-col" style={{ padding: 12 }}>Mode</th>
                   <th style={{ padding: 12 }}>Size</th>
                   <th style={{ padding: 12 }}>SL</th>
                   <th style={{ padding: 12 }}>TP</th>
@@ -390,7 +390,7 @@ export default function History() {
                         </button>
                       </td>
                       <td style={{ padding: 12, fontWeight: 900, color: t.side === "LONG" ? "#00ffe0" : "#ff5078" }}>{t.side}</td>
-                      <td style={{ padding: 12, opacity: 0.9 }}>{(t.mode || "MINI_ASYM").replace("_", " ")}</td>
+                      <td className="hist-mode-col" style={{ padding: 12, opacity: 0.9 }}>{(t.mode || "MINI_ASYM").replace("_", " ")}</td>
                       <td style={{ padding: 12 }}>{fmtNum(Number(t.size ?? 0), 2)}</td>
                       <td style={{ padding: 12 }}>{fmtNum(Number(t.sl ?? 0), 2)}</td>
                       <td style={{ padding: 12 }}>{fmtNum(Number(t.tp ?? 0), 2)}</td>
