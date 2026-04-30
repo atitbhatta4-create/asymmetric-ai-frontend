@@ -106,9 +106,9 @@ export default function Market() {
   return (
     <div style={{ color: "white" }}>
       {/* ── Header ── */}
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ fontSize: 24, fontWeight: 950 }}>Market</div>
-        <div style={{ fontSize: 12, opacity: 0.5, marginTop: 2 }}>
+      <div style={{ marginBottom: isMobile ? 12 : 16 }}>
+        <div style={{ fontSize: isMobile ? 18 : 24, fontWeight: 950 }}>Market</div>
+        <div style={{ fontSize: isMobile ? 11 : 12, opacity: 0.5, marginTop: 2 }}>
           Prices via OKX · connected exchange: <span style={{ color: "#00ffe0", textTransform: "uppercase" }}>{exchange}</span>
         </div>
       </div>

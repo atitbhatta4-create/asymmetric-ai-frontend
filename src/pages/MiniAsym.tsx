@@ -304,7 +304,7 @@ export default function MiniAsym() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 950 }}>Mini-Asym</div>
+            <div style={{ fontSize: isMobile ? 20 : 26, fontWeight: 950 }}>Mini-Asym</div>
             <div style={{ padding: "4px 10px", borderRadius: 999, fontSize: 10, fontWeight: 900, letterSpacing: 1, background: "rgba(0,255,224,0.10)", border: "1px solid rgba(0,255,224,0.22)", color: "#00ffe0" }}>
               RISK ENGINE
             </div>
@@ -328,7 +328,7 @@ export default function MiniAsym() {
 
       {/* Status banner */}
       <div style={{
-        marginTop: 10, padding: isMobile ? "10px 14px" : "12px 18px", borderRadius: 16,
+        marginTop: 10, padding: isMobile ? "8px 11px" : "12px 18px", borderRadius: 16,
         border: `1px solid ${badge.br}`, background: badge.bg,
         display: "flex", alignItems: "center", gap: 10,
       }}>
@@ -342,20 +342,20 @@ export default function MiniAsym() {
       {/* Top stats */}
       <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
         {/* Equity card */}
-        <div style={{ borderRadius: 16, padding: isMobile ? "12px 14px" : "16px 18px", background: "rgba(9,15,30,0.92)", border: "1px solid rgba(255,255,255,0.08)", position: "relative", overflow: "hidden" }}>
+        <div style={{ borderRadius: 16, padding: isMobile ? "9px 11px" : "16px 18px", background: "rgba(9,15,30,0.92)", border: "1px solid rgba(255,255,255,0.08)", position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 80% 20%, rgba(0,255,157,0.07), transparent 60%)", pointerEvents: "none" }} />
           <div style={{ fontSize: 10, fontWeight: 900, opacity: 0.5, letterSpacing: 1, textTransform: "uppercase" }}>Account Equity</div>
-          <div style={{ fontSize: isMobile ? 26 : 34, fontWeight: 950, marginTop: 4, color: "#f1f5f9" }}>${fmtMoney(equity)}</div>
+          <div style={{ fontSize: isMobile ? 24 : 34, fontWeight: 950, marginTop: 4, color: "#f1f5f9" }}>${fmtMoney(equity)}</div>
           <div style={{ fontSize: 11, opacity: 0.45, marginTop: 3 }}>
             Floor: ${fmtMoney(equity * 0.85)} · Peak protected
           </div>
         </div>
 
         {/* Live price card */}
-        <div style={{ borderRadius: 16, padding: isMobile ? "12px 14px" : "16px 18px", background: "rgba(9,15,30,0.92)", border: "1px solid rgba(255,255,255,0.08)", position: "relative", overflow: "hidden" }}>
+        <div style={{ borderRadius: 16, padding: isMobile ? "9px 11px" : "16px 18px", background: "rgba(9,15,30,0.92)", border: "1px solid rgba(255,255,255,0.08)", position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 20% 80%, rgba(0,210,255,0.06), transparent 60%)", pointerEvents: "none" }} />
           <div style={{ fontSize: 10, fontWeight: 900, opacity: 0.5, letterSpacing: 1, textTransform: "uppercase" }}>Live Price</div>
-          <div style={{ fontSize: isMobile ? 26 : 34, fontWeight: 950, marginTop: 4, color: "#f1f5f9" }}>${fmtMoney(livePrice)}</div>
+          <div style={{ fontSize: isMobile ? 24 : 34, fontWeight: 950, marginTop: 4, color: "#f1f5f9" }}>${fmtMoney(livePrice)}</div>
           <div style={{ fontSize: 11, opacity: 0.45, marginTop: 3 }}>
             {symbol.toUpperCase().trim()} · refreshes every 5s
           </div>
@@ -367,74 +367,74 @@ export default function MiniAsym() {
         style={{
           marginTop: 10,
           borderRadius: 16,
-          padding: isMobile ? 10 : 14,
+          padding: isMobile ? 8 : 14,
           background: "rgba(9, 15, 30, 0.92)",
           border: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        <div style={{ fontWeight: 950, fontSize: isMobile ? 13 : 15, marginBottom: 8 }}>Today’s Risk Summary</div>
+        <div style={{ fontWeight: 950, fontSize: isMobile ? 11 : 15, marginBottom: 8 }}>Today’s Risk Summary</div>
 
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(5, 1fr)", gap: 10 }}>
           <div
             style={{
-              padding: isMobile ? 8 : 12,
+              padding: isMobile ? 6 : 12,
               borderRadius: 12,
               border: "1px solid rgba(255,255,255,0.08)",
               background: "rgba(15,23,42,0.55)",
             }}
           >
             <div style={{ fontSize: isMobile ? 10 : 11, opacity: 0.7, fontWeight: 900 }}>Trades</div>
-            <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 950, marginTop: 4 }}>
+            <div style={{ fontSize: isMobile ? 13 : 18, fontWeight: 950, marginTop: 4 }}>
               {today.tradesUsed}/{MAX_TRADES_PER_DAY}
             </div>
           </div>
 
           <div
             style={{
-              padding: isMobile ? 8 : 12,
+              padding: isMobile ? 6 : 12,
               borderRadius: 12,
               border: "1px solid rgba(255,255,255,0.08)",
               background: "rgba(15,23,42,0.55)",
             }}
           >
             <div style={{ fontSize: isMobile ? 10 : 11, opacity: 0.7, fontWeight: 900 }}>PnL</div>
-            <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 950, marginTop: 4 }}>{fmtNum(today.pnlPct, 2)}%</div>
+            <div style={{ fontSize: isMobile ? 13 : 18, fontWeight: 950, marginTop: 4 }}>{fmtNum(today.pnlPct, 2)}%</div>
           </div>
 
           <div
             style={{
-              padding: isMobile ? 8 : 12,
+              padding: isMobile ? 6 : 12,
               borderRadius: 12,
               border: "1px solid rgba(255,255,255,0.08)",
               background: "rgba(15,23,42,0.55)",
             }}
           >
             <div style={{ fontSize: isMobile ? 10 : 11, opacity: 0.7, fontWeight: 900 }}>Loss limit</div>
-            <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 950, marginTop: 4 }}>{DAILY_LOSS_LIMIT_PCT}%</div>
+            <div style={{ fontSize: isMobile ? 13 : 18, fontWeight: 950, marginTop: 4 }}>{DAILY_LOSS_LIMIT_PCT}%</div>
           </div>
 
           <div
             style={{
-              padding: isMobile ? 8 : 12,
+              padding: isMobile ? 6 : 12,
               borderRadius: 12,
               border: "1px solid rgba(255,255,255,0.08)",
               background: "rgba(15,23,42,0.55)",
             }}
           >
             <div style={{ fontSize: isMobile ? 10 : 11, opacity: 0.7, fontWeight: 900 }}>Target</div>
-            <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 950, marginTop: 4 }}>{DAILY_PROFIT_TARGET_PCT}%</div>
+            <div style={{ fontSize: isMobile ? 13 : 18, fontWeight: 950, marginTop: 4 }}>{DAILY_PROFIT_TARGET_PCT}%</div>
           </div>
 
           <div
             style={{
-              padding: isMobile ? 8 : 12,
+              padding: isMobile ? 6 : 12,
               borderRadius: 12,
               border: "1px solid rgba(255,255,255,0.08)",
               background: "rgba(15,23,42,0.55)",
             }}
           >
             <div style={{ fontSize: isMobile ? 10 : 11, opacity: 0.7, fontWeight: 900 }}>Losses</div>
-            <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 950, marginTop: 4 }}>
+            <div style={{ fontSize: isMobile ? 13 : 18, fontWeight: 950, marginTop: 4 }}>
               {today.consecLoss}/{MAX_CONSEC_LOSSES}
             </div>
           </div>

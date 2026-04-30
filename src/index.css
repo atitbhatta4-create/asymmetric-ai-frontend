@@ -35,10 +35,35 @@ body{
 a{ color:inherit; text-decoration:none; }
 button, input, select{ font:inherit; }
 
+/* Reduce base font size on mobile */
+@media (max-width: 768px) {
+  html { font-size: 11px; }
+}
+
 /* iOS Safari auto-zooms when tapping inputs with font-size < 16px.
    Force 16px on mobile to prevent this. */
 @media (max-width: 768px) {
   input, select, textarea {
     font-size: 16px !important;
   }
+}
+
+/* ── Mobile padding/font reductions ─────────────────────────────────────────
+   !important in external CSS overrides inline styles per the CSS cascade spec.
+   Desktop styles are untouched — these rules only fire at ≤768px.
+   ────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Buttons: reduce padding ~22%, font by 2px */
+  button {
+    padding: 8px 11px !important;
+    font-size: 13px !important;
+  }
+
+  /* Input/select padding: reduce ~20% (font-size kept 16px above for iOS) */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    padding: 9px 11px !important;
+  }
+
 }

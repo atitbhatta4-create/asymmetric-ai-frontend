@@ -370,47 +370,47 @@
    ========================================================= */
 
 @media (max-width: 720px) {
-  .dash { padding: 10px; }
-  .container { padding: 0; gap: 10px; }
+  .dash { padding: 6px; }
+  .container { padding: 0; gap: 6px; }
 
   /* Brand / header */
-  .brand { padding: 12px; }
-  .brandName { font-size: 18px !important; }
-  .brandSub  { font-size: 11px; }
+  .brand { padding: 8px 10px; }
+  .brandName { font-size: 13px !important; }
+  .brandSub  { font-size: 9px; }
 
   /* coins become 2 columns */
   .coinsRow { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-  .coinChip { padding: 8px 10px; }
-  .coinSym  { font-size: 13px; }
-  .coinPx   { font-size: 11px; margin-top: 4px; }
+  .coinChip { padding: 6px 7px; }
+  .coinSym  { font-size: 11px; }
+  .coinPx   { font-size: 9px; margin-top: 2px; }
 
   /* Card heads tighter */
-  .cardHead { padding: 10px 12px 8px; }
-  .title    { font-size: 11px; }
+  .cardHead { padding: 6px 8px 5px; }
+  .title    { font-size: 9px; }
 
   /* Equity / stat numbers smaller */
-  .stat .big { font-size: 22px !important; padding: 8px 12px 10px !important; }
+  .stat .big { font-size: 16px !important; padding: 5px 8px 6px !important; }
 
   /* Form sections tighter */
-  .modes   { padding: 8px 12px 0; gap: 6px; }
-  .pill    { padding: 7px 10px; font-size: 11px; }
-  .formRow { padding: 8px 12px 0; }
-  .grid4   { padding: 8px 12px 0; gap: 8px; }
-  .sideRow { padding: 8px 12px 0; }
-  .input   { padding: 9px 10px; font-size: 16px; }
-  .ghost   { padding: 9px 10px; font-size: 14px; }
+  .modes   { padding: 6px 8px 0; gap: 4px; }
+  .pill    { padding: 5px 7px; font-size: 9px; }
+  .formRow { padding: 6px 8px 0; }
+  .grid4   { padding: 6px 8px 0; gap: 6px; }
+  .sideRow { padding: 6px 8px 0; }
+  .input   { padding: 7px 9px; font-size: 16px; }
+  .ghost   { padding: 7px 9px; font-size: 11px; }
 
   /* Symbol input row stacks */
   .rowInline {
     display: grid !important;
     grid-template-columns: 1fr !important;
-    gap: 8px !important;
+    gap: 6px !important;
   }
   .rowInline .ghost { width: 100% !important; }
 
   /* Actions stack and fill */
   .actions {
-    padding: 10px 12px 12px;
+    padding: 7px 8px 9px;
     display: grid !important;
     grid-template-columns: 1fr !important;
     justify-content: stretch !important;
@@ -420,26 +420,29 @@
   .actions .ghost {
     width: 100% !important;
     min-width: 0 !important;
-    padding: 11px 12px;
+    padding: 8px 10px;
   }
 
   /* Side buttons still 2 cols */
   .sideRow { display: grid !important; grid-template-columns: 1fr 1fr !important; }
-  .sideBtn { padding: 10px 12px; font-size: 13px; }
+  .sideBtn { padding: 7px 8px; font-size: 11px; }
 
-  .rightCol { gap: 10px; }
-  .bottomGrid { gap: 10px; }
+  .rightCol { gap: 6px; }
+  .bottomGrid { gap: 6px; }
 
   /* Curve chart smaller on mobile */
-  .curve svg { height: 180px; }
-  .bottomGrid > .card { height: 260px; }
+  .curve svg { height: 150px; }
+  .bottomGrid > .card { height: 220px; }
 }
 
 /* very small phones */
 @media (max-width: 480px) {
+  .dash { padding: 6px; }
   .coinsRow { grid-template-columns: repeat(2, 1fr) !important; }
   .grid4    { grid-template-columns: 1fr 1fr !important; }
-  .stat .big { font-size: 20px !important; }
+  .stat .big { font-size: 16px !important; }
+  .brandName { font-size: 14px !important; }
+  .pill { padding: 5px 8px; font-size: 10px; }
 }
 
 /* Table: allow horizontal scroll without shrinking the whole UI */

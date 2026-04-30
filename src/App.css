@@ -117,3 +117,23 @@
   .sidebar{ height:auto; position:relative; }
   .gridDash{ grid-template-columns: 1fr; }
 }
+
+@media(max-width: 768px){
+  /* Cards: reduce padding ~22% */
+  .card { padding: 0; } /* card itself has no padding; children do — handled below */
+
+  /* Buttons */
+  .btnPrimary { padding: 8px 12px !important; font-size: 13px !important; }
+  .btnGhost   { padding: 8px 11px !important; font-size: 13px !important; }
+
+  /* Inputs / labels */
+  .input { padding: 9px 10px !important; font-size: 16px !important; }
+  .label { font-size: 11px; }
+
+  /* Nav */
+  .navBtn { padding: 9px 11px; font-size: 12px; }
+
+  /* Content area */
+  .content { padding: 12px; }
+  .sidebar { padding: 12px; }
+}

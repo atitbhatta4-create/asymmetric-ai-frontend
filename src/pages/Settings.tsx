@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { api } from "../lib/api";
 import * as apiLib from "../lib/api";
+import useIsMobile from "../hooks/useIsMobile";
 
 const card: React.CSSProperties = {
   background: "rgba(9, 15, 30, 0.92)",
@@ -19,7 +20,7 @@ const inputStyle: React.CSSProperties = {
   border: "1px solid rgba(148,163,184,0.35)",
   background: "rgba(15,23,42,0.85)",
   color: "white",
-  fontSize: 14,
+  fontSize: 16,
   boxSizing: "border-box",
 };
 
@@ -340,10 +341,11 @@ function TwoFactor() {
 
 // ── Main Settings page ────────────────────────────────────────────────────────
 export default function Settings() {
+  const isMobile = useIsMobile();
   return (
     <div style={{ maxWidth: 600 }}>
-      <div style={{ fontSize: 26, fontWeight: 950, marginBottom: 6 }}>Settings</div>
-      <div style={{ opacity: 0.7, marginBottom: 20 }}>Manage your account</div>
+      <div style={{ fontSize: isMobile ? 20 : 26, fontWeight: 950, marginBottom: isMobile ? 4 : 6 }}>Settings</div>
+      <div style={{ opacity: 0.7, marginBottom: isMobile ? 14 : 20, fontSize: isMobile ? 12 : 14 }}>Manage your account</div>
       <ChangePassword />
       <ResetViaEmail />
       <TwoFactor />

@@ -128,15 +128,15 @@ export default function App() {
 
   const linkStyle = (active: boolean): React.CSSProperties => ({
     display: "block",
-    padding: isMobile ? "12px 16px" : "9px 11px",
+    padding: isMobile ? "10px 14px" : "9px 11px",
     borderRadius: 12,
     textDecoration: "none",
     color: "white",
     background: active ? "rgba(0,255,224,0.10)" : "transparent",
     border: active ? "1px solid rgba(0,255,224,0.22)" : "1px solid rgba(255,255,255,0.06)",
     fontWeight: 800,
-    marginBottom: isMobile ? 5 : 6,
-    fontSize: isMobile ? 14 : 13,
+    marginBottom: isMobile ? 4 : 6,
+    fontSize: isMobile ? 13 : 13,
   });
 
   const allNavItems = isAdmin
@@ -152,12 +152,12 @@ export default function App() {
           position: "sticky", top: 0, zIndex: 100,
           background: "rgba(9,15,30,0.97)",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
-          padding: "12px 16px",
+          padding: "7px 12px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 900 }}>Asymmetric AI</div>
-            <div style={{ fontSize: 10, opacity: 0.5 }}>{session.email}</div>
+            <div style={{ fontSize: 12, fontWeight: 900 }}>Asymmetric AI</div>
+            <div style={{ fontSize: 9, opacity: 0.5 }}>{session.email}</div>
           </div>
           <button
             onClick={() => setMenuOpen((o) => !o)}
@@ -174,9 +174,9 @@ export default function App() {
         {/* Slide-down menu */}
         {menuOpen && (
           <div style={{
-            position: "fixed", top: 57, left: 0, right: 0, bottom: 0,
+            position: "fixed", top: 50, left: 0, right: 0, bottom: 0,
             background: "rgba(9,15,30,0.98)", zIndex: 99,
-            padding: 16, overflowY: "auto",
+            padding: 12, overflowY: "auto",
           }}>
             {allNavItems.map(({ to, label }) => (
               <NavLink key={to} to={to}
@@ -191,7 +191,7 @@ export default function App() {
               style={{
                 width: "100%", borderRadius: 14, border: "1px solid rgba(255,255,255,0.10)",
                 background: "rgba(255,255,255,0.04)", color: "white",
-                padding: "14px", cursor: "pointer", fontWeight: 800, fontSize: 15, marginTop: 8,
+                padding: "11px", cursor: "pointer", fontWeight: 800, fontSize: 13, marginTop: 6,
               }}
             >
               Logout
@@ -203,7 +203,7 @@ export default function App() {
         )}
 
         {/* Page content */}
-        <main style={{ padding: 10, paddingBottom: 20 }}>
+        <main style={{ padding: 8, paddingBottom: 16 }}>
           <Routes>
             <Route path="/"           element={<Dashboard />} />
             <Route path="/market"     element={<Market />} />
