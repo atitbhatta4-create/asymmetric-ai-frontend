@@ -37,7 +37,7 @@ button, input, select{ font:inherit; }
 
 /* Reduce base font size on mobile */
 @media (max-width: 768px) {
-  html { font-size: 11px; }
+  html { font-size: 10px; }
 }
 
 /* iOS Safari auto-zooms when tapping inputs with font-size < 16px.
@@ -53,17 +53,17 @@ button, input, select{ font:inherit; }
    Desktop styles are untouched — these rules only fire at ≤768px.
    ────────────────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  /* Buttons: reduce padding ~22%, font by 2px */
+  /* Buttons: compact for mobile */
   button {
-    padding: 8px 11px !important;
-    font-size: 13px !important;
+    padding: 6px 9px !important;
+    font-size: 11px !important;
   }
 
-  /* Input/select padding: reduce ~20% (font-size kept 16px above for iOS) */
+  /* Input/select padding: compact (font-size kept 16px above for iOS zoom) */
   input:not([type="checkbox"]):not([type="radio"]),
   select,
   textarea {
-    padding: 9px 11px !important;
+    padding: 7px 9px !important;
   }
 
   /* ── CRITICAL: collapse desktop 2-column sidebar+content grid on mobile ──

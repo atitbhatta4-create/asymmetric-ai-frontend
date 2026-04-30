@@ -128,15 +128,15 @@ export default function App() {
 
   const linkStyle = (active: boolean): React.CSSProperties => ({
     display: "block",
-    padding: isMobile ? "10px 14px" : "9px 11px",
-    borderRadius: 12,
+    padding: isMobile ? "8px 10px" : "9px 11px",
+    borderRadius: 10,
     textDecoration: "none",
     color: "white",
     background: active ? "rgba(0,255,224,0.10)" : "transparent",
     border: active ? "1px solid rgba(0,255,224,0.22)" : "1px solid rgba(255,255,255,0.06)",
     fontWeight: 800,
-    marginBottom: isMobile ? 4 : 6,
-    fontSize: isMobile ? 13 : 13,
+    marginBottom: isMobile ? 3 : 6,
+    fontSize: isMobile ? 11 : 13,
   });
 
   const allNavItems = isAdmin
@@ -152,19 +152,19 @@ export default function App() {
           position: "sticky", top: 0, zIndex: 100,
           background: "rgba(9,15,30,0.97)",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
-          padding: "7px 12px",
+          padding: "5px 10px",
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           <div>
-            <div style={{ fontSize: 12, fontWeight: 900 }}>Asymmetric AI</div>
-            <div style={{ fontSize: 9, opacity: 0.5 }}>{session.email}</div>
+            <div style={{ fontSize: 11, fontWeight: 900 }}>Asymmetric AI</div>
+            <div style={{ fontSize: 8, opacity: 0.5 }}>{session.email}</div>
           </div>
           <button
             onClick={() => setMenuOpen((o) => !o)}
             style={{
               background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)",
-              borderRadius: 10, color: "white", padding: "8px 12px", cursor: "pointer",
-              fontSize: 18, lineHeight: 1,
+              borderRadius: 8, color: "white", padding: "6px 10px", cursor: "pointer",
+              fontSize: 16, lineHeight: 1,
             }}
           >
             {menuOpen ? "✕" : "☰"}
@@ -174,9 +174,9 @@ export default function App() {
         {/* Slide-down menu */}
         {menuOpen && (
           <div style={{
-            position: "fixed", top: 50, left: 0, right: 0, bottom: 0,
+            position: "fixed", top: 44, left: 0, right: 0, bottom: 0,
             background: "rgba(9,15,30,0.98)", zIndex: 99,
-            padding: 12, overflowY: "auto",
+            padding: 10, overflowY: "auto",
           }}>
             {allNavItems.map(({ to, label }) => (
               <NavLink key={to} to={to}
@@ -189,21 +189,21 @@ export default function App() {
             <button
               onClick={doLogout}
               style={{
-                width: "100%", borderRadius: 14, border: "1px solid rgba(255,255,255,0.10)",
+                width: "100%", borderRadius: 10, border: "1px solid rgba(255,255,255,0.10)",
                 background: "rgba(255,255,255,0.04)", color: "white",
-                padding: "11px", cursor: "pointer", fontWeight: 800, fontSize: 13, marginTop: 6,
+                padding: "8px", cursor: "pointer", fontWeight: 800, fontSize: 11, marginTop: 4,
               }}
             >
               Logout
             </button>
-            <div style={{ marginTop: 16, fontSize: 11, opacity: 0.4, textAlign: "center" }}>
+            <div style={{ marginTop: 10, fontSize: 9, opacity: 0.4, textAlign: "center" }}>
               Demo mode · No real funds · Educational only
             </div>
           </div>
         )}
 
         {/* Page content */}
-        <main style={{ padding: 8, paddingBottom: 16 }}>
+        <main style={{ padding: 6, paddingBottom: 12 }}>
           <Routes>
             <Route path="/"           element={<Dashboard />} />
             <Route path="/market"     element={<Market />} />

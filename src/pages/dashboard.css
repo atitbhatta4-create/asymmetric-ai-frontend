@@ -370,47 +370,47 @@
    ========================================================= */
 
 @media (max-width: 720px) {
-  .dash { padding: 6px; }
-  .container { padding: 0; gap: 6px; }
+  .dash { padding: 4px; }
+  .container { padding: 0; gap: 4px; }
 
   /* Brand / header */
-  .brand { padding: 8px 10px; }
-  .brandName { font-size: 13px !important; }
-  .brandSub  { font-size: 9px; }
+  .brand { padding: 6px 8px; }
+  .brandName { font-size: 11px !important; }
+  .brandSub  { font-size: 8px; }
 
   /* coins become 2 columns */
   .coinsRow { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-  .coinChip { padding: 6px 7px; }
-  .coinSym  { font-size: 11px; }
-  .coinPx   { font-size: 9px; margin-top: 2px; }
+  .coinChip { padding: 4px 6px; }
+  .coinSym  { font-size: 10px; }
+  .coinPx   { font-size: 8px; margin-top: 1px; }
 
   /* Card heads tighter */
-  .cardHead { padding: 6px 8px 5px; }
-  .title    { font-size: 9px; }
+  .cardHead { padding: 5px 7px 4px; }
+  .title    { font-size: 8px; }
 
   /* Equity / stat numbers smaller */
-  .stat .big { font-size: 16px !important; padding: 5px 8px 6px !important; }
+  .stat .big { font-size: 14px !important; padding: 4px 7px 5px !important; }
 
   /* Form sections tighter */
-  .modes   { padding: 6px 8px 0; gap: 4px; }
-  .pill    { padding: 5px 7px; font-size: 9px; }
-  .formRow { padding: 6px 8px 0; }
-  .grid4   { padding: 6px 8px 0; gap: 6px; }
-  .sideRow { padding: 6px 8px 0; }
-  .input   { padding: 7px 9px; font-size: 16px; }
-  .ghost   { padding: 7px 9px; font-size: 11px; }
+  .modes   { padding: 4px 6px 0; gap: 3px; }
+  .pill    { padding: 4px 6px; font-size: 8px; }
+  .formRow { padding: 4px 6px 0; }
+  .grid4   { padding: 4px 6px 0; gap: 4px; }
+  .sideRow { padding: 4px 6px 0; }
+  .input   { padding: 6px 8px; font-size: 16px; }
+  .ghost   { padding: 6px 8px; font-size: 10px; }
 
   /* Symbol input row stacks */
   .rowInline {
     display: grid !important;
     grid-template-columns: 1fr !important;
-    gap: 6px !important;
+    gap: 4px !important;
   }
   .rowInline .ghost { width: 100% !important; }
 
   /* Actions stack and fill */
   .actions {
-    padding: 7px 8px 9px;
+    padding: 5px 6px 7px;
     display: grid !important;
     grid-template-columns: 1fr !important;
     justify-content: stretch !important;
@@ -420,19 +420,19 @@
   .actions .ghost {
     width: 100% !important;
     min-width: 0 !important;
-    padding: 8px 10px;
+    padding: 6px 8px;
   }
 
   /* Side buttons still 2 cols */
   .sideRow { display: grid !important; grid-template-columns: 1fr 1fr !important; }
-  .sideBtn { padding: 7px 8px; font-size: 11px; }
+  .sideBtn { padding: 5px 6px; font-size: 10px; }
 
-  .rightCol { gap: 6px; }
-  .bottomGrid { gap: 6px; }
+  .rightCol { gap: 4px; }
+  .bottomGrid { gap: 4px; }
 
   /* Curve chart smaller on mobile */
-  .curve svg { height: 150px; }
-  .bottomGrid > .card { height: 220px; }
+  .curve svg { height: 120px; }
+  .bottomGrid > .card { height: 190px; }
 }
 
 /* very small phones */
