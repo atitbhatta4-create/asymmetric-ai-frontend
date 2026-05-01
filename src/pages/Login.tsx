@@ -73,18 +73,18 @@ export default function Login({ onLoggedIn }: { onLoggedIn: () => Promise<void> 
       placeItems: "center",
       background: "radial-gradient(1200px 600px at 20% 10%, rgba(0,255,224,0.14), transparent 55%), #050814",
       color: "white",
-      padding: isMobile ? 12 : 20,
+      padding: isMobile ? 8 : 20,
     }}>
       <div style={{
         width: 460, maxWidth: "100%",
         borderRadius: 18,
-        padding: isMobile ? "14px 16px" : "clamp(18px, 5vw, 28px)",
+        padding: isMobile ? "10px 12px" : "clamp(18px, 5vw, 28px)",
         background: "rgba(9,15,30,0.96)",
         border: "1px solid rgba(255,255,255,0.08)",
         boxShadow: "0 0 40px rgba(0,0,0,0.65)",
       }}>
-        <div style={{ fontSize: isMobile ? 20 : "clamp(22px, 6vw, 34px)", fontWeight: 950 }}>Asymmetric AI</div>
-        <div style={{ opacity: 0.7, marginTop: 4, marginBottom: isMobile ? 14 : 20, fontSize: isMobile ? 12 : 14 }}>
+        <div style={{ fontSize: isMobile ? 16 : "clamp(22px, 6vw, 34px)", fontWeight: 950 }}>Asymmetric AI</div>
+        <div style={{ opacity: 0.7, marginTop: 3, marginBottom: isMobile ? 10 : 20, fontSize: isMobile ? 10 : 14 }}>
           {step === "login" ? "Login" : "Two-Factor Authentication"}
         </div>
 
@@ -105,7 +105,7 @@ export default function Login({ onLoggedIn }: { onLoggedIn: () => Promise<void> 
         {step === "login" ? (
           <>
             <div style={{ marginBottom: isMobile ? 10 : 14 }}>
-              <div style={{ fontSize: isMobile ? 11 : 12, opacity: 0.75 }}>Email</div>
+              <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.75 }}>Email</div>
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -116,7 +116,7 @@ export default function Login({ onLoggedIn }: { onLoggedIn: () => Promise<void> 
             </div>
 
             <div style={{ marginBottom: isMobile ? 4 : 6 }}>
-              <div style={{ fontSize: isMobile ? 11 : 12, opacity: 0.75 }}>Password</div>
+              <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.75 }}>Password</div>
               <input
                 type="password"
                 value={password}
@@ -145,14 +145,14 @@ export default function Login({ onLoggedIn }: { onLoggedIn: () => Promise<void> 
                 borderRadius: 14, border: "none",
                 background: loading ? "rgba(0,255,224,0.35)" : "linear-gradient(90deg,#00ff9d,#00ffe0)",
                 color: "#021018", fontWeight: 950,
-                fontSize: isMobile ? 13 : 15,
+                fontSize: isMobile ? 11 : 15,
                 cursor: loading ? "not-allowed" : "pointer",
               }}
             >
               {loading ? "Logging in…" : "Login"}
             </button>
 
-            <div style={{ marginTop: isMobile ? 10 : 14, fontSize: isMobile ? 12 : 13 }}>
+            <div style={{ marginTop: isMobile ? 8 : 14, fontSize: isMobile ? 10 : 13 }}>
               New user?{" "}
               <span
                 onClick={() => nav("/signup")}
@@ -196,7 +196,7 @@ export default function Login({ onLoggedIn }: { onLoggedIn: () => Promise<void> 
                 borderRadius: 14, border: "none",
                 background: loading ? "rgba(0,255,224,0.35)" : "linear-gradient(90deg,#00ff9d,#00ffe0)",
                 color: "#021018", fontWeight: 950,
-                fontSize: isMobile ? 13 : 15,
+                fontSize: isMobile ? 11 : 15,
                 cursor: loading ? "not-allowed" : "pointer",
               }}
             >

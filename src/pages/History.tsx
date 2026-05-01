@@ -136,7 +136,7 @@ export default function History() {
     <div style={{ maxWidth: 1200 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "end", gap: 12, flexWrap: "wrap" }}>
         <div>
-          <div style={{ fontSize: isMobile ? 22 : 26, fontWeight: 950 }}>History</div>
+          <div style={{ fontSize: isMobile ? 15 : 26, fontWeight: 950 }}>History</div>
           {!isMobile && (
             <div style={{ opacity: 0.7, marginTop: 6 }}>
               Full history (persistent). Filter by date. Click a row to view reason. Click symbol to open chart.
@@ -147,14 +147,15 @@ export default function History() {
         <button
           onClick={load}
           style={{
-            borderRadius: 14,
+            borderRadius: isMobile ? 10 : 14,
             border: "1px solid rgba(0,255,224,0.22)",
             background: "rgba(0,255,224,0.10)",
             color: "white",
-            padding: "10px 14px",
+            padding: isMobile ? "5px 9px" : "10px 14px",
             fontWeight: 950,
             cursor: "pointer",
-            height: 42,
+            height: isMobile ? 30 : 42,
+            fontSize: isMobile ? 11 : 14,
           }}
         >
           {loading ? "Loading…" : "Refresh"}
@@ -164,18 +165,18 @@ export default function History() {
       {/* Filters */}
       <div
         style={{
-          marginTop: 14,
-          borderRadius: 18,
-          padding: 14,
+          marginTop: isMobile ? 8 : 14,
+          borderRadius: isMobile ? 12 : 18,
+          padding: isMobile ? 8 : 14,
           background: "rgba(9, 15, 30, 0.92)",
           border: "1px solid rgba(255,255,255,0.08)",
           display: "grid",
           gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 200px 200px 160px 160px",
-          gap: 10,
+          gap: isMobile ? 6 : 10,
         }}
       >
         <div>
-          <div style={{ fontSize: 12, opacity: 0.75 }}>Search symbol</div>
+          <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.75 }}>Search symbol</div>
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -193,7 +194,7 @@ export default function History() {
         </div>
 
         <div>
-          <div style={{ fontSize: 12, opacity: 0.75 }}>Mode</div>
+          <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.75 }}>Mode</div>
           <select
             value={mode}
             onChange={(e) => setMode(e.target.value as any)}
@@ -217,7 +218,7 @@ export default function History() {
         </div>
 
         <div>
-          <div style={{ fontSize: 12, opacity: 0.75 }}>Side</div>
+          <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.75 }}>Side</div>
           <select
             value={side}
             onChange={(e) => setSide(e.target.value as any)}
@@ -238,7 +239,7 @@ export default function History() {
         </div>
 
         <div>
-          <div style={{ fontSize: 12, opacity: 0.75 }}>From</div>
+          <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.75 }}>From</div>
           <input
             type="date"
             value={fromDate}
@@ -256,7 +257,7 @@ export default function History() {
         </div>
 
         <div>
-          <div style={{ fontSize: 12, opacity: 0.75 }}>To</div>
+          <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.75 }}>To</div>
           <input
             type="date"
             value={toDate}
@@ -319,22 +320,22 @@ export default function History() {
                   key={t.id ?? i}
                   onClick={() => openReason(t)}
                   style={{
-                    padding: "12px 14px",
+                    padding: "8px 10px",
                     borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.06)",
                     cursor: "pointer",
                   }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 6 }}>
                     <button
                       onClick={(ev) => { ev.stopPropagation(); nav(`/market/${encodeURIComponent(t.symbol)}`); }}
-                      style={{ border: "1px solid rgba(0,255,224,0.22)", background: "rgba(0,255,224,0.08)", color: "white", padding: "5px 10px", borderRadius: 999, cursor: "pointer", fontWeight: 900, fontSize: 13 }}
+                      style={{ border: "1px solid rgba(0,255,224,0.22)", background: "rgba(0,255,224,0.08)", color: "white", padding: "3px 7px", borderRadius: 999, cursor: "pointer", fontWeight: 900, fontSize: 11 }}
                     >
                       {t.symbol}
                     </button>
-                    <span style={{ fontWeight: 900, fontSize: 13, color: t.side === "LONG" ? "#00ffe0" : "#ff5078" }}>{t.side}</span>
-                    <span style={{ fontWeight: 950, fontSize: 13 }}>${fmtMoney(Number(t.equity_after ?? 0))}</span>
+                    <span style={{ fontWeight: 900, fontSize: 11, color: t.side === "LONG" ? "#00ffe0" : "#ff5078" }}>{t.side}</span>
+                    <span style={{ fontWeight: 950, fontSize: 11 }}>${fmtMoney(Number(t.equity_after ?? 0))}</span>
                   </div>
-                  <div style={{ marginTop: 4, fontSize: 11, opacity: 0.5, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <div style={{ marginTop: 3, fontSize: 9, opacity: 0.5, display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <span>{timeLabel(t)}</span>
                     <span>{(t.mode || "MINI_ASYM").replace("_", " ")}</span>
                     <span>Lev {fmtNum(Number(t.leverage ?? 0), 0)}×</span>

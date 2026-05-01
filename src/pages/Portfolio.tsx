@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import * as api from "../lib/api";
+import useIsMobile from "../hooks/useIsMobile";
 
 // ── types ────────────────────────────────────────────────────────────────────
 type MonthlyPnl  = { month: string; pnl: number; trades: number; wins: number };
@@ -379,6 +380,7 @@ function TradeCard({ trade, isBest }: { trade: TradeRec; isBest: boolean }) {
 
 // ── main page ─────────────────────────────────────────────────────────────────
 export default function Portfolio() {
+  const isMobile = useIsMobile();
   const [stats, setStats]   = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]   = useState<string | null>(null);
@@ -397,7 +399,7 @@ export default function Portfolio() {
   useEffect(() => { load(); }, []);
 
   const pg: React.CSSProperties = {
-    minHeight: "100vh", padding: 14, color: T,
+    minHeight: "100vh", padding: isMobile ? 6 : 14, color: T,
     fontFamily: "ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial",
     background: "radial-gradient(900px 600px at 20% -10%,rgba(0,255,209,.07),transparent 55%),radial-gradient(900px 600px at 85% 0%,rgba(120,90,255,.08),transparent 55%),linear-gradient(180deg,#070a14,#0a1022)",
   };
@@ -420,7 +422,7 @@ export default function Portfolio() {
 
   const totalWins   = Math.round(summary.total_trades * (summary.win_rate / 100));
   const totalLosses = summary.total_trades - totalWins;
-  const G = 12; // grid gap
+  const G = isMobile ? 6 : 12;
 
   // ── streak card note ──────────────────────────────────────────────────────
   const streakSub = summary.current_streak.type === "W"
@@ -449,27 +451,27 @@ export default function Portfolio() {
         {/* ── header ── */}
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
           <div>
-            <div style={{ fontSize:20, fontWeight:900 }}>Portfolio Analytics</div>
-            <div style={{ fontSize:11, color:M, marginTop:3 }}>{summary.total_trades} trades · all time</div>
+            <div style={{ fontSize: isMobile ? 14 : 20, fontWeight:900 }}>Portfolio Analytics</div>
+            <div style={{ fontSize: isMobile ? 9 : 11, color:M, marginTop:3 }}>{summary.total_trades} trades · all time</div>
           </div>
-          <button onClick={load} style={{ padding:"8px 14px", borderRadius:10, border:`1px solid ${BORDER}`, background:"rgba(255,255,255,.04)", color:T, fontSize:12, fontWeight:800, cursor:"pointer" }}>
+          <button onClick={load} style={{ padding: isMobile ? "4px 9px" : "8px 14px", borderRadius:10, border:`1px solid ${BORDER}`, background:"rgba(255,255,255,.04)", color:T, fontSize: isMobile ? 10 : 12, fontWeight:800, cursor:"pointer" }}>
             Refresh
           </button>
         </div>
 
         {/* ── summary cards (streak card has extended sub text) ── */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:G }}>
+        <div style={{ display:"grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(7,1fr)", gap:G }}>
           {summaryCards.map(c => (
-            <div key={c.label} style={{ ...card(), padding:"12px 14px" }}>
-              <div style={{ fontSize:9, fontWeight:900, letterSpacing:".10em", textTransform:"uppercase", color:M, marginBottom:6 }}>{c.label}</div>
-              <div style={{ fontSize:18, fontWeight:900, color:c.color, lineHeight:1.1 }}>{c.value}</div>
-              <div style={{ fontSize:10, color: c.label === "Streak" && summary.current_streak.type === "L" ? RD : S, marginTop:4, lineHeight:1.4 }}>{c.sub}</div>
+            <div key={c.label} style={{ ...card(), padding: isMobile ? "8px 10px" : "12px 14px" }}>
+              <div style={{ fontSize: isMobile ? 8 : 9, fontWeight:900, letterSpacing:".10em", textTransform:"uppercase", color:M, marginBottom: isMobile ? 3 : 6 }}>{c.label}</div>
+              <div style={{ fontSize: isMobile ? 13 : 18, fontWeight:900, color:c.color, lineHeight:1.1 }}>{c.value}</div>
+              <div style={{ fontSize: isMobile ? 9 : 10, color: c.label === "Streak" && summary.current_streak.type === "L" ? RD : S, marginTop: isMobile ? 2 : 4, lineHeight:1.4 }}>{c.sub}</div>
             </div>
           ))}
         </div>
 
         {/* ── AI summary banner ── */}
-        <div style={{ padding:"12px 16px", borderRadius:12, border:`1px solid rgba(0,255,209,.18)`, background:"rgba(0,255,209,.05)", fontSize:12, color:T, fontWeight:600, lineHeight:1.6 }}>
+        <div style={{ padding: isMobile ? "8px 10px" : "12px 16px", borderRadius:12, border:`1px solid rgba(0,255,209,.18)`, background:"rgba(0,255,209,.05)", fontSize: isMobile ? 10 : 12, color:T, fontWeight:600, lineHeight:1.6 }}>
           <span style={{ color:GN, fontWeight:900, marginRight:8 }}>AI Summary</span>{ai_summary}
         </div>
 
