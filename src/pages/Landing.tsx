@@ -48,7 +48,7 @@ function Nav({ onLogin }: { onLogin: () => void }) {
       height: 60,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 28, height: 28, borderRadius: 8, background: `linear-gradient(135deg,${GN},#00b8ff)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 900, color: "#050814" }}>A</div>
+        <img src="/logo.png" alt="Asymmetric AI" style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover" }} />
         <span style={{ fontSize: 15, fontWeight: 900, color: T }}>Asymmetric AI</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -454,12 +454,49 @@ function HowToStart({ onCTA }: { onCTA: () => void }) {
   );
 }
 
+// ── exchange SVG logos ────────────────────────────────────────────────────────
+function BinanceLogo() {
+  return (
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+      <rect width="36" height="36" rx="10" fill="#F0B90B22" />
+      <g transform="translate(18,18)" fill="#F0B90B">
+        <rect x="-3.2" y="-3.2" width="6.4" height="6.4" transform="rotate(45)" />
+        <rect x="-9.8" y="-3.2" width="6.4" height="6.4" transform="rotate(45)" />
+        <rect x="3.4" y="-3.2" width="6.4" height="6.4" transform="rotate(45)" />
+        <rect x="-3.2" y="-9.8" width="6.4" height="6.4" transform="rotate(45)" />
+        <rect x="-3.2" y="3.4" width="6.4" height="6.4" transform="rotate(45)" />
+      </g>
+    </svg>
+  );
+}
+
+function BybitLogo() {
+  return (
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+      <rect width="36" height="36" rx="10" fill="#F7A60022" />
+      <text x="18" y="24" textAnchor="middle" fontSize="15" fontWeight="900" fill="#F7A600" fontFamily="Arial,sans-serif">B</text>
+      <rect x="8" y="24" width="20" height="2.5" rx="1.25" fill="#F7A600" />
+    </svg>
+  );
+}
+
+function OKXLogo() {
+  return (
+    <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+      <rect width="36" height="36" rx="10" fill="#ffffff18" />
+      <rect x="8" y="14" width="7" height="7" rx="1.5" fill="white" />
+      <rect x="14.5" y="14" width="7" height="7" rx="1.5" fill="white" />
+      <rect x="21" y="14" width="7" height="7" rx="1.5" fill="white" />
+    </svg>
+  );
+}
+
 // ── exchange logos strip ──────────────────────────────────────────────────────
 function Exchanges() {
-  const exchanges = [
-    { name: "Binance",  color: "#F0B90B", letter: "B", sub: "Supported" },
-    { name: "Bybit",    color: "#F7A600", letter: "B", sub: "Supported" },
-    { name: "OKX",      color: "#FFFFFF", letter: "O", sub: "Supported" },
+  const exchanges: { name: string; sub: string; logo: JSX.Element }[] = [
+    { name: "Binance", sub: "Supported", logo: <BinanceLogo /> },
+    { name: "Bybit",   sub: "Supported", logo: <BybitLogo /> },
+    { name: "OKX",     sub: "Supported", logo: <OKXLogo /> },
   ];
   return (
     <section style={{ padding: "48px 24px" }}>
@@ -470,7 +507,7 @@ function Exchanges() {
         <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
           {exchanges.map(ex => (
             <div key={ex.name} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 28px", borderRadius: 14, border: `1px solid ${BDR}`, background: "rgba(255,255,255,.03)" }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: `${ex.color}22`, border: `1px solid ${ex.color}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 900, color: ex.color }}>{ex.letter}</div>
+              {ex.logo}
               <div>
                 <div style={{ fontSize: 14, fontWeight: 900, color: T }}>{ex.name}</div>
                 <div style={{ fontSize: 10, color: GN, fontWeight: 800 }}>{ex.sub}</div>
