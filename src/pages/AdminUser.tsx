@@ -74,6 +74,91 @@ function exportCSV(trades: any[], email: string) {
   a.click(); URL.revokeObjectURL(url);
 }
 
+// ── AI log session card ───────────────────────────────────────────────────────
+function AiLogSession({ log, running, filter, onFilterChange, onRefresh }: {
+  log: { t: string; msg: string }[];
+  running: boolean;
+  filter: string;
+  onFilterChange: (v: string) => void;
+  onRefresh: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  // log is newest-first (appendleft); oldest = last item = session start
+  const startEntry = log.length > 0 ? log[log.length - 1] : null;
+  const latestEntry = log.length > 0 ? log[0] : null;
+
+  // find the stop message if AI is not running
+  const stopEntry = !running ? log.find(e => e.msg.toLowerCase().includes("stop") || e.msg.toLowerCase().includes("ended") || e.msg.toLowerCase().includes("pausing")) || latestEntry : null;
+
+  const filtered = filter ? log.filter(e => e.t.includes(filter) || e.msg.toLowerCase().includes(filter.toLowerCase())) : log;
+
+  return (
+    <div style={card}>
+      {/* clickable header showing date range */}
+      <div
+        onClick={() => setExpanded(o => !o)}
+        style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 12, userSelect: "none" }}
+      >
+        <div style={{ width: 10, height: 10, borderRadius: "50%", background: running ? GN : "rgba(255,80,120,.7)", flexShrink: 0 }} />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 900 }}>
+            {running ? "Session Active" : "Last Session"}
+            <span style={{ fontSize: 10, fontWeight: 400, opacity: 0.5, marginLeft: 8 }}>{log.length} entries · auto-refresh 30s</span>
+          </div>
+          <div style={{ fontSize: 11, opacity: 0.65, marginTop: 3, display: "flex", gap: 16 }}>
+            <span>Started: <b style={{ color: "rgba(255,255,255,.85)" }}>{startEntry ? startEntry.t : "—"}</b></span>
+            {stopEntry && !running && (
+              <span>Ended: <b style={{ color: RD }}>{stopEntry.t}</b></span>
+            )}
+            {running && latestEntry && (
+              <span>Last entry: <b style={{ color: GN }}>{latestEntry.t}</b></span>
+            )}
+          </div>
+        </div>
+        <span style={{ fontSize: 16, opacity: 0.5, transform: expanded ? "rotate(180deg)" : "none", transition: "transform .2s" }}>▼</span>
+      </div>
+
+      {expanded && (
+        <>
+          <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+            <input
+              value={filter}
+              onChange={e => onFilterChange(e.target.value)}
+              placeholder="Filter by date or keyword…"
+              style={{ flex: 1, padding: "7px 11px", borderRadius: 10, border: "1px solid rgba(255,255,255,.10)", background: "rgba(0,0,0,.22)", color: "white", fontSize: 12 }}
+            />
+            <button onClick={onRefresh} style={btn}>Refresh</button>
+          </div>
+          {!running && (
+            <div style={{ marginTop: 8, padding: "7px 11px", borderRadius: 10, background: "rgba(255,180,60,.08)", border: "1px solid rgba(255,180,60,.22)", fontSize: 11, color: "rgba(255,180,60,.9)" }}>
+              AI is not running — showing last known entries from memory.
+            </div>
+          )}
+          <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 1, maxHeight: 480, overflowY: "auto" }}>
+            {filtered.length === 0 && <div style={{ opacity: 0.5, fontSize: 13, padding: 10 }}>No entries match filter.</div>}
+            {filtered.map((e, i) => {
+              const isStart = e.msg === "AI started.";
+              const isStop = e.msg.toLowerCase().includes("stop") || e.msg.toLowerCase().includes("ended") || e.msg.toLowerCase().includes("pausing");
+              return (
+                <div key={i} style={{
+                  display: "flex", gap: 10, padding: "5px 8px", borderRadius: 8,
+                  background: isStart ? "rgba(0,255,209,.06)" : isStop ? "rgba(255,80,120,.06)" : "rgba(0,0,0,.18)",
+                  borderLeft: isStart ? `2px solid ${GN}` : isStop ? `2px solid ${RD}` : "2px solid transparent",
+                  fontFamily: "monospace",
+                }}>
+                  <span style={{ fontSize: 10, opacity: 0.5, whiteSpace: "nowrap", flexShrink: 0 }}>{e.t}</span>
+                  <span style={{ fontSize: 11, color: isStart ? GN : isStop ? RD : "rgba(255,255,255,.85)", lineHeight: 1.5 }}>{e.msg}</span>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── main component ────────────────────────────────────────────────────────────
 export default function AdminUser() {
   const nav = useNavigate();
@@ -299,33 +384,15 @@ export default function AdminUser() {
 
       {/* ─── TAB 2: AI LOG ─────────────────────────────────────────────────── */}
       {tab === "AI LOG" && (
-        <div style={card}>
-          <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
-            <div style={{ fontSize: 12, fontWeight: 900, opacity: 0.7, letterSpacing: ".1em", textTransform: "uppercase" }}>
-              AI Log · {log.length} entries · auto-refresh 30s
-            </div>
-            <input
-              value={logFilter}
-              onChange={e => setLogFilter(e.target.value)}
-              placeholder="Filter by date or keyword…"
-              style={{ flex: 1, minWidth: 180, padding: "7px 11px", borderRadius: 10, border: "1px solid rgba(255,255,255,.10)", background: "rgba(0,0,0,.22)", color: "white", fontSize: 12 }}
-            />
-            <button onClick={loadLog} style={btn}>Refresh Now</button>
-          </div>
-          {!data?.ai?.running && (
-            <div style={{ marginBottom: 10, padding: "8px 12px", borderRadius: 10, background: "rgba(255,180,60,.08)", border: "1px solid rgba(255,180,60,.22)", fontSize: 12, color: "rgba(255,180,60,.9)" }}>
-              AI is not running — log shows last known entries from memory only.
-            </div>
-          )}
-          <div style={{ display: "flex", flexDirection: "column", gap: 1, maxHeight: 520, overflowY: "auto" }}>
-            {filteredLog.length === 0 && <div style={{ opacity: 0.5, fontSize: 13, padding: 12 }}>No log entries available.</div>}
-            {filteredLog.map((e, i) => (
-              <div key={i} style={{ display: "flex", gap: 10, padding: "5px 8px", borderRadius: 8, background: "rgba(0,0,0,.18)", fontFamily: "monospace" }}>
-                <span style={{ fontSize: 10, opacity: 0.5, whiteSpace: "nowrap", flexShrink: 0 }}>{e.t}</span>
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,.85)", lineHeight: 1.5 }}>{e.msg}</span>
-              </div>
-            ))}
-          </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {/* session summary card — clickable */}
+          <AiLogSession
+            log={log}
+            running={!!data?.ai?.running}
+            filter={logFilter}
+            onFilterChange={setLogFilter}
+            onRefresh={loadLog}
+          />
         </div>
       )}
 
