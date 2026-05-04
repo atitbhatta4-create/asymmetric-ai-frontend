@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://asymmetric-ai-backend-demo30k.onrender.com/:path*"
+      "destination": "https://asymmetric-ai-backend.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
