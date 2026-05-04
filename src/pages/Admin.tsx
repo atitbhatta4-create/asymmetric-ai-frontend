@@ -19,6 +19,10 @@ type UserRow = {
   exchange_connected: boolean;
   trades_count: number;
   ai_running: boolean;
+  today_pnl: number;
+  win_rate: number;
+  last_active: string | null;
+  open_positions: number;
 };
 
 const cardStyle: React.CSSProperties = {
@@ -258,33 +262,41 @@ export default function Admin() {
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 980 }}>
             <thead>
               <tr style={{ textAlign: "left", fontSize: 11, opacity: 0.7 }}>
+                <th style={th}>AI</th>
                 <th style={th}>Email</th>
                 <th style={th}>Created</th>
                 <th style={th}>Equity</th>
-                <th style={th}>Exchange</th>
+                <th style={th}>Today PnL</th>
                 <th style={th}>Trades</th>
-                <th style={th}>AI</th>
+                <th style={th}>Win%</th>
+                <th style={th}>Open</th>
+                <th style={th}>Last Active</th>
+                <th style={th}>Exchange</th>
                 <th style={th}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {users.map((u) => (
                 <tr key={u.email} style={{ borderBottom: "1px solid rgba(255,255,255,.06)" }}>
+                  <td style={{ ...td, textAlign: "center" }}>
+                    <div style={{ width: 9, height: 9, borderRadius: "50%", background: u.ai_running ? "rgba(0,255,209,.9)" : "rgba(255,80,120,.6)", display: "inline-block" }} title={u.ai_running ? "AI Running" : "AI Off"} />
+                  </td>
                   <td style={{ ...td, fontWeight: 950 }}>
-                    <span
-                      onClick={() => openUser(u.email)}
-                      style={{ cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3 }}
-                      title="Open details"
-                    >
+                    <span onClick={() => openUser(u.email)} style={{ cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3 }} title="Open details">
                       {u.email}
                     </span>
                   </td>
-                  <td style={td}>{u.created_at}</td>
-                  <td style={td}>${Number(u.equity).toFixed(2)}</td>
-                  <td style={td}>{u.exchange_connected ? "Connected" : "No"}</td>
+                  <td style={{ ...td, fontSize: 11, opacity: 0.7 }}>{String(u.created_at).slice(0, 10)}</td>
+                  <td style={{ ...td, fontWeight: 900 }}>${Number(u.equity).toFixed(2)}</td>
+                  <td style={{ ...td, fontWeight: 900, color: Number(u.today_pnl) >= 0 ? "rgba(0,255,209,.9)" : "rgba(255,80,120,.9)" }}>
+                    {Number(u.today_pnl) >= 0 ? "+" : ""}${Number(u.today_pnl).toFixed(2)}
+                  </td>
                   <td style={td}>{u.trades_count}</td>
-                  <td style={td}>{u.ai_running ? "RUNNING" : "-"}</td>
-                  <td style={{ ...td, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <td style={{ ...td, color: Number(u.win_rate) >= 50 ? "rgba(0,255,209,.9)" : "rgba(255,80,120,.9)", fontWeight: 900 }}>{u.win_rate}%</td>
+                  <td style={td}>{u.open_positions || 0}</td>
+                  <td style={{ ...td, fontSize: 11, opacity: 0.6 }}>{u.last_active ? String(u.last_active).slice(0, 16) : "-"}</td>
+                  <td style={td}>{u.exchange_connected ? "✓" : "—"}</td>
+                  <td style={{ ...td, display: "flex", gap: 6, flexWrap: "wrap" }}>
                     <button onClick={() => openUser(u.email)} style={btnStyle}>Open</button>
                     <button onClick={() => resetUser(u.email)} style={goodBtn}>Reset</button>
                   </td>
@@ -293,7 +305,7 @@ export default function Admin() {
 
               {users.length === 0 && (
                 <tr>
-                  <td style={{ padding: 14, opacity: 0.7 }} colSpan={7}>No users found.</td>
+                  <td style={{ padding: 14, opacity: 0.7 }} colSpan={11}>No users found.</td>
                 </tr>
               )}
             </tbody>

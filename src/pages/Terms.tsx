@@ -81,7 +81,21 @@ export default function Terms() {
           These terms are governed by applicable laws. Any disputes shall be resolved through binding arbitration. By using the Platform, you waive your right to participate in class-action lawsuits related to the Platform.
         </Section>
 
-        <Section title="11. Contact">
+        <Section title="11. Administrator Access Policy">
+          Asymmetric AI administrators may access your account data including trade history, AI logs, and portfolio performance for the following purposes only:
+          <ul style={{ marginTop: 8, lineHeight: 2 }}>
+            <li>Providing customer support</li>
+            <li>Resolving technical issues</li>
+            <li>Monitoring platform performance</li>
+            <li>Ensuring risk engine accuracy</li>
+            <li>Regulatory compliance</li>
+          </ul>
+          All administrator access is logged automatically with a timestamp, retained for a minimum of 24 months, and available to you upon written request. Administrators will never share your data with third parties, use your trading patterns personally, or access your data without a valid reason.
+          <br /><br />
+          Your data may be used in anonymous aggregated form for platform improvement and marketing statistics. Your individual data will never appear in marketing without your explicit written permission.
+        </Section>
+
+        <Section title="12. Contact">
           For questions about these Terms, contact us at:{" "}
           <a href="mailto:support.asymetricai@gmail.com" style={{ color: GN }}>support.asymetricai@gmail.com</a>
         </Section>
