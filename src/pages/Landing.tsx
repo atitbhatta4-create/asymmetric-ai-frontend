@@ -493,7 +493,7 @@ function OKXLogo() {
 
 // ── exchange logos strip ──────────────────────────────────────────────────────
 function Exchanges() {
-  const exchanges: { name: string; sub: string; logo: JSX.Element }[] = [
+  const exchanges: { name: string; sub: string; logo: React.ReactNode }[] = [
     { name: "Binance", sub: "Supported", logo: <BinanceLogo /> },
     { name: "Bybit",   sub: "Supported", logo: <BybitLogo /> },
     { name: "OKX",     sub: "Supported", logo: <OKXLogo /> },
