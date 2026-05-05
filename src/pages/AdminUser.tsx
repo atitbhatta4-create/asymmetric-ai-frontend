@@ -75,48 +75,49 @@ function exportCSV(trades: any[], email: string) {
 }
 
 // ── AI log session card ───────────────────────────────────────────────────────
-function AiLogSession({ log, running, filter, onFilterChange, onRefresh }: {
-  log: { t: string; msg: string }[];
-  running: boolean;
-  filter: string;
-  onFilterChange: (v: string) => void;
-  onRefresh: () => void;
-}) {
-  const [expanded, setExpanded] = useState(false);
+type AiSession = {
+  id: number;
+  symbol: string;
+  mode: string;
+  trade_style: string;
+  started_at: string;
+  ended_at: string | null;
+  stop_reason: string | null;
+  events: { t: string; msg: string }[];
+};
 
-  // log is newest-first (appendleft); oldest = last item = session start
-  const startEntry = log.length > 0 ? log[log.length - 1] : null;
-  const latestEntry = log.length > 0 ? log[0] : null;
+function AiLogSession({ session, isActive }: { session: AiSession; isActive: boolean }) {
+  const [expanded, setExpanded] = useState(isActive);
+  const [filter, setFilter] = useState("");
 
-  // find the stop message if AI is not running
-  const stopEntry = !running ? log.find(e => e.msg.toLowerCase().includes("stop") || e.msg.toLowerCase().includes("ended") || e.msg.toLowerCase().includes("pausing")) || latestEntry : null;
-
-  const filtered = filter ? log.filter(e => e.t.includes(filter) || e.msg.toLowerCase().includes(filter.toLowerCase())) : log;
+  const filtered = filter
+    ? session.events.filter(e => e.t.includes(filter) || e.msg.toLowerCase().includes(filter.toLowerCase()))
+    : session.events;
 
   return (
     <div style={card}>
-      {/* clickable header showing date range */}
-      <div
-        onClick={() => setExpanded(o => !o)}
-        style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 12, userSelect: "none" }}
-      >
-        <div style={{ width: 10, height: 10, borderRadius: "50%", background: running ? GN : "rgba(255,80,120,.7)", flexShrink: 0 }} />
+      <div onClick={() => setExpanded(o => !o)} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 12, userSelect: "none" }}>
+        <div style={{ width: 10, height: 10, borderRadius: "50%", flexShrink: 0, background: isActive ? GN : "rgba(255,80,120,.7)" }} />
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 13, fontWeight: 900 }}>
-            {running ? "Session Active" : "Last Session"}
-            <span style={{ fontSize: 10, fontWeight: 400, opacity: 0.5, marginLeft: 8 }}>{log.length} entries · auto-refresh 30s</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 13, fontWeight: 950 }}>{session.symbol}</span>
+            <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 8, background: "rgba(0,255,209,.10)", color: GN, fontWeight: 800 }}>{session.mode}</span>
+            <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 8, background: "rgba(255,255,255,.06)", color: "rgba(255,255,255,.7)", fontWeight: 800 }}>{session.trade_style.replace("_", " ")}</span>
+            {isActive && <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 8, background: "rgba(0,255,209,.15)", color: GN, fontWeight: 900 }}>LIVE</span>}
+            <span style={{ fontSize: 10, opacity: 0.45, marginLeft: "auto" }}>{session.events.length} entries</span>
           </div>
-          <div style={{ fontSize: 11, opacity: 0.65, marginTop: 3, display: "flex", gap: 16 }}>
-            <span>Started: <b style={{ color: "rgba(255,255,255,.85)" }}>{startEntry ? startEntry.t : "—"}</b></span>
-            {stopEntry && !running && (
-              <span>Ended: <b style={{ color: RD }}>{stopEntry.t}</b></span>
-            )}
-            {running && latestEntry && (
-              <span>Last entry: <b style={{ color: GN }}>{latestEntry.t}</b></span>
+          <div style={{ fontSize: 11, opacity: 0.6, marginTop: 4, display: "flex", gap: 16, flexWrap: "wrap" }}>
+            <span>Started: <b style={{ color: "rgba(255,255,255,.85)" }}>{session.started_at}</b></span>
+            {session.ended_at
+              ? <span>Ended: <b style={{ color: RD }}>{session.ended_at}</b></span>
+              : <span style={{ color: GN }}>Still running…</span>
+            }
+            {session.stop_reason && !isActive && (
+              <span>Reason: <b style={{ color: "rgba(255,180,60,.9)" }}>{session.stop_reason.slice(0, 60)}</b></span>
             )}
           </div>
         </div>
-        <span style={{ fontSize: 16, opacity: 0.5, transform: expanded ? "rotate(180deg)" : "none", transition: "transform .2s" }}>▼</span>
+        <span style={{ fontSize: 16, opacity: 0.4, transform: expanded ? "rotate(180deg)" : "none", transition: "transform .2s" }}>▼</span>
       </div>
 
       {expanded && (
@@ -124,30 +125,25 @@ function AiLogSession({ log, running, filter, onFilterChange, onRefresh }: {
           <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
             <input
               value={filter}
-              onChange={e => onFilterChange(e.target.value)}
+              onChange={e => setFilter(e.target.value)}
               placeholder="Filter by date or keyword…"
               style={{ flex: 1, padding: "7px 11px", borderRadius: 10, border: "1px solid rgba(255,255,255,.10)", background: "rgba(0,0,0,.22)", color: "white", fontSize: 12 }}
             />
-            <button onClick={onRefresh} style={btn}>Refresh</button>
           </div>
-          {!running && (
-            <div style={{ marginTop: 8, padding: "7px 11px", borderRadius: 10, background: "rgba(255,180,60,.08)", border: "1px solid rgba(255,180,60,.22)", fontSize: 11, color: "rgba(255,180,60,.9)" }}>
-              AI is not running — showing last known entries from memory.
-            </div>
-          )}
           <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 1, maxHeight: 480, overflowY: "auto" }}>
             {filtered.length === 0 && <div style={{ opacity: 0.5, fontSize: 13, padding: 10 }}>No entries match filter.</div>}
             {filtered.map((e, i) => {
               const isStart = e.msg === "AI started.";
-              const isStop = e.msg.toLowerCase().includes("stop") || e.msg.toLowerCase().includes("ended") || e.msg.toLowerCase().includes("pausing");
+              const isStop = e.msg.toLowerCase().includes("stop") || e.msg.toLowerCase().includes("pausing") || e.msg.toLowerCase().includes("floor hit");
+              const isTrade = e.msg.toLowerCase().includes("trade closed") || e.msg.toLowerCase().includes("tp_hit") || e.msg.toLowerCase().includes("sl_hit");
               return (
                 <div key={i} style={{
                   display: "flex", gap: 10, padding: "5px 8px", borderRadius: 8,
-                  background: isStart ? "rgba(0,255,209,.06)" : isStop ? "rgba(255,80,120,.06)" : "rgba(0,0,0,.18)",
-                  borderLeft: isStart ? `2px solid ${GN}` : isStop ? `2px solid ${RD}` : "2px solid transparent",
+                  background: isStart ? "rgba(0,255,209,.06)" : isStop ? "rgba(255,80,120,.06)" : isTrade ? "rgba(255,255,255,.04)" : "rgba(0,0,0,.18)",
+                  borderLeft: isStart ? `2px solid ${GN}` : isStop ? `2px solid ${RD}` : isTrade ? "2px solid rgba(255,255,255,.2)" : "2px solid transparent",
                   fontFamily: "monospace",
                 }}>
-                  <span style={{ fontSize: 10, opacity: 0.5, whiteSpace: "nowrap", flexShrink: 0 }}>{e.t}</span>
+                  <span style={{ fontSize: 10, opacity: 0.45, whiteSpace: "nowrap", flexShrink: 0 }}>{e.t}</span>
                   <span style={{ fontSize: 11, color: isStart ? GN : isStop ? RD : "rgba(255,255,255,.85)", lineHeight: 1.5 }}>{e.msg}</span>
                 </div>
               );
@@ -167,12 +163,11 @@ export default function AdminUser() {
 
   const [tab, setTab] = useState<Tab>("TRADES");
   const [data, setData] = useState<any>(null);
-  const [log, setLog] = useState<{ t: string; msg: string }[]>([]);
+  const [sessions, setSessions] = useState<AiSession[]>([]);
   const [portfolio, setPortfolio] = useState<any>(null);
   const [notes, setNotes] = useState("");
   const [notesInfo, setNotesInfo] = useState<{ updated_at: string | null; updated_by: string | null }>({ updated_at: null, updated_by: null });
   const [expandedTrade, setExpandedTrade] = useState<number | null>(null);
-  const [logFilter, setLogFilter] = useState("");
   const [notesSaving, setNotesSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -192,8 +187,8 @@ export default function AdminUser() {
   const loadLog = async () => {
     try {
       const r = await api.apiRequest(`/admin/user/${encodeURIComponent(decodedEmail)}/log?limit=200`, { method: "GET" });
-      setLog(r.events || []);
-    } catch { setLog([]); }
+      setSessions(r.sessions || []);
+    } catch { setSessions([]); }
   };
 
   const loadPortfolio = async () => {
@@ -255,9 +250,6 @@ export default function AdminUser() {
   const ai = data?.ai?.status;
   const state = data?.state;
   const trades: any[] = data?.trades?.recent || [];
-  const filteredLog = logFilter
-    ? log.filter(e => e.t.includes(logFilter) || e.msg.toLowerCase().includes(logFilter.toLowerCase()))
-    : log;
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", flexDirection: "column", gap: 12 }}>
@@ -385,14 +377,20 @@ export default function AdminUser() {
       {/* ─── TAB 2: AI LOG ─────────────────────────────────────────────────── */}
       {tab === "AI LOG" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {/* session summary card — clickable */}
-          <AiLogSession
-            log={log}
-            running={!!data?.ai?.running}
-            filter={logFilter}
-            onFilterChange={setLogFilter}
-            onRefresh={loadLog}
-          />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ fontSize: 12, opacity: 0.5 }}>{sessions.length} session{sessions.length !== 1 ? "s" : ""} · auto-refresh 30s</div>
+            <button onClick={loadLog} style={btn}>Refresh</button>
+          </div>
+          {sessions.length === 0 && (
+            <div style={{ ...card, opacity: 0.6, textAlign: "center", padding: 24 }}>No AI sessions recorded yet.</div>
+          )}
+          {sessions.map((sess, i) => (
+            <AiLogSession
+              key={sess.id}
+              session={sess}
+              isActive={i === 0 && !sess.ended_at}
+            />
+          ))}
         </div>
       )}
 
