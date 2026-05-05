@@ -156,7 +156,6 @@ function EquityCurveChart({
       if (i === 0) {
         floorD = `M ${fx} ${fy}`;
       } else {
-        const prevFx = padL + (i - 1) * fxStep;
         floorD += ` L ${fx} ${toY(floorSeries[i - 1])} L ${fx} ${fy}`;
       }
     });
