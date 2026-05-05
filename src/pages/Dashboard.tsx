@@ -119,10 +119,10 @@ function EquityCurveChart({
   const padT = 16;
   const padB = 26;
 
-  const eqLine  = up ? “rgba(255,80,120,0.95)”  : “rgba(255,80,120,0.95)”;
-  const eqGlow  = up ? “rgba(255,80,120,0.28)”  : “rgba(255,80,120,0.22)”;
-  const fillTop = up ? “rgba(255,80,120,0.14)”  : “rgba(255,80,120,0.10)”;
-  const fillBot = “rgba(255,80,120,0.00)”;
+  const eqLine  = up ? "rgba(255,80,120,0.95)"  : "rgba(255,80,120,0.95)";
+  const eqGlow  = up ? "rgba(255,80,120,0.28)"  : "rgba(255,80,120,0.22)";
+  const fillTop = up ? "rgba(255,80,120,0.14)"  : "rgba(255,80,120,0.10)";
+  const fillBot = "rgba(255,80,120,0.00)";
 
   const data = series.length ? series : [start];
   const allVals = [...data, ...(floorSeries.length ? floorSeries : [])];
@@ -147,7 +147,7 @@ function EquityCurveChart({
   const area = `${d} L ${padL + innerW} ${padT + innerH} L ${padL} ${padT + innerH} Z`;
 
   // Floor dotted path — step function: each point holds its value until next
-  let floorD = “”;
+  let floorD = "";
   if (floorSeries.length >= 2) {
     const fxStep = innerW / Math.max(1, floorSeries.length - 1);
     floorSeries.forEach((fv, i) => {
@@ -170,68 +170,68 @@ function EquityCurveChart({
   const lastPt = pts[pts.length - 1];
   const lastLabelY = Math.max(padT + 6, Math.min(lastPt.y - 14, padT + innerH - 28));
 
-  const badgeBorder = up ? “rgba(0,255,209,.32)” : “rgba(255,80,120,.32)”;
-  const badgeBg    = up ? “rgba(0,255,209,.10)” : “rgba(255,80,120,.10)”;
+  const badgeBorder = up ? "rgba(0,255,209,.32)" : "rgba(255,80,120,.32)";
+  const badgeBg    = up ? "rgba(0,255,209,.10)" : "rgba(255,80,120,.10)";
 
   return (
-    <div style={{ padding: “12px 14px 14px” }}>
-      <div style={{ display: “flex”, alignItems: “center”, justifyContent: “space-between”, gap: 10, marginBottom: 10 }}>
+    <div style={{ padding: "12px 14px 14px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
         <div style={{ fontSize: 12, opacity: 0.85, fontWeight: 900 }}>
           Start: ${fmtMoney(start)} — Last: ${fmtMoney(last)}
         </div>
-        <div style={{ display: “flex”, alignItems: “center”, gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {floorSeries.length >= 2 && (
-            <div style={{ display: “flex”, alignItems: “center”, gap: 5, fontSize: 11, color: “rgba(0,255,209,0.75)”, fontWeight: 800 }}>
-              <svg width=”22” height=”8”><line x1=”0” y1=”4” x2=”22” y2=”4” stroke=”rgba(0,255,209,0.75)” strokeWidth=”2” strokeDasharray=”4 3” /></svg>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "rgba(0,255,209,0.75)", fontWeight: 800 }}>
+              <svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="rgba(0,255,209,0.75)" strokeWidth="2" strokeDasharray="4 3" /></svg>
               floor
             </div>
           )}
-          <div style={{ padding: “6px 10px”, borderRadius: 999, border: `1px solid ${badgeBorder}`, background: badgeBg, fontWeight: 950, fontSize: 12, whiteSpace: “nowrap” }}>
-            {up ? “+” : “”}{fmtMoney(delta)} ({up ? “+” : “”}{pct.toFixed(2)}%)
+          <div style={{ padding: "6px 10px", borderRadius: 999, border: `1px solid ${badgeBorder}`, background: badgeBg, fontWeight: 950, fontSize: 12, whiteSpace: "nowrap" }}>
+            {up ? "+" : ""}{fmtMoney(delta)} ({up ? "+" : ""}{pct.toFixed(2)}%)
           </div>
         </div>
       </div>
 
-      <div style={{ height, width: “100%”, borderRadius: 14, background: “linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.10))”, border: “1px solid rgba(255,255,255,.07)”, overflow: “hidden” }}>
-        <svg viewBox={`0 0 ${W} ${H}`} width=”100%” height=”100%” preserveAspectRatio=”xMidYMid meet”>
+      <div style={{ height, width: "100%", borderRadius: 14, background: "linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.10))", border: "1px solid rgba(255,255,255,.07)", overflow: "hidden" }}>
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
           <defs>
-            <linearGradient id=”eqFill” x1=”0” y1=”0” x2=”0” y2=”1”>
-              <stop offset=”0%” stopColor={fillTop} />
-              <stop offset=”100%” stopColor={fillBot} />
+            <linearGradient id="eqFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={fillTop} />
+              <stop offset="100%" stopColor={fillBot} />
             </linearGradient>
-            <filter id=”eqGlow” x=”-20%” y=”-20%” width=”140%” height=”140%”>
-              <feGaussianBlur stdDeviation=”3.2” result=”blur” />
-              <feMerge><feMergeNode in=”blur” /><feMergeNode in=”SourceGraphic” /></feMerge>
+            <filter id="eqGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3.2" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
             </filter>
           </defs>
 
           {tickVals.map((_, i) => {
             const y = padT + (innerH * i) / ticks;
-            return <line key={i} x1={padL} x2={padL + innerW} y1={y} y2={y} stroke=”rgba(255,255,255,0.08)” strokeWidth=”1” />;
+            return <line key={i} x1={padL} x2={padL + innerW} y1={y} y2={y} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />;
           })}
 
           {tickVals.map((v, i) => {
             const y = padT + (innerH * i) / ticks;
-            return <text key={`t${i}`} x={padL - 10} y={y + 4} textAnchor=”end” fontSize=”12” fill=”rgba(255,255,255,0.55)” fontWeight=”800”>{fmtMoney(v)}</text>;
+            return <text key={`t${i}`} x={padL - 10} y={y + 4} textAnchor="end" fontSize="12" fill="rgba(255,255,255,0.55)" fontWeight="800">{fmtMoney(v)}</text>;
           })}
 
-          <line x1={padL} x2={padL + innerW} y1={yStart} y2={yStart} stroke=”rgba(255,255,255,0.12)” strokeDasharray=”6 6” strokeWidth=”1” />
+          <line x1={padL} x2={padL + innerW} y1={yStart} y2={yStart} stroke="rgba(255,255,255,0.12)" strokeDasharray="6 6" strokeWidth="1" />
 
           {/* floor trailing line — teal dotted step */}
           {floorD && (
-            <path d={floorD} fill=”none” stroke=”rgba(0,255,209,0.70)” strokeWidth=”2” strokeDasharray=”6 4” />
+            <path d={floorD} fill="none" stroke="rgba(0,255,209,0.70)" strokeWidth="2" strokeDasharray="6 4" />
           )}
 
           {/* equity area + line — pink */}
-          <path d={area} fill=”url(#eqFill)” />
-          <path d={d} fill=”none” stroke={eqGlow} strokeWidth=”7” filter=”url(#eqGlow)” />
-          <path d={d} fill=”none” stroke={eqLine} strokeWidth=”3.2” />
+          <path d={area} fill="url(#eqFill)" />
+          <path d={d} fill="none" stroke={eqGlow} strokeWidth="7" filter="url(#eqGlow)" />
+          <path d={d} fill="none" stroke={eqLine} strokeWidth="3.2" />
 
           <circle cx={lastPt.x} cy={lastPt.y} r={5.5} fill={eqLine} />
-          <circle cx={lastPt.x} cy={lastPt.y} r={9} fill=”rgba(255,255,255,0.06)” />
+          <circle cx={lastPt.x} cy={lastPt.y} r={9} fill="rgba(255,255,255,0.06)" />
 
-          <rect x={W - padR - 154} y={lastLabelY} width=”146” height=”26” rx=”10” fill=”rgba(9,15,30,0.92)” stroke=”rgba(255,255,255,0.12)” />
-          <text x={W - padR - 81} y={lastLabelY + 17} textAnchor=”middle” fontSize=”12” fill=”rgba(255,255,255,0.88)” fontWeight=”950”>
+          <rect x={W - padR - 154} y={lastLabelY} width="146" height="26" rx="10" fill="rgba(9,15,30,0.92)" stroke="rgba(255,255,255,0.12)" />
+          <text x={W - padR - 81} y={lastLabelY + 17} textAnchor="middle" fontSize="12" fill="rgba(255,255,255,0.88)" fontWeight="950">
             last: {fmtMoney(last)}
           </text>
         </svg>
@@ -1076,7 +1076,7 @@ export default function Dashboard() {
               </div>
 
               <div style={{ marginTop: 10, fontSize: 12, opacity: 0.75 }}>
-                If you see “Blocked: CHOP_FILTER / TREND_FILTER” it means AI is
+                If you see "Blocked: CHOP_FILTER / TREND_FILTER" it means AI is
                 protecting you (Option B).
               </div>
 
