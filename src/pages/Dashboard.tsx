@@ -451,7 +451,7 @@ export default function Dashboard() {
         await loadExchangeStatus();
         await loadAutoStatus();
 
-        const bal = await apiGet<{ total?: number }>("/balance");
+        const bal = await apiGet<{ total?: number; start_equity?: number }>("/balance");
         const eq0 = Number(bal.total ?? 1000);
         setEquity(eq0);
 
@@ -461,8 +461,8 @@ export default function Dashboard() {
         const list = (t.trades ?? []).slice();
         setTrades(list);
 
-        // Build curve from oldest -> newest
-        const startEq = eq0;
+        // Build curve from oldest -> newest; anchor at server's START_EQUITY not current balance
+        const startEq = Number(bal.start_equity ?? 1000);
         const curve: number[] = [startEq];
         for (const tr of list.slice().reverse()) {
           const v = Number(tr.equity_after);
@@ -540,7 +540,7 @@ export default function Dashboard() {
   };
 
   async function refreshTradesAndEquity() {
-    const bal = await apiGet<{ total?: number }>("/balance");
+    const bal = await apiGet<{ total?: number; start_equity?: number }>("/balance");
     const refreshedEq = Number(bal.total ?? 1000);
     setEquity(refreshedEq);
 
@@ -550,7 +550,7 @@ export default function Dashboard() {
     const list = (t.trades ?? []).slice();
     setTrades(list);
 
-    const startEq = refreshedEq;
+    const startEq = Number(bal.start_equity ?? 1000);
     const curve: number[] = [startEq];
     for (const tr of list.slice().reverse()) {
       const v = Number(tr.equity_after);
