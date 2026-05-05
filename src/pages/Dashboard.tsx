@@ -353,13 +353,13 @@ export default function Dashboard() {
   const [autoHistory, setAutoHistory] = useState<AutoHistoryEvent[]>([]);
   const [aiLogOpen, setAiLogOpen] = useState(false);
 
-  const [equity, setEquity] = useState(1000);
+  const [equity, setEquity] = useState(NaN);
   const [liveSymbol, setLiveSymbol] = useState("BTCUSDT");
   const [livePrice, setLivePrice] = useState(0);
 
   const [topPrices, setTopPrices] = useState<Record<string, number>>({});
   const [trades, setTrades] = useState<Trade[]>([]);
-  const [equitySeries, setEquitySeries] = useState<number[]>([1000]);
+  const [equitySeries, setEquitySeries] = useState<number[]>([]);
 
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
@@ -462,7 +462,7 @@ export default function Dashboard() {
         setTrades(list);
 
         // Build curve from oldest -> newest
-        const startEq = 1000;
+        const startEq = eq0;
         const curve: number[] = [startEq];
         for (const tr of list.slice().reverse()) {
           const v = Number(tr.equity_after);
@@ -541,7 +541,8 @@ export default function Dashboard() {
 
   async function refreshTradesAndEquity() {
     const bal = await apiGet<{ total?: number }>("/balance");
-    setEquity(Number(bal.total ?? 1000));
+    const refreshedEq = Number(bal.total ?? 1000);
+    setEquity(refreshedEq);
 
     const t = await apiGet<{ trades?: Trade[] }>(
       "/trades?current_session=true&limit=50"
@@ -549,7 +550,7 @@ export default function Dashboard() {
     const list = (t.trades ?? []).slice();
     setTrades(list);
 
-    const startEq = 1000;
+    const startEq = refreshedEq;
     const curve: number[] = [startEq];
     for (const tr of list.slice().reverse()) {
       const v = Number(tr.equity_after);
