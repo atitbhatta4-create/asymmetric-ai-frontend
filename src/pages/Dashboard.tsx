@@ -908,37 +908,6 @@ export default function Dashboard() {
               <div className="big">${fmtMoney(livePrice)}</div>
             </section>
 
-            {floorStats && (
-              <section className="card" style={{ padding: "14px 18px" }}>
-                <div className="cardHead" style={{ marginBottom: 12 }}>
-                  <div className="title">HARD FLOOR</div>
-                  <div className="hint">Trailing profit protection</div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 18px" }}>
-                  <div>
-                    <div style={{ fontSize: 10, color: "rgba(255,255,255,.4)", fontWeight: 800, marginBottom: 2 }}>PEAK EQUITY</div>
-                    <div style={{ fontSize: 15, fontWeight: 950, color: "#00ffd1" }}>${fmtMoney(floorStats.peak)}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 10, color: "rgba(255,255,255,.4)", fontWeight: 800, marginBottom: 2 }}>HARD FLOOR</div>
-                    <div style={{ fontSize: 15, fontWeight: 950, color: "rgba(0,255,209,0.7)" }}>${fmtMoney(floorStats.floor)}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 10, color: "rgba(255,255,255,.4)", fontWeight: 800, marginBottom: 2 }}>LOCKED PROFIT</div>
-                    <div style={{ fontSize: 15, fontWeight: 950, color: floorStats.locked >= 0 ? "#00ffd1" : "#ff5078" }}>
-                      {floorStats.locked >= 0 ? "+" : ""}${fmtMoney(floorStats.locked)}
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 10, color: "rgba(255,255,255,.4)", fontWeight: 800, marginBottom: 2 }}>DISTANCE TO FLOOR</div>
-                    <div style={{ fontSize: 15, fontWeight: 950, color: floorStats.distance < 0 ? "#ff5078" : "rgba(255,255,255,.85)" }}>
-                      ${fmtMoney(Math.abs(floorStats.distance))} ({floorStats.distancePct.toFixed(1)}%)
-                    </div>
-                  </div>
-                </div>
-              </section>
-            )}
-
             <section className="card">
               <div className="cardHead">
                 <div className="title">EQUITY CURVE</div>
