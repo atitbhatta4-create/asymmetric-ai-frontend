@@ -23,6 +23,7 @@ type Trade = {
   entry_price?: number;
   current_price?: number;
   equity_after?: number;
+  hard_floor?: number;
   reason?: string | null;
 };
 
@@ -95,12 +96,14 @@ function secToHMS(s: number | null | undefined) {
   return `${ss}s`;
 }
 
-/** Small “market-like” equity curve (fills the whole card) */
+/** Equity curve with trailing hard-floor dotted overlay */
 function EquityCurveChart({
   series,
+  floorSeries = [],
   height = 210,
 }: {
   series: number[];
+  floorSeries?: number[];
   height?: number;
 }) {
   const start = series.length ? series[0] : 1000;
@@ -116,16 +119,16 @@ function EquityCurveChart({
   const padT = 16;
   const padB = 26;
 
-  const line = up ? "rgba(0,255,209,0.95)" : "rgba(255,80,120,0.95)";
-  const glow = up ? "rgba(0,255,209,0.30)" : "rgba(255,80,120,0.28)";
-  const fillTop = up ? "rgba(0,255,209,0.22)" : "rgba(255,80,120,0.18)";
-  const fillBot = up ? "rgba(0,255,209,0.00)" : "rgba(255,80,120,0.00)";
+  const eqLine  = up ? “rgba(255,80,120,0.95)”  : “rgba(255,80,120,0.95)”;
+  const eqGlow  = up ? “rgba(255,80,120,0.28)”  : “rgba(255,80,120,0.22)”;
+  const fillTop = up ? “rgba(255,80,120,0.14)”  : “rgba(255,80,120,0.10)”;
+  const fillBot = “rgba(255,80,120,0.00)”;
 
   const data = series.length ? series : [start];
-  const minRaw = Math.min(...data);
-  const maxRaw = Math.max(...data);
+  const allVals = [...data, ...(floorSeries.length ? floorSeries : [])];
+  const minRaw = Math.min(...allVals);
+  const maxRaw = Math.max(...allVals);
 
-  // Keep a little breathing room so it doesn’t look “flat”
   const pad = Math.max(0.35, Math.abs(maxRaw - minRaw) * 0.18);
   const min = minRaw - pad;
   const max = maxRaw + pad;
@@ -135,182 +138,101 @@ function EquityCurveChart({
   const innerH = H - padT - padB;
   const xStep = innerW / Math.max(1, data.length - 1);
 
-  const pts = data.map((v, i) => {
-    const x = padL + i * xStep;
-    const y = padT + innerH * (1 - (v - min) / span);
-    return { x, y, v };
-  });
+  const toY = (v: number) => padT + innerH * (1 - (v - min) / span);
+
+  const pts = data.map((v, i) => ({ x: padL + i * xStep, y: toY(v), v }));
 
   let d = `M ${pts[0].x} ${pts[0].y}`;
   for (let i = 1; i < pts.length; i++) d += ` L ${pts[i].x} ${pts[i].y}`;
-
-  // Area path
   const area = `${d} L ${padL + innerW} ${padT + innerH} L ${padL} ${padT + innerH} Z`;
 
-  // y-axis ticks (4)
-  const ticks = 4;
-  const tickVals = Array.from({ length: ticks + 1 }).map((_, i) => {
-    const t = i / ticks;
-    return max - t * (max - min);
-  });
+  // Floor dotted path — step function: each point holds its value until next
+  let floorD = “”;
+  if (floorSeries.length >= 2) {
+    const fxStep = innerW / Math.max(1, floorSeries.length - 1);
+    floorSeries.forEach((fv, i) => {
+      const fx = padL + i * fxStep;
+      const fy = toY(fv);
+      if (i === 0) {
+        floorD = `M ${fx} ${fy}`;
+      } else {
+        const prevFx = padL + (i - 1) * fxStep;
+        floorD += ` L ${fx} ${toY(floorSeries[i - 1])} L ${fx} ${fy}`;
+      }
+    });
+  }
 
-  // baseline at start
-  const yStart = padT + innerH * (1 - (start - min) / span);
-  const lastPt = pts[pts.length - 1];
-  const lastLabelY = Math.max(
-    padT + 6,
-    Math.min(lastPt.y - 14, padT + innerH - 28)
+  const ticks = 4;
+  const tickVals = Array.from({ length: ticks + 1 }).map((_, i) =>
+    max - (i / ticks) * (max - min)
   );
 
-  const badgeBorder = up ? "rgba(0,255,209,.32)" : "rgba(255,80,120,.32)";
-  const badgeBg = up ? "rgba(0,255,209,.10)" : "rgba(255,80,120,.10)";
+  const yStart = toY(start);
+  const lastPt = pts[pts.length - 1];
+  const lastLabelY = Math.max(padT + 6, Math.min(lastPt.y - 14, padT + innerH - 28));
+
+  const badgeBorder = up ? “rgba(0,255,209,.32)” : “rgba(255,80,120,.32)”;
+  const badgeBg    = up ? “rgba(0,255,209,.10)” : “rgba(255,80,120,.10)”;
 
   return (
-    <div style={{ padding: "12px 14px 14px" }}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 10,
-          marginBottom: 10,
-        }}
-      >
+    <div style={{ padding: “12px 14px 14px” }}>
+      <div style={{ display: “flex”, alignItems: “center”, justifyContent: “space-between”, gap: 10, marginBottom: 10 }}>
         <div style={{ fontSize: 12, opacity: 0.85, fontWeight: 900 }}>
           Start: ${fmtMoney(start)} — Last: ${fmtMoney(last)}
         </div>
-
-        <div
-          style={{
-            padding: "6px 10px",
-            borderRadius: 999,
-            border: `1px solid ${badgeBorder}`,
-            background: badgeBg,
-            fontWeight: 950,
-            fontSize: 12,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {up ? "+" : ""}
-          {fmtMoney(delta)} ({up ? "+" : ""}
-          {pct.toFixed(2)}%)
+        <div style={{ display: “flex”, alignItems: “center”, gap: 8 }}>
+          {floorSeries.length >= 2 && (
+            <div style={{ display: “flex”, alignItems: “center”, gap: 5, fontSize: 11, color: “rgba(0,255,209,0.75)”, fontWeight: 800 }}>
+              <svg width=”22” height=”8”><line x1=”0” y1=”4” x2=”22” y2=”4” stroke=”rgba(0,255,209,0.75)” strokeWidth=”2” strokeDasharray=”4 3” /></svg>
+              floor
+            </div>
+          )}
+          <div style={{ padding: “6px 10px”, borderRadius: 999, border: `1px solid ${badgeBorder}`, background: badgeBg, fontWeight: 950, fontSize: 12, whiteSpace: “nowrap” }}>
+            {up ? “+” : “”}{fmtMoney(delta)} ({up ? “+” : “”}{pct.toFixed(2)}%)
+          </div>
         </div>
       </div>
 
-      <div
-        style={{
-          height,
-          width: "100%",
-          borderRadius: 14,
-          background:
-            "linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.10))",
-          border: "1px solid rgba(255,255,255,.07)",
-          overflow: "hidden",
-        }}
-      >
-        <svg
-          viewBox={`0 0 ${W} ${H}`}
-          width="100%"
-          height="100%"
-          preserveAspectRatio="xMidYMid meet"
-        >
+      <div style={{ height, width: “100%”, borderRadius: 14, background: “linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.10))”, border: “1px solid rgba(255,255,255,.07)”, overflow: “hidden” }}>
+        <svg viewBox={`0 0 ${W} ${H}`} width=”100%” height=”100%” preserveAspectRatio=”xMidYMid meet”>
           <defs>
-            <linearGradient id="eqFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={fillTop} />
-              <stop offset="100%" stopColor={fillBot} />
+            <linearGradient id=”eqFill” x1=”0” y1=”0” x2=”0” y2=”1”>
+              <stop offset=”0%” stopColor={fillTop} />
+              <stop offset=”100%” stopColor={fillBot} />
             </linearGradient>
-            <filter id="eqGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="3.2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
+            <filter id=”eqGlow” x=”-20%” y=”-20%” width=”140%” height=”140%”>
+              <feGaussianBlur stdDeviation=”3.2” result=”blur” />
+              <feMerge><feMergeNode in=”blur” /><feMergeNode in=”SourceGraphic” /></feMerge>
             </filter>
           </defs>
 
-          {/* grid */}
           {tickVals.map((_, i) => {
             const y = padT + (innerH * i) / ticks;
-            return (
-              <line
-                key={i}
-                x1={padL}
-                x2={padL + innerW}
-                y1={y}
-                y2={y}
-                stroke="rgba(255,255,255,0.08)"
-                strokeWidth="1"
-              />
-            );
+            return <line key={i} x1={padL} x2={padL + innerW} y1={y} y2={y} stroke=”rgba(255,255,255,0.08)” strokeWidth=”1” />;
           })}
 
-          {/* y labels */}
           {tickVals.map((v, i) => {
             const y = padT + (innerH * i) / ticks;
-            return (
-              <text
-                key={`t${i}`}
-                x={padL - 10}
-                y={y + 4}
-                textAnchor="end"
-                fontSize="12"
-                fill="rgba(255,255,255,0.55)"
-                fontWeight="800"
-              >
-                {fmtMoney(v)}
-              </text>
-            );
+            return <text key={`t${i}`} x={padL - 10} y={y + 4} textAnchor=”end” fontSize=”12” fill=”rgba(255,255,255,0.55)” fontWeight=”800”>{fmtMoney(v)}</text>;
           })}
 
-          {/* baseline */}
-          <line
-            x1={padL}
-            x2={padL + innerW}
-            y1={yStart}
-            y2={yStart}
-            stroke="rgba(255,255,255,0.12)"
-            strokeDasharray="6 6"
-            strokeWidth="1"
-          />
+          <line x1={padL} x2={padL + innerW} y1={yStart} y2={yStart} stroke=”rgba(255,255,255,0.12)” strokeDasharray=”6 6” strokeWidth=”1” />
 
-          {/* area + line */}
-          <path d={area} fill="url(#eqFill)" />
-          <path
-            d={d}
-            fill="none"
-            stroke={glow}
-            strokeWidth="7"
-            filter="url(#eqGlow)"
-          />
-          <path d={d} fill="none" stroke={line} strokeWidth="3.2" />
+          {/* floor trailing line — teal dotted step */}
+          {floorD && (
+            <path d={floorD} fill=”none” stroke=”rgba(0,255,209,0.70)” strokeWidth=”2” strokeDasharray=”6 4” />
+          )}
 
-          {/* last point */}
-          <circle cx={lastPt.x} cy={lastPt.y} r={5.5} fill={line} />
-          <circle
-            cx={lastPt.x}
-            cy={lastPt.y}
-            r={9}
-            fill="rgba(255,255,255,0.06)"
-          />
+          {/* equity area + line — pink */}
+          <path d={area} fill=”url(#eqFill)” />
+          <path d={d} fill=”none” stroke={eqGlow} strokeWidth=”7” filter=”url(#eqGlow)” />
+          <path d={d} fill=”none” stroke={eqLine} strokeWidth=”3.2” />
 
-          {/* last label (right) */}
-          <rect
-            x={W - padR - 154}
-            y={lastLabelY}
-            width="146"
-            height="26"
-            rx="10"
-            fill="rgba(9, 15, 30, 0.92)"
-            stroke="rgba(255,255,255,0.12)"
-          />
-          <text
-            x={W - padR - 81}
-            y={lastLabelY + 17}
-            textAnchor="middle"
-            fontSize="12"
-            fill="rgba(255,255,255,0.88)"
-            fontWeight="950"
-          >
+          <circle cx={lastPt.x} cy={lastPt.y} r={5.5} fill={eqLine} />
+          <circle cx={lastPt.x} cy={lastPt.y} r={9} fill=”rgba(255,255,255,0.06)” />
+
+          <rect x={W - padR - 154} y={lastLabelY} width=”146” height=”26” rx=”10” fill=”rgba(9,15,30,0.92)” stroke=”rgba(255,255,255,0.12)” />
+          <text x={W - padR - 81} y={lastLabelY + 17} textAnchor=”middle” fontSize=”12” fill=”rgba(255,255,255,0.88)” fontWeight=”950”>
             last: {fmtMoney(last)}
           </text>
         </svg>
@@ -360,6 +282,10 @@ export default function Dashboard() {
   const [topPrices, setTopPrices] = useState<Record<string, number>>({});
   const [trades, setTrades] = useState<Trade[]>([]);
   const [equitySeries, setEquitySeries] = useState<number[]>([]);
+  const [floorSeries, setFloorSeries] = useState<number[]>([]);
+  const [floorStats, setFloorStats] = useState<{
+    peak: number; floor: number; locked: number; distance: number; distancePct: number; ath: number;
+  } | null>(null);
 
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
@@ -451,9 +377,22 @@ export default function Dashboard() {
         await loadExchangeStatus();
         await loadAutoStatus();
 
-        const bal = await apiGet<{ total?: number; start_equity?: number }>("/balance");
+        const bal = await apiGet<{
+          total?: number; start_equity?: number;
+          peak_equity?: number; hard_floor?: number;
+          locked_profit?: number; distance_to_floor?: number;
+          distance_pct?: number; all_time_high?: number;
+        }>("/balance");
         const eq0 = Number(bal.total ?? 1000);
         setEquity(eq0);
+        setFloorStats({
+          peak: Number(bal.peak_equity ?? eq0),
+          floor: Number(bal.hard_floor ?? eq0 * 0.85),
+          locked: Number(bal.locked_profit ?? 0),
+          distance: Number(bal.distance_to_floor ?? 0),
+          distancePct: Number(bal.distance_pct ?? 0),
+          ath: Number(bal.all_time_high ?? eq0),
+        });
 
         const t = await apiGet<{ trades?: Trade[] }>(
           "/trades?current_session=true&limit=50"
@@ -461,14 +400,19 @@ export default function Dashboard() {
         const list = (t.trades ?? []).slice();
         setTrades(list);
 
-        // Build curve from oldest -> newest; anchor at server's START_EQUITY not current balance
+        // Build equity + floor series from oldest → newest
         const startEq = Number(bal.start_equity ?? 1000);
+        const startFloor = Number(bal.hard_floor ?? startEq * 0.85);
         const curve: number[] = [startEq];
+        const fCurve: number[] = [startFloor];
         for (const tr of list.slice().reverse()) {
           const v = Number(tr.equity_after);
           if (isFinite(v)) curve.push(v);
+          const f = Number(tr.hard_floor);
+          fCurve.push(isFinite(f) && f > 0 ? f : fCurve[fCurve.length - 1]);
         }
         setEquitySeries(curve.length ? curve : [startEq]);
+        setFloorSeries(fCurve);
 
         await loadAutoHistory();
       } catch (e: any) {
@@ -540,9 +484,22 @@ export default function Dashboard() {
   };
 
   async function refreshTradesAndEquity() {
-    const bal = await apiGet<{ total?: number; start_equity?: number }>("/balance");
+    const bal = await apiGet<{
+      total?: number; start_equity?: number;
+      peak_equity?: number; hard_floor?: number;
+      locked_profit?: number; distance_to_floor?: number;
+      distance_pct?: number; all_time_high?: number;
+    }>("/balance");
     const refreshedEq = Number(bal.total ?? 1000);
     setEquity(refreshedEq);
+    setFloorStats({
+      peak: Number(bal.peak_equity ?? refreshedEq),
+      floor: Number(bal.hard_floor ?? refreshedEq * 0.85),
+      locked: Number(bal.locked_profit ?? 0),
+      distance: Number(bal.distance_to_floor ?? 0),
+      distancePct: Number(bal.distance_pct ?? 0),
+      ath: Number(bal.all_time_high ?? refreshedEq),
+    });
 
     const t = await apiGet<{ trades?: Trade[] }>(
       "/trades?current_session=true&limit=50"
@@ -551,12 +508,17 @@ export default function Dashboard() {
     setTrades(list);
 
     const startEq = Number(bal.start_equity ?? 1000);
+    const startFloor = Number(bal.hard_floor ?? startEq * 0.85);
     const curve: number[] = [startEq];
+    const fCurve: number[] = [startFloor];
     for (const tr of list.slice().reverse()) {
       const v = Number(tr.equity_after);
       if (isFinite(v)) curve.push(v);
+      const f = Number(tr.hard_floor);
+      fCurve.push(isFinite(f) && f > 0 ? f : fCurve[fCurve.length - 1]);
     }
     setEquitySeries(curve.length ? curve : [startEq]);
+    setFloorSeries(fCurve);
 
     await loadExchangeStatus();
     await loadAutoStatus();
@@ -947,12 +909,43 @@ export default function Dashboard() {
               <div className="big">${fmtMoney(livePrice)}</div>
             </section>
 
+            {floorStats && (
+              <section className="card" style={{ padding: "14px 18px" }}>
+                <div className="cardHead" style={{ marginBottom: 12 }}>
+                  <div className="title">HARD FLOOR</div>
+                  <div className="hint">Trailing profit protection</div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 18px" }}>
+                  <div>
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,.4)", fontWeight: 800, marginBottom: 2 }}>PEAK EQUITY</div>
+                    <div style={{ fontSize: 15, fontWeight: 950, color: "#00ffd1" }}>${fmtMoney(floorStats.peak)}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,.4)", fontWeight: 800, marginBottom: 2 }}>HARD FLOOR</div>
+                    <div style={{ fontSize: 15, fontWeight: 950, color: "rgba(0,255,209,0.7)" }}>${fmtMoney(floorStats.floor)}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,.4)", fontWeight: 800, marginBottom: 2 }}>LOCKED PROFIT</div>
+                    <div style={{ fontSize: 15, fontWeight: 950, color: floorStats.locked >= 0 ? "#00ffd1" : "#ff5078" }}>
+                      {floorStats.locked >= 0 ? "+" : ""}${fmtMoney(floorStats.locked)}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,.4)", fontWeight: 800, marginBottom: 2 }}>DISTANCE TO FLOOR</div>
+                    <div style={{ fontSize: 15, fontWeight: 950, color: floorStats.distance < 0 ? "#ff5078" : "rgba(255,255,255,.85)" }}>
+                      ${fmtMoney(Math.abs(floorStats.distance))} ({floorStats.distancePct.toFixed(1)}%)
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
             <section className="card">
               <div className="cardHead">
                 <div className="title">EQUITY CURVE</div>
-                <div className="hint">Market-style curve (session)</div>
+                <div className="hint">Pink = equity · Teal dotted = floor</div>
               </div>
-              <EquityCurveChart series={equitySeries} height={220} />
+              <EquityCurveChart series={equitySeries} floorSeries={floorSeries} height={220} />
             </section>
           </div>
         </div>
