@@ -36,6 +36,51 @@ function QRImage({ uri }: { uri: string }) {
   );
 }
 
+// ── Display name card ─────────────────────────────────────────────────────────
+function DisplayName() {
+  const [name, setName]       = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [err, setErr]         = useState("");
+
+  useEffect(() => {
+    api("/profile", { method: "GET" }).then((r: any) => {
+      setName(r.display_name || "");
+    }).catch(() => {});
+  }, []);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErr(""); setSuccess(false);
+    if (!name.trim()) { setErr("Name cannot be empty."); return; }
+    setLoading(true);
+    try {
+      await api("/profile", { method: "POST", body: { display_name: name.trim() } });
+      setSuccess(true);
+    } catch (e: any) {
+      setErr(e?.message || "Failed to update name.");
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <div style={card}>
+      <div style={{ fontWeight: 950, marginBottom: 4 }}>Display Name</div>
+      <div style={{ fontSize: 12, opacity: 0.5, marginBottom: 16 }}>Shown as "Welcome back, [name]" on dashboard</div>
+      <form onSubmit={submit}>
+        <div style={{ marginBottom: 18 }}>
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+            placeholder="Your name" style={inputStyle} maxLength={40} required />
+        </div>
+        {err && <div style={{ marginBottom: 14, padding: "10px 14px", borderRadius: 12, background: "rgba(220,38,38,0.12)", border: "1px solid rgba(248,113,113,0.4)", color: "#fecaca", fontSize: 13 }}>{err}</div>}
+        {success && <div style={{ marginBottom: 14, padding: "10px 14px", borderRadius: 12, background: "rgba(0,255,157,0.10)", border: "1px solid rgba(0,255,157,0.30)", color: "#00ff9d", fontSize: 13, fontWeight: 900 }}>Name updated.</div>}
+        <button type="submit" disabled={loading} style={{ width: "100%", padding: "13px 14px", borderRadius: 14, border: "none", background: loading ? "rgba(0,255,224,0.35)" : "linear-gradient(90deg,#00ff9d,#00ffe0)", color: "#021018", fontWeight: 950, fontSize: 15, cursor: loading ? "not-allowed" : "pointer" }}>
+          {loading ? "Saving…" : "Save name"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 // ── Change password card ──────────────────────────────────────────────────────
 function ChangePassword() {
   const [current, setCurrent]   = useState("");
@@ -344,6 +389,7 @@ export default function Settings() {
     <div style={{ maxWidth: 600 }}>
       <div style={{ fontSize: 26, fontWeight: 950, marginBottom: 6 }}>Settings</div>
       <div style={{ opacity: 0.7, marginBottom: 20 }}>Manage your account</div>
+      <DisplayName />
       <ChangePassword />
       <ResetViaEmail />
       <TwoFactor />
