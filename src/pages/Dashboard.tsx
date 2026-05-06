@@ -275,6 +275,8 @@ export default function Dashboard() {
   const [aiLogOpen, setAiLogOpen] = useState(false);
 
   const [equity, setEquity] = useState(NaN);
+  const [displayName, setDisplayName] = useState("");
+  const [isRealTrading, setIsRealTrading] = useState(false);
   const [liveSymbol, setLiveSymbol] = useState("BTCUSDT");
   const [livePrice, setLivePrice] = useState(0);
 
@@ -373,6 +375,14 @@ export default function Dashboard() {
     (async () => {
       try {
         setError("");
+        try {
+          const cfg = await apiGet<{ real_trading?: boolean }>("/config");
+          setIsRealTrading(!!cfg.real_trading);
+        } catch {}
+        try {
+          const prof = await apiGet<{ display_name?: string }>("/profile");
+          setDisplayName(prof.display_name || "");
+        } catch {}
         await loadExchangeStatus();
         await loadAutoStatus();
 
@@ -656,9 +666,11 @@ export default function Dashboard() {
         <div className="header">
           <div className="brand">
             <div className="brandName">Asymmetric AI</div>
-            <div className="brandSub">
-              Mini-Asym demo — accuracy-first automated trading (Option B)
-            </div>
+            {displayName && (
+              <div className="brandSub">
+                Welcome back, {displayName} {isRealTrading ? "· Live Trading" : "· Demo"}
+              </div>
+            )}
           </div>
 
           <div className="coinsRow">
@@ -895,7 +907,7 @@ export default function Dashboard() {
             <section className="card stat">
               <div className="cardHead">
                 <div className="title">EQUITY</div>
-                <div className="hint">Session equity (sandbox)</div>
+                <div className="hint">{isRealTrading ? "Live exchange balance (USDT)" : "Session equity (sandbox)"}</div>
               </div>
               <div className="big">${fmtMoney(equity)}</div>
             </section>
