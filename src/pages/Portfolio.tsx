@@ -381,14 +381,23 @@ function TradeCard({ trade, isBest }: { trade: TradeRec; isBest: boolean }) {
 // ── main page ─────────────────────────────────────────────────────────────────
 export default function Portfolio() {
   const isMobile = useIsMobile();
-  const [stats, setStats]   = useState<Stats | null>(null);
+  const [stats, setStats]     = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]   = useState<string | null>(null);
+  const [error, setError]     = useState<string | null>(null);
+  const [currentDd, setCurrentDd] = useState(0);
 
   const load = async () => {
     setLoading(true); setError(null);
     try {
-      setStats(await api.apiRequest<Stats>("/portfolio/stats", { method: "GET" }));
+      const [s, bal] = await Promise.all([
+        api.apiRequest<Stats>("/portfolio/stats", { method: "GET" }),
+        api.apiRequest<{ total?: number; peak_equity?: number; hard_floor?: number }>("/balance", { method: "GET" }),
+      ]);
+      setStats(s);
+      const eq   = Number(bal.total ?? 0);
+      const peak = Number(bal.peak_equity ?? eq);
+      const dd   = peak > 0 ? Math.max(0, (peak - eq) / peak * 100) : 0;
+      setCurrentDd(dd);
     } catch (e: any) {
       setError(e.message || "Failed to load");
     } finally {
@@ -494,7 +503,7 @@ export default function Portfolio() {
         <div style={card()}>
           <Head label="Risk Protection Layers — Active Capital Guards" />
           <div style={{ padding:"14px 16px" }}>
-            <RiskLayers maxDrawdown={summary.max_drawdown} />
+            <RiskLayers maxDrawdown={currentDd} />
             <div style={{ marginTop:12, fontSize:10, color:S, lineHeight:1.6 }}>
               These tiers activate automatically as equity drawdown grows from peak.
               No manual intervention needed — Mini-Asym reduces risk and stops trading to protect your capital.
