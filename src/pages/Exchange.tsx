@@ -16,6 +16,9 @@ type TestOut = {
   accountType?: string;
   balances_count?: number;
   note?: string;
+  error?: string;
+  usdt_free?: number;
+  usdt_total?: number;
 };
 
 type BalanceOut = {
@@ -312,8 +315,11 @@ export default function Exchange() {
                     </div>
                     <div>ok: {String(testRes.ok)}</div>
                     <div>canTrade: {String(testRes.canTrade)}</div>
-                    <div>accountType: {String(testRes.accountType)}</div>
-                    <div>balances_count: {String(testRes.balances_count)}</div>
+                    {testRes.accountType && <div>accountType: {testRes.accountType}</div>}
+                    {testRes.usdt_free !== undefined && <div>USDT free: {testRes.usdt_free}</div>}
+                    {testRes.usdt_total !== undefined && <div>USDT total: {testRes.usdt_total}</div>}
+                    {testRes.note && <div style={{ marginTop: 6, color: testRes.ok ? "#00ffe0" : "#f59e0b" }}>note: {testRes.note}</div>}
+                    {testRes.error && <div style={{ marginTop: 6, color: "#ff5078", wordBreak: "break-word" }}>error: {testRes.error}</div>}
                   </div>
                 )}
 
