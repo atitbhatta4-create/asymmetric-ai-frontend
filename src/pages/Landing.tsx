@@ -457,16 +457,7 @@ function HowToStart({ onCTA }: { onCTA: () => void }) {
 // ── exchange SVG logos ────────────────────────────────────────────────────────
 function BinanceLogo() {
   return (
-    <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-      <rect width="36" height="36" rx="10" fill="#F0B90B22" />
-      <g transform="translate(18,18)" fill="#F0B90B">
-        <rect x="-3.2" y="-3.2" width="6.4" height="6.4" transform="rotate(45)" />
-        <rect x="-9.8" y="-3.2" width="6.4" height="6.4" transform="rotate(45)" />
-        <rect x="3.4" y="-3.2" width="6.4" height="6.4" transform="rotate(45)" />
-        <rect x="-3.2" y="-9.8" width="6.4" height="6.4" transform="rotate(45)" />
-        <rect x="-3.2" y="3.4" width="6.4" height="6.4" transform="rotate(45)" />
-      </g>
-    </svg>
+    <img src="/binance-logo.png" alt="Binance" width={36} height={36} style={{ borderRadius: 10, objectFit: "cover", display: "block" }} />
   );
 }
 
@@ -478,12 +469,7 @@ function BybitLogo() {
 
 function OKXLogo() {
   return (
-    <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-      <rect width="36" height="36" rx="10" fill="#ffffff18" />
-      <rect x="8" y="14" width="7" height="7" rx="1.5" fill="white" />
-      <rect x="14.5" y="14" width="7" height="7" rx="1.5" fill="white" />
-      <rect x="21" y="14" width="7" height="7" rx="1.5" fill="white" />
-    </svg>
+    <img src="/okx-logo.png" alt="OKX" width={36} height={36} style={{ borderRadius: 10, objectFit: "cover", display: "block" }} />
   );
 }
 
