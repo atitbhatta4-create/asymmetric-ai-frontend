@@ -472,11 +472,7 @@ function BinanceLogo() {
 
 function BybitLogo() {
   return (
-    <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-      <rect width="36" height="36" rx="10" fill="#F7A60022" />
-      <text x="18" y="24" textAnchor="middle" fontSize="15" fontWeight="900" fill="#F7A600" fontFamily="Arial,sans-serif">B</text>
-      <rect x="8" y="24" width="20" height="2.5" rx="1.25" fill="#F7A600" />
-    </svg>
+    <img src="/bybit-logo.png" alt="Bybit" width={36} height={36} style={{ borderRadius: 10, objectFit: "cover", display: "block" }} />
   );
 }
 
