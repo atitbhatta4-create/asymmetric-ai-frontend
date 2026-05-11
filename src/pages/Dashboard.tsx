@@ -392,7 +392,7 @@ export default function Dashboard() {
           locked_profit?: number; distance_to_floor?: number;
           distance_pct?: number; all_time_high?: number;
         }>("/balance");
-        const eq0 = Number(bal.total ?? 1000);
+        const eq0 = Number(bal.total ?? NaN);
         setEquity(eq0);
         setFloorStats({
           peak: Number(bal.peak_equity ?? eq0),
@@ -410,7 +410,7 @@ export default function Dashboard() {
         setTrades(list);
 
         // Build equity + floor series from oldest → newest
-        const startEq = Number(bal.start_equity ?? 1000);
+        const startEq = Number(bal.start_equity ?? NaN);
         const startFloor = Number(bal.hard_floor ?? startEq * 0.85);
         const curve: number[] = [startEq];
         const fCurve: number[] = [startFloor];
