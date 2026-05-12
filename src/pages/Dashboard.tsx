@@ -808,7 +808,7 @@ export default function Dashboard() {
             </div>
 
             {/* 5 ── Actions */}
-            <div className="actions" style={{ gap: 8, marginTop: isMobile ? 10 : 14 }}>
+            <div className="actions" style={{ gap: 8, marginTop: isMobile ? 8 : 10 }}>
               <button className="primary" type="button" onClick={startAI} disabled={!connected || aiRunning}>
                 {aiRunning ? "AI Running" : "Start AI"}
               </button>
