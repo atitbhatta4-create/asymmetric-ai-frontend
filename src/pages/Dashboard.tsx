@@ -807,7 +807,38 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* 5 ── Actions */}
+            {/* 5 ── AI status strip (visible only when running) */}
+            {aiRunning && autoStatus && (
+              <div style={{
+                marginTop: 12,
+                padding: "10px 12px",
+                borderRadius: 10,
+                background: "rgba(0,255,224,0.05)",
+                border: "1px solid rgba(0,255,224,0.15)",
+                display: "flex", flexWrap: "wrap", gap: "10px 18px",
+              }}>
+                {[
+                  { label: "Symbol",  val: autoStatus.symbol ?? "—" },
+                  { label: "Style",   val: (autoStatus.trade_style ?? "—").replace("_", " ") },
+                  { label: "Mode",    val: autoStatus.mode === "MINI_ASYM" ? "Mini-Asym" : (autoStatus.mode ?? "—").replace("_", " ") },
+                  { label: "Grade",   val: autoStatus.market_grade && autoStatus.market_grade !== "-" ? autoStatus.market_grade : "—" },
+                  { label: "Signal",  val: autoStatus.last_signal ?? "—" },
+                  { label: "Trades",  val: `${autoStatus.trades_today ?? 0} / ${autoStatus.max_trades_per_day || "∞"}` },
+                  ...(autoStatus.blocked_reason ? [{ label: "Blocked", val: autoStatus.blocked_reason }] : []),
+                ].map(({ label, val }) => (
+                  <div key={label} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", opacity: 0.4 }}>{label}</span>
+                    <span style={{
+                      fontSize: 11, fontWeight: 700,
+                      color: label === "Blocked" ? "#ff5078" : label === "Grade" && val !== "—" ? "#00ffe0" : "rgba(255,255,255,0.85)",
+                      maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                    }}>{val}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 6 ── Actions */}
             <div className="actions" style={{ gap: 8, marginTop: isMobile ? 8 : 10 }}>
               <button className="primary" type="button" onClick={startAI} disabled={!connected || aiRunning}>
                 {aiRunning ? "AI Running" : "Start AI"}
