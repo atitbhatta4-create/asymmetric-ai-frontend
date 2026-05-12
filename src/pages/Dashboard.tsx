@@ -253,12 +253,6 @@ export default function Dashboard() {
   const [symbolInput, setSymbolInput] = useState("BTCUSDT");
 
   const [mode, setMode] = useState<RiskMode>("MINI_ASYM");
-  const [side, setSide] = useState<Side>("LONG");
-
-  const [size, setSize] = useState(0.65);
-  const [sl, setSl] = useState(0.55);
-  const [tp, setTp] = useState(1.1);
-  const [leverage, setLeverage] = useState(6);
 
   // Auto AI settings
   const [tradeStyle, setTradeStyle] = useState<TradeStyle>("DAY_TRADE");
@@ -288,7 +282,6 @@ export default function Dashboard() {
     peak: number; floor: number; locked: number; distance: number; distancePct: number; ath: number;
   } | null>(null);
 
-  const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
 
   const [exStatus, setExStatus] = useState<ExchangeStatus | null>(null);
@@ -360,14 +353,9 @@ export default function Dashboard() {
     }
   }
 
-  // mode -> preset (also sets default max trades/day)
+  // mode -> preset (sets default max trades/day)
   useEffect(() => {
-    const p = presetForMode(mode);
-    setSize(p.size);
-    setSl(p.sl);
-    setTp(p.tp);
-    setLeverage(p.leverage);
-    setMaxTradesPerDay(p.maxTrades);
+    setMaxTradesPerDay(presetForMode(mode).maxTrades);
   }, [mode]);
 
   // initial load
@@ -536,38 +524,6 @@ export default function Dashboard() {
 
   const connected = !!exStatus?.connected;
   const aiRunning = !!autoStatus?.running;
-
-  async function placeTrade() {
-    try {
-      setError("");
-      setPlacing(true);
-
-      if (aiRunning) {
-        setPlacing(false);
-        setError("Manual trading is disabled while AI is running.");
-        return;
-      }
-
-      const st = exStatus ?? (await apiGet<ExchangeStatus>("/exchange/status"));
-      if (!st.connected) {
-        setPlacing(false);
-        setError("Connect exchange first (go to Exchange tab).");
-        return;
-      }
-
-      const symbol = (symbolInput || activeSymbol).toUpperCase().trim();
-      if (!symbol.endsWith("USDT"))
-        throw new Error("Use Binance symbol like BTCUSDT / ETHUSDT / SOLUSDT");
-
-      const payload = { symbol, side, mode, size, sl, tp, leverage };
-      await apiPost("/trade", payload);
-      await refreshTradesAndEquity();
-      setPlacing(false);
-    } catch (e: any) {
-      setPlacing(false);
-      setError(e?.message || "Trade failed");
-    }
-  }
 
   async function startAI() {
     try {
@@ -774,7 +730,6 @@ export default function Dashboard() {
             {/* 1 ── Risk Mode */}
             <div className="cardHead" style={{ marginBottom: 10 }}>
               <div className="title">TRADE PANEL</div>
-              <div className="hint">Sandbox · manual disabled while AI runs</div>
             </div>
             <div className="modes">
               {(["ULTRA_SAFE", "SAFE", "NORMAL", "MINI_ASYM", "AGGRESSIVE"] as RiskMode[]).map((m) => (
@@ -852,44 +807,12 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* 5 ── Manual trade size/SL/TP/leverage */}
-            <div style={{ marginTop: isMobile ? 10 : 14 }}>
-              <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 1, textTransform: "uppercase", opacity: 0.4, marginBottom: 6 }}>Size / SL / TP (manual trade)</div>
-              <div className="grid4">
-                <div className="field">
-                  <label>Size %</label>
-                  <input className="input" type="number" step="0.01" value={size} onChange={(e) => setSize(Number(e.target.value))} />
-                </div>
-                <div className="field">
-                  <label>SL %</label>
-                  <input className="input" type="number" step="0.01" value={sl} onChange={(e) => setSl(Number(e.target.value))} />
-                </div>
-                <div className="field">
-                  <label>TP %</label>
-                  <input className="input" type="number" step="0.01" value={tp} onChange={(e) => setTp(Number(e.target.value))} />
-                </div>
-                <div className="field">
-                  <label>Leverage</label>
-                  <input className="input" type="number" step="1" value={leverage} onChange={(e) => setLeverage(Number(e.target.value))} />
-                </div>
-              </div>
-            </div>
-
-            {/* 6 ── Direction + Actions */}
-            <div className="sideRow" style={{ marginTop: 14 }}>
-              <button className={`sideBtn long ${side === "LONG" ? "active" : ""}`} type="button" onClick={() => setSide("LONG")}>LONG</button>
-              <button className={`sideBtn short ${side === "SHORT" ? "active" : ""}`} type="button" onClick={() => setSide("SHORT")}>SHORT</button>
-            </div>
-
-            <div className="actions" style={{ gap: 8, marginTop: isMobile ? 8 : 10 }}>
+            {/* 5 ── Actions */}
+            <div className="actions" style={{ gap: 8, marginTop: isMobile ? 10 : 14 }}>
               <button className="primary" type="button" onClick={startAI} disabled={!connected || aiRunning}>
                 {aiRunning ? "AI Running" : "Start AI"}
               </button>
               <button className="danger" type="button" onClick={stopAI} disabled={!aiRunning}>Stop AI</button>
-              <button className="primary" type="button" onClick={placeTrade} disabled={placing || aiRunning}
-                style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "white" }}>
-                {aiRunning ? "Manual Disabled" : placing ? "Placing…" : "Place Trade"}
-              </button>
               <button className="danger" type="button" onClick={resetSandbox}
                 style={{ background: "transparent", border: "1px solid rgba(255,80,120,0.3)" }}>
                 Reset
