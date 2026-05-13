@@ -109,14 +109,10 @@
   display: grid;
   grid-template-columns: 1fr 320px; /* right side compact */
   gap: 12px;
-  align-items: stretch;
+  align-items: start;
 }
 
-.exec{
-  padding-bottom: 10px;
-  display: flex;
-  flex-direction: column;
-}
+.exec{ padding-bottom: 10px; }
 
 .modes{
   padding: 10px 14px 0;
