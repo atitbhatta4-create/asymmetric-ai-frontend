@@ -287,7 +287,7 @@ export default function Admin() {
                     </span>
                   </td>
                   <td style={{ ...td, fontSize: 11, opacity: 0.7 }}>{String(u.created_at).slice(0, 10)}</td>
-                  <td style={{ ...td, fontWeight: 900 }}>${Number(u.equity).toFixed(2)}</td>
+                  <td style={{ ...td, fontWeight: 900 }}>{u.exchange_connected ? `$${Number(u.equity).toFixed(2)}` : "$0.00"}</td>
                   <td style={{ ...td, fontWeight: 900, color: Number(u.today_pnl) >= 0 ? "rgba(0,255,209,.9)" : "rgba(255,80,120,.9)" }}>
                     {Number(u.today_pnl) >= 0 ? "+" : ""}${Number(u.today_pnl).toFixed(2)}
                   </td>
