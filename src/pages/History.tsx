@@ -337,6 +337,8 @@ export default function History() {
         </div>
       ) : null}
 
+      </> /* end trades tab */}
+
       {/* ── AI LOG TAB ── */}
       {tab === "ailog" && (
         <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -516,8 +518,6 @@ export default function History() {
           </div>
         )}
       </div>
-
-      </> /* end trades tab */}
 
       {/* Modal */}
       {open && (
