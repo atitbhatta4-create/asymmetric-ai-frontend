@@ -404,8 +404,7 @@ export default function History() {
         </div>
       )}
 
-      {/* Table */}
-      <div
+      {tab === "trades" && <div
         style={{
           marginTop: 14,
           borderRadius: 18,
@@ -517,7 +516,7 @@ export default function History() {
             </table>
           </div>
         )}
-      </div>
+      </div>}
 
       {/* Modal */}
       {open && (
