@@ -265,7 +265,7 @@ export default function Admin() {
                 <th style={th}>AI</th>
                 <th style={th}>Email</th>
                 <th style={th}>Created</th>
-                <th style={th}>Equity</th>
+                <th style={th}>Equity <span style={{ fontWeight: 400, opacity: 0.45, fontSize: 10 }}>(last sync)</span></th>
                 <th style={th}>Today PnL</th>
                 <th style={th}>Trades</th>
                 <th style={th}>Win%</th>
