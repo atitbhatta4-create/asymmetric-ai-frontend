@@ -21,6 +21,17 @@ type Trade = {
   reason?: string | null;
 };
 
+type AiSession = {
+  id: number;
+  symbol: string;
+  mode: string;
+  trade_style: string;
+  started_at: string;
+  ended_at: string | null;
+  stop_reason: string | null;
+  events: { t: string; msg: string }[];
+};
+
 type TradesOut = { trades: Trade[] };
 
 async function apiGet<T>(path: string): Promise<T> {
@@ -62,6 +73,8 @@ export default function History() {
   const nav = useNavigate();
   const isMobile = useIsMobile();
 
+  const [tab, setTab] = useState<"trades" | "ailog">("trades");
+
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string>("");
@@ -76,17 +89,20 @@ export default function History() {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<Trade | null>(null);
 
+  // AI Sessions log
+  const [aiSessions, setAiSessions] = useState<AiSession[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [expandedSession, setExpandedSession] = useState<number | null>(null);
+
   const load = async () => {
     try {
       setErr("");
       setLoading(true);
 
-      // ✅ History = ALL trades ever
       const out = await apiGet<TradesOut>("/trades?limit=2000");
       const list = out.trades ?? [];
       setTrades(list);
 
-      // auto-set date range if empty
       if (list.length) {
         const times = list.map(parseTradeTime).filter(Boolean) as Date[];
         if (times.length) {
@@ -103,8 +119,21 @@ export default function History() {
     }
   };
 
+  const loadAiSessions = async () => {
+    try {
+      setAiLoading(true);
+      const r = await apiGet<{ ok: boolean; sessions: AiSession[] }>("/auto/sessions?limit=30&log_limit=1000");
+      setAiSessions(r.sessions ?? []);
+    } catch {
+      setAiSessions([]);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   useEffect(() => {
     load();
+    loadAiSessions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -132,6 +161,24 @@ export default function History() {
     setOpen(true);
   };
 
+  const tabBtn = (id: "trades" | "ailog", label: string) => (
+    <button
+      onClick={() => setTab(id)}
+      style={{
+        padding: isMobile ? "6px 14px" : "8px 20px",
+        borderRadius: 10,
+        border: tab === id ? "1.5px solid rgba(0,255,224,0.5)" : "1px solid rgba(255,255,255,0.10)",
+        background: tab === id ? "rgba(0,255,224,0.09)" : "rgba(255,255,255,0.03)",
+        color: tab === id ? "#00ffe0" : "rgba(255,255,255,0.7)",
+        fontWeight: 900,
+        fontSize: isMobile ? 11 : 13,
+        cursor: "pointer",
+      }}
+    >
+      {label}
+    </button>
+  );
+
   return (
     <div style={{ maxWidth: 1200 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "end", gap: 12, flexWrap: "wrap" }}>
@@ -139,13 +186,13 @@ export default function History() {
           <div style={{ fontSize: isMobile ? 15 : 26, fontWeight: 950 }}>History</div>
           {!isMobile && (
             <div style={{ opacity: 0.7, marginTop: 6 }}>
-              Full history (persistent). Filter by date. Click a row to view reason. Click symbol to open chart.
+              Full history (persistent). Filter by date. Click a row to view reason.
             </div>
           )}
         </div>
 
         <button
-          onClick={load}
+          onClick={tab === "trades" ? load : loadAiSessions}
           style={{
             borderRadius: isMobile ? 10 : 14,
             border: "1px solid rgba(0,255,224,0.22)",
@@ -158,9 +205,18 @@ export default function History() {
             fontSize: isMobile ? 11 : 14,
           }}
         >
-          {loading ? "Loading…" : "Refresh"}
+          {(tab === "trades" ? loading : aiLoading) ? "Loading…" : "Refresh"}
         </button>
       </div>
+
+      {/* Tab switcher */}
+      <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+        {tabBtn("trades", "Trade History")}
+        {tabBtn("ailog", "AI Log")}
+      </div>
+
+      {/* ── TRADES TAB ── */}
+      {tab === "trades" && <>
 
       {/* Filters */}
       <div
@@ -276,20 +332,75 @@ export default function History() {
       </div>
 
       {err ? (
-        <div
-          style={{
-            marginTop: 12,
-            background: "rgba(220,38,38,0.12)",
-            border: "1px solid rgba(248,113,113,0.55)",
-            color: "#fecaca",
-            padding: 12,
-            borderRadius: 14,
-            whiteSpace: "pre-wrap",
-          }}
-        >
+        <div style={{ marginTop: 12, background: "rgba(220,38,38,0.12)", border: "1px solid rgba(248,113,113,0.55)", color: "#fecaca", padding: 12, borderRadius: 14, whiteSpace: "pre-wrap" }}>
           <b>Error:</b> {err}
         </div>
       ) : null}
+
+      {/* ── AI LOG TAB ── */}
+      {tab === "ailog" && (
+        <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+          {aiLoading && <div style={{ opacity: 0.6, fontSize: 13 }}>Loading sessions…</div>}
+          {!aiLoading && aiSessions.length === 0 && (
+            <div style={{ opacity: 0.6, fontSize: 13, padding: 16, borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(9,15,30,0.9)" }}>
+              No AI sessions found yet. Start the AI from the Dashboard to begin recording logs.
+            </div>
+          )}
+          {aiSessions.map((sess) => {
+            const isOpen = expandedSession === sess.id;
+            const isActive = !sess.ended_at;
+            const style = (sess.trade_style || "").replace("_", " ");
+            const modeLabel = sess.mode === "MINI_ASYM" ? "Mini-Asym" : (sess.mode || "").replace("_", " ");
+            return (
+              <div key={sess.id} style={{ borderRadius: 14, border: `1px solid ${isActive ? "rgba(0,255,224,0.25)" : "rgba(255,255,255,0.08)"}`, background: "rgba(9,15,30,0.92)", overflow: "hidden" }}>
+                {/* Session header */}
+                <div
+                  onClick={() => setExpandedSession(isOpen ? null : sess.id)}
+                  style={{ padding: isMobile ? "10px 12px" : "12px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}
+                >
+                  <div style={{ flex: 1, display: "flex", flexWrap: "wrap", gap: isMobile ? "6px 14px" : "4px 20px", alignItems: "center" }}>
+                    {isActive && (
+                      <span style={{ fontSize: 9, fontWeight: 900, background: "rgba(0,255,224,0.15)", color: "#00ffe0", border: "1px solid rgba(0,255,224,0.3)", borderRadius: 999, padding: "2px 8px", letterSpacing: 1 }}>LIVE</span>
+                    )}
+                    <span style={{ fontWeight: 950, fontSize: isMobile ? 13 : 15 }}>{sess.symbol}</span>
+                    <span style={{ fontSize: 11, opacity: 0.65 }}>{modeLabel} · {style}</span>
+                    <span style={{ fontSize: 11, opacity: 0.5 }}>{sess.started_at}</span>
+                    {sess.ended_at && <span style={{ fontSize: 11, opacity: 0.5 }}>→ {sess.ended_at}</span>}
+                    <span style={{ fontSize: 11, opacity: 0.55 }}>{sess.events.length} entries</span>
+                    {sess.stop_reason && !isActive && (
+                      <span style={{ fontSize: 10, color: "#94a3b8", maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sess.stop_reason}</span>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 18, opacity: 0.5, userSelect: "none" }}>{isOpen ? "▲" : "▼"}</span>
+                </div>
+
+                {/* Log entries */}
+                {isOpen && (
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", maxHeight: 420, overflowY: "auto", padding: "8px 0" }}>
+                    {sess.events.length === 0 ? (
+                      <div style={{ padding: "10px 16px", opacity: 0.5, fontSize: 12 }}>No log entries.</div>
+                    ) : sess.events.map((ev, i) => {
+                      const isBlocked = ev.msg.startsWith("Blocked") || ev.msg.startsWith("BLOCKED");
+                      const isTrade = ev.msg.startsWith("REAL") || ev.msg.startsWith("Opened") || ev.msg.startsWith("Closed") || ev.msg.startsWith("Grade A");
+                      const isSystem = ev.msg.startsWith("AI started") || ev.msg.startsWith("AI resumed") || ev.msg.startsWith("Daily counters") || ev.msg.startsWith("Stopped");
+                      return (
+                        <div key={i} style={{ padding: isMobile ? "4px 12px" : "4px 16px", display: "flex", gap: 10, borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.03)" }}>
+                          <span style={{ fontSize: 10, opacity: 0.4, whiteSpace: "nowrap", paddingTop: 2, minWidth: isMobile ? 60 : 130 }}>{isMobile ? ev.t.slice(11, 16) : ev.t}</span>
+                          <span style={{
+                            fontSize: 11,
+                            color: isTrade ? "#00ffe0" : isBlocked ? "#ff5078" : isSystem ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.85)",
+                            lineHeight: 1.45,
+                          }}>{ev.msg}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Table */}
       <div
@@ -405,6 +516,8 @@ export default function History() {
           </div>
         )}
       </div>
+
+      </> /* end trades tab */}
 
       {/* Modal */}
       {open && (
