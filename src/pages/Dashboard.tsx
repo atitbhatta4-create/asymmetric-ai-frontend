@@ -267,6 +267,7 @@ export default function Dashboard() {
   const [autoStatus, setAutoStatus] = useState<AutoStatus | null>(null);
   const [autoHistory, setAutoHistory] = useState<AutoHistoryEvent[]>([]);
   const [aiLogOpen, setAiLogOpen] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
 
   const [equity, setEquity] = useState(NaN);
   const [displayName, setDisplayName] = useState("");
@@ -344,9 +345,17 @@ export default function Dashboard() {
 
   async function loadAutoHistory() {
     try {
-      const r = await apiGet<{ ok: boolean; events: AutoHistoryEvent[] }>(
+      const r = await apiGet<{ ok: boolean; session_id?: number | null; events: AutoHistoryEvent[] }>(
         "/auto/history?limit=60"
       );
+      const newSid = r.session_id ?? null;
+      setCurrentSessionId(prev => {
+        if (prev !== null && newSid !== null && newSid !== prev) {
+          // New session started — clear log before loading new one
+          setAutoHistory([]);
+        }
+        return newSid;
+      });
       setAutoHistory(r.events ?? []);
     } catch {
       setAutoHistory([]);
