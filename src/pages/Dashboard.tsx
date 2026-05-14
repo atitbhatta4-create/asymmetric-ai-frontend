@@ -101,13 +101,16 @@ function EquityCurveChart({
   series,
   floorSeries = [],
   height = 210,
+  currentEquity = 0,
 }: {
   series: number[];
   floorSeries?: number[];
   height?: number;
+  currentEquity?: number;
 }) {
-  const start = series.length ? series[0] : 1000;
-  const last = series.length ? series[series.length - 1] : start;
+  const fallback = isFinite(currentEquity) && currentEquity > 0 ? currentEquity : 0;
+  const start = series.length ? series[0] : fallback;
+  const last = series.length ? series[series.length - 1] : fallback;
   const delta = last - start;
   const pct = start !== 0 ? (delta / start) * 100 : 0;
   const up = delta >= 0;
@@ -496,7 +499,7 @@ export default function Dashboard() {
       locked_profit?: number; distance_to_floor?: number;
       distance_pct?: number; all_time_high?: number;
     }>("/balance");
-    const refreshedEq = Number(bal.total ?? 1000);
+    const refreshedEq = Number(bal.total ?? NaN);
     setEquity(refreshedEq);
     setFloorStats({
       peak: Number(bal.peak_equity ?? refreshedEq),
@@ -513,7 +516,7 @@ export default function Dashboard() {
     const list = (t.trades ?? []).slice();
     setTrades(list);
 
-    const startEq = Number(bal.start_equity ?? 1000);
+    const startEq = Number(bal.start_equity ?? bal.total ?? NaN);
     const startFloor = Number(bal.hard_floor ?? startEq * 0.85);
     const curve: number[] = [startEq];
     const fCurve: number[] = [startFloor];
@@ -888,7 +891,7 @@ export default function Dashboard() {
                 <div className="title">EQUITY CURVE</div>
                 <div className="hint">Pink = equity · Teal dotted = floor</div>
               </div>
-              <EquityCurveChart series={equitySeries} floorSeries={floorSeries} height={220} />
+              <EquityCurveChart series={equitySeries} floorSeries={floorSeries} height={220} currentEquity={equity} />
             </section>
           </div>
         </div>
