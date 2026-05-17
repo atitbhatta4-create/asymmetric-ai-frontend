@@ -205,7 +205,7 @@ export default function History() {
         </div>
 
         <button
-          onClick={tab === "trades" ? load : loadAiSessions}
+          onClick={tab === "trades" ? load : () => loadAiSessions()}
           style={{
             borderRadius: isMobile ? 10 : 14,
             border: "1px solid rgba(0,255,224,0.22)",
