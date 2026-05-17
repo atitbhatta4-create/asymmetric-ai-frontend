@@ -551,7 +551,23 @@ export default function MiniAsym() {
                 {(["regime", "direction", "entry", "momentum"] as const).map((key) => {
                   const l = signalData.breakdown![key];
                   if (!l) return null;
-                  const ok = !!l.ok;
+                  // Entry layer: enforce hard FAIL when any critical condition is violated.
+                  // Backend ok (score > 0.25) can pass with bad RSI if pullback/pattern are decent —
+                  // but the display must be honest: RSI outside zone or price too far = FAIL.
+                  let ok = !!l.ok;
+                  if (key === "entry") {
+                    const rsiVal   = typeof l.rsi === "number" ? l.rsi : null;
+                    const rsiRange = typeof l.rsi_range === "string" ? l.rsi_range : "";
+                    if (rsiVal !== null && rsiRange) {
+                      const parts = rsiRange.replace(/[–—]/g, "-").split("-").map(Number);
+                      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                        if (rsiVal < parts[0] || rsiVal > parts[1]) ok = false;
+                      }
+                    }
+                    const pbPct = typeof l.price_vs_ema21_pct === "number" ? l.price_vs_ema21_pct : null;
+                    const pbMax = typeof l.pullback_max_pct   === "number" ? l.pullback_max_pct   : null;
+                    if (pbPct !== null && pbMax !== null && pbPct > pbMax) ok = false;
+                  }
                   const layerScore = typeof l.score === "number" ? l.score : (ok ? 0.8 : 0.2);
                   const meta = LAYER_META[key];
                   const barColor = ok ? "#00ff9d" : "#ff5078";
