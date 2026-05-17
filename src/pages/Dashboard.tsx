@@ -57,6 +57,7 @@ type AutoStatus = {
   chop_min_sep_pct?: number | null;
   trade_style?: string | null;
   market_grade?: string | null;
+  signal_score?: number | null;
 
   last_run_at?: string | null;
   last_trade_at?: string | null;
@@ -623,7 +624,9 @@ export default function Dashboard() {
         : "unlimited";
 
     const styleTxt = autoStatus?.trade_style ? ` ${autoStatus.trade_style}` : "";
-    const gradeTxt = autoStatus?.market_grade && autoStatus.market_grade !== "-" ? ` Grade ${autoStatus.market_grade}` : "";
+    const _s = autoStatus?.signal_score ?? 0;
+    const _g = _s >= 0.78 ? "A" : _s >= 0.65 ? "B" : "C";
+    const gradeTxt = _s > 0 ? ` Grade ${_g}` : "";
 
     return `AI RUNNING (${autoStatus?.side || "-"}) • ${modeTxt}${styleTxt}${gradeTxt} • ${sig}${blocked} • trades ${tradesToday} • bad ${badToday} • reset ${resetIn} • ${dur}`;
   }, [aiRunning, autoStatus]);
@@ -829,20 +832,28 @@ export default function Dashboard() {
                 border: "1px solid rgba(0,255,224,0.15)",
                 display: "flex", flexWrap: "wrap", gap: "10px 18px",
               }}>
-                {[
-                  { label: "Symbol",  val: autoStatus.symbol ?? "—" },
-                  { label: "Style",   val: (autoStatus.trade_style ?? "—").replace("_", " ") },
-                  { label: "Mode",    val: autoStatus.mode === "MINI_ASYM" ? "Mini-Asym" : (autoStatus.mode ?? "—").replace("_", " ") },
-                  { label: "Grade",   val: autoStatus.market_grade && autoStatus.market_grade !== "-" ? autoStatus.market_grade : "—" },
-                  { label: "Signal",  val: autoStatus.last_signal ?? "—" },
-                  { label: "Trades",  val: `${autoStatus.trades_today ?? 0} / ${autoStatus.max_trades_per_day || "∞"}` },
-                  ...(autoStatus.blocked_reason ? [{ label: "Blocked", val: autoStatus.blocked_reason }] : []),
-                ].map(({ label, val }) => (
+                {(() => {
+                  const sc = autoStatus.signal_score ?? 0;
+                  const trueGrade = sc >= 0.78 ? "A" : sc >= 0.65 ? "B" : "C";
+                  // Green = grade can fire now. Amber = valid signal but currently blocked. Red = weak signal (C).
+                  const gradeColor = sc >= 0.65
+                    ? (autoStatus.blocked_reason ? "#ffa032" : "#00ff9d")
+                    : "#ff5078";
+                  return [
+                    { label: "Symbol",  val: autoStatus.symbol ?? "—",         color: undefined },
+                    { label: "Style",   val: (autoStatus.trade_style ?? "—").replace("_", " "), color: undefined },
+                    { label: "Mode",    val: autoStatus.mode === "MINI_ASYM" ? "Mini-Asym" : (autoStatus.mode ?? "—").replace("_", " "), color: undefined },
+                    { label: "Grade",   val: sc > 0 ? trueGrade : "—",         color: sc > 0 ? gradeColor : undefined },
+                    { label: "Signal",  val: autoStatus.last_signal ?? "—",    color: undefined },
+                    { label: "Trades",  val: `${autoStatus.trades_today ?? 0} / ${autoStatus.max_trades_per_day || "∞"}`, color: undefined },
+                    ...(autoStatus.blocked_reason ? [{ label: "Blocked", val: autoStatus.blocked_reason, color: "#ff5078" as string | undefined }] : []),
+                  ];
+                })().map(({ label, val, color }) => (
                   <div key={label} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                     <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", opacity: 0.4 }}>{label}</span>
                     <span style={{
                       fontSize: 11, fontWeight: 700,
-                      color: label === "Blocked" ? "#ff5078" : label === "Grade" && val !== "—" ? "#00ffe0" : "rgba(255,255,255,0.85)",
+                      color: color ?? "rgba(255,255,255,0.85)",
                       maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                     }}>{val}</span>
                   </div>
