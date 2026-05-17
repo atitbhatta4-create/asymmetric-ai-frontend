@@ -21,6 +21,8 @@ type Trade = {
   reason?: string | null;
 };
 
+type LogType = "TRADE" | "BLOCKED" | "MID_CANDLE" | "HOLDING" | "ERROR" | "RESET" | "SYSTEM";
+
 type AiSession = {
   id: number;
   symbol: string;
@@ -29,7 +31,8 @@ type AiSession = {
   started_at: string;
   ended_at: string | null;
   stop_reason: string | null;
-  events: { t: string; msg: string }[];
+  total_events?: number;
+  events: { t: string; msg: string; log_type?: LogType }[];
 };
 
 type TradesOut = { trades: Trade[] };
@@ -93,6 +96,9 @@ export default function History() {
   const [aiSessions, setAiSessions] = useState<AiSession[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [expandedSession, setExpandedSession] = useState<number | null>(null);
+  const [aiSearch, setAiSearch] = useState("");
+  const [aiLogType, setAiLogType] = useState<"ALL" | LogType>("ALL");
+  const [aiSymbol, setAiSymbol] = useState("");
 
   const load = async () => {
     try {
@@ -119,10 +125,17 @@ export default function History() {
     }
   };
 
-  const loadAiSessions = async () => {
+  const loadAiSessions = async (opts?: { search?: string; logType?: string; symbol?: string }) => {
     try {
       setAiLoading(true);
-      const r = await apiGet<{ ok: boolean; sessions: AiSession[] }>("/auto/sessions?limit=30&log_limit=1000");
+      const p = new URLSearchParams({ limit: "30", log_limit: "1000" });
+      const sym = (opts?.symbol ?? aiSymbol).trim();
+      const q   = (opts?.search  ?? aiSearch).trim();
+      const lt  = opts?.logType ?? aiLogType;
+      if (sym) p.set("symbol", sym);
+      if (q)   p.set("search", q);
+      if (lt && lt !== "ALL") p.set("log_type", lt);
+      const r = await apiGet<{ ok: boolean; sessions: AiSession[] }>(`/auto/sessions?${p}`);
       setAiSessions(r.sessions ?? []);
     } catch {
       setAiSessions([]);
@@ -342,17 +355,66 @@ export default function History() {
       {/* ── AI LOG TAB ── */}
       {tab === "ailog" && (
         <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+
+          {/* Filters */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 180px 200px 100px", gap: isMobile ? 6 : 10, padding: isMobile ? 8 : 12, borderRadius: 14, background: "rgba(9,15,30,0.92)", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div>
+              <div style={{ fontSize: 10, opacity: 0.6, marginBottom: 4 }}>Search keyword</div>
+              <input
+                value={aiSearch}
+                onChange={(e) => setAiSearch(e.target.value)}
+                placeholder="SL_HIT, REAL ORDER…"
+                style={{ width: "100%", padding: "8px 10px", borderRadius: 10, border: "1px solid rgba(148,163,184,0.4)", background: "rgba(15,23,42,0.85)", color: "white", fontSize: 12 }}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: 10, opacity: 0.6, marginBottom: 4 }}>Symbol</div>
+              <input
+                value={aiSymbol}
+                onChange={(e) => setAiSymbol(e.target.value)}
+                placeholder="BTCUSDT"
+                style={{ width: "100%", padding: "8px 10px", borderRadius: 10, border: "1px solid rgba(148,163,184,0.4)", background: "rgba(15,23,42,0.85)", color: "white", fontSize: 12 }}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: 10, opacity: 0.6, marginBottom: 4 }}>Log type</div>
+              <select
+                value={aiLogType}
+                onChange={(e) => setAiLogType(e.target.value as any)}
+                style={{ width: "100%", padding: "8px 10px", borderRadius: 10, border: "1px solid rgba(148,163,184,0.4)", background: "rgba(15,23,42,0.85)", color: "white", fontSize: 12 }}
+              >
+                <option value="ALL">All types</option>
+                <option value="TRADE">Trades</option>
+                <option value="BLOCKED">Blocked</option>
+                <option value="HOLDING">Holding</option>
+                <option value="MID_CANDLE">Mid-Candle</option>
+                <option value="ERROR">Errors</option>
+                <option value="RESET">Resets</option>
+                <option value="SYSTEM">System</option>
+              </select>
+            </div>
+            <div style={{ display: "flex", alignItems: "flex-end" }}>
+              <button
+                onClick={() => loadAiSessions()}
+                style={{ width: "100%", padding: "8px 10px", borderRadius: 10, border: "1px solid rgba(0,255,224,0.3)", background: "rgba(0,255,224,0.10)", color: "white", fontWeight: 900, fontSize: 12, cursor: "pointer" }}
+              >
+                {aiLoading ? "Loading…" : "Apply"}
+              </button>
+            </div>
+          </div>
+
           {aiLoading && <div style={{ opacity: 0.6, fontSize: 13 }}>Loading sessions…</div>}
           {!aiLoading && aiSessions.length === 0 && (
             <div style={{ opacity: 0.6, fontSize: 13, padding: 16, borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(9,15,30,0.9)" }}>
-              No AI sessions found yet. Start the AI from the Dashboard to begin recording logs.
+              No AI sessions found. Start the AI from the Dashboard to begin recording logs, or adjust your filters.
             </div>
           )}
           {aiSessions.map((sess) => {
             const isOpen = expandedSession === sess.id;
             const isActive = !sess.ended_at;
-            const style = (sess.trade_style || "").replace("_", " ");
+            const styleLabel = (sess.trade_style || "").replace("_", " ");
             const modeLabel = sess.mode === "MINI_ASYM" ? "Mini-Asym" : (sess.mode || "").replace("_", " ");
+            const entryCount = sess.total_events ?? sess.events.length;
             return (
               <div key={sess.id} style={{ borderRadius: 14, border: `1px solid ${isActive ? "rgba(0,255,224,0.25)" : "rgba(255,255,255,0.08)"}`, background: "rgba(9,15,30,0.92)", overflow: "hidden" }}>
                 {/* Session header */}
@@ -365,10 +427,10 @@ export default function History() {
                       <span style={{ fontSize: 9, fontWeight: 900, background: "rgba(0,255,224,0.15)", color: "#00ffe0", border: "1px solid rgba(0,255,224,0.3)", borderRadius: 999, padding: "2px 8px", letterSpacing: 1 }}>LIVE</span>
                     )}
                     <span style={{ fontWeight: 950, fontSize: isMobile ? 13 : 15 }}>{sess.symbol}</span>
-                    <span style={{ fontSize: 11, opacity: 0.65 }}>{modeLabel} · {style}</span>
+                    <span style={{ fontSize: 11, opacity: 0.65 }}>{modeLabel} · {styleLabel}</span>
                     <span style={{ fontSize: 11, opacity: 0.5 }}>{sess.started_at}</span>
                     {sess.ended_at && <span style={{ fontSize: 11, opacity: 0.5 }}>→ {sess.ended_at}</span>}
-                    <span style={{ fontSize: 11, opacity: 0.55 }}>{sess.events.length} entries</span>
+                    <span style={{ fontSize: 11, opacity: 0.55 }}>{entryCount} entries</span>
                     {sess.stop_reason && !isActive && (
                       <span style={{ fontSize: 10, color: "#94a3b8", maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sess.stop_reason}</span>
                     )}
@@ -378,21 +440,23 @@ export default function History() {
 
                 {/* Log entries */}
                 {isOpen && (
-                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", maxHeight: 420, overflowY: "auto", padding: "8px 0" }}>
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", maxHeight: 480, overflowY: "auto", padding: "8px 0" }}>
                     {sess.events.length === 0 ? (
-                      <div style={{ padding: "10px 16px", opacity: 0.5, fontSize: 12 }}>No log entries.</div>
+                      <div style={{ padding: "10px 16px", opacity: 0.5, fontSize: 12 }}>No log entries match your filters.</div>
                     ) : sess.events.map((ev, i) => {
-                      const isBlocked = ev.msg.startsWith("Blocked") || ev.msg.startsWith("BLOCKED");
-                      const isTrade = ev.msg.startsWith("REAL") || ev.msg.startsWith("Opened") || ev.msg.startsWith("Closed") || ev.msg.startsWith("Grade A");
-                      const isSystem = ev.msg.startsWith("AI started") || ev.msg.startsWith("AI resumed") || ev.msg.startsWith("Daily counters") || ev.msg.startsWith("Stopped");
+                      const lt = ev.log_type || "";
+                      const logColor =
+                        lt === "TRADE"      ? "#00ffe0" :
+                        lt === "BLOCKED"    ? "#ff5078" :
+                        lt === "ERROR"      ? "#fca5a5" :
+                        lt === "MID_CANDLE" ? "#ffa032" :
+                        lt === "RESET"      ? "#a78bfa" :
+                        lt === "HOLDING"    ? "#64748b" :
+                        "rgba(255,255,255,0.80)";
                       return (
                         <div key={i} style={{ padding: isMobile ? "4px 12px" : "4px 16px", display: "flex", gap: 10, borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.03)" }}>
                           <span style={{ fontSize: 10, opacity: 0.4, whiteSpace: "nowrap", paddingTop: 2, minWidth: isMobile ? 60 : 130 }}>{isMobile ? ev.t.slice(11, 16) : ev.t}</span>
-                          <span style={{
-                            fontSize: 11,
-                            color: isTrade ? "#00ffe0" : isBlocked ? "#ff5078" : isSystem ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.85)",
-                            lineHeight: 1.45,
-                          }}>{ev.msg}</span>
+                          <span style={{ fontSize: 11, color: logColor, lineHeight: 1.45 }}>{ev.msg}</span>
                         </div>
                       );
                     })}
