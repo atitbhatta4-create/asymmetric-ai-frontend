@@ -99,24 +99,24 @@ export default function Admin() {
 
   const loadAnalytics = async () => {
     setAnalyticsLoading(true);
-    try {
-      const [ov, wr, bc, st, bs] = await Promise.all([
-        api.apiRequest("/analytics/overview",  { method: "GET" }),
-        api.apiRequest("/analytics/win-rates", { method: "GET" }),
-        api.apiRequest("/analytics/by-coin",   { method: "GET" }),
-        api.apiRequest("/analytics/by-regime", { method: "GET" }),
-        api.apiRequest("/analytics/by-session", { method: "GET" }),
-      ]);
-      setAnalyticsOverview(ov);
-      setAnalyticsWinRates(wr);
-      setAnalyticsByCoin(bc);
-      setAnalyticsSignalTrend(st);
-      setAnalyticsBySession(bs);
-    } catch (e: any) {
-      setErr(e?.message || "Analytics load failed");
-    } finally {
-      setAnalyticsLoading(false);
-    }
+    // Use allSettled so one failing endpoint doesn't block the others
+    const [ov, wr, bc, st, bs] = await Promise.allSettled([
+      api.apiRequest("/analytics/overview",   { method: "GET" }),
+      api.apiRequest("/analytics/win-rates",  { method: "GET" }),
+      api.apiRequest("/analytics/by-coin",    { method: "GET" }),
+      api.apiRequest("/analytics/by-regime",  { method: "GET" }),
+      api.apiRequest("/analytics/by-session", { method: "GET" }),
+    ]);
+    if (ov.status === "fulfilled") setAnalyticsOverview(ov.value);
+    if (wr.status === "fulfilled") setAnalyticsWinRates(wr.value);
+    if (bc.status === "fulfilled") setAnalyticsByCoin(bc.value);
+    if (st.status === "fulfilled") setAnalyticsSignalTrend(st.value);
+    if (bs.status === "fulfilled") setAnalyticsBySession(bs.value);
+    const errs = [ov, wr, bc, st, bs]
+      .filter((r): r is PromiseRejectedResult => r.status === "rejected")
+      .map((r) => r.reason?.message || "Unknown error");
+    if (errs.length > 0) setErr(`Analytics: ${errs.join(" | ")}`);
+    setAnalyticsLoading(false);
   };
 
   const load = async () => {
