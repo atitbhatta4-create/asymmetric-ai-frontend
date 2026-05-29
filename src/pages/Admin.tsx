@@ -410,7 +410,7 @@ export default function Admin() {
                 {[
                   { title: "By Grade", data: analyticsWinRates.by_grade },
                   { title: "By Score Band", data: analyticsWinRates.by_score },
-                  { title: "By Regime", data: analyticsWinRates.by_regime },
+                  { title: "By Leverage", data: analyticsWinRates.by_leverage },
                 ].map(({ title, data }) => (
                   <div key={title}>
                     <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.55, marginBottom: 6 }}>{title}</div>
