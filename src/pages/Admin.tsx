@@ -75,6 +75,7 @@ const td: React.CSSProperties = { padding: 10, fontSize: 12, opacity: 0.9 };
 export default function Admin() {
   const nav = useNavigate();
 
+  const [activeTab, setActiveTab] = useState<"users" | "analytics">("users");
   const [status, setStatus] = useState<AdminStatus | null>(null);
 
   const [signupEnabled, setSignupEnabled] = useState(true);
@@ -85,6 +86,35 @@ export default function Admin() {
 
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
+  // Analytics state
+  const [analyticsOverview, setAnalyticsOverview] = useState<any>(null);
+  const [analyticsWinRates, setAnalyticsWinRates] = useState<any>(null);
+  const [analyticsByCoin, setAnalyticsByCoin] = useState<any>(null);
+  const [analyticsSignalTrend, setAnalyticsSignalTrend] = useState<any>(null);
+  const [analyticsBySession, setAnalyticsBySession] = useState<any>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
+  const loadAnalytics = async () => {
+    setAnalyticsLoading(true);
+    const [ov, wr, bc, st, bs] = await Promise.allSettled([
+      api.apiRequest("/analytics/overview",   { method: "GET" }),
+      api.apiRequest("/analytics/win-rates",  { method: "GET" }),
+      api.apiRequest("/analytics/by-coin",    { method: "GET" }),
+      api.apiRequest("/analytics/by-regime",  { method: "GET" }),
+      api.apiRequest("/analytics/by-session", { method: "GET" }),
+    ]);
+    if (ov.status === "fulfilled") setAnalyticsOverview(ov.value);
+    if (wr.status === "fulfilled") setAnalyticsWinRates(wr.value);
+    if (bc.status === "fulfilled") setAnalyticsByCoin(bc.value);
+    if (st.status === "fulfilled") setAnalyticsSignalTrend(st.value);
+    if (bs.status === "fulfilled") setAnalyticsBySession(bs.value);
+    const errs = [ov, wr, bc, st, bs]
+      .filter((r): r is PromiseRejectedResult => r.status === "rejected")
+      .map((r) => r.reason?.message || "Unknown error");
+    if (errs.length > 0) setErr(`Analytics: ${errs.join(" | ")}`);
+    setAnalyticsLoading(false);
+  };
 
   const load = async () => {
     setErr(null);
@@ -178,6 +208,25 @@ export default function Admin() {
 
   return (
     <div style={{ maxWidth: 1180, margin: "0 auto", display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* Tab Navigation */}
+      <div style={{ display: "flex", gap: 8 }}>
+        {(["users", "analytics"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => { setActiveTab(tab); if (tab === "analytics") loadAnalytics(); }}
+            style={{
+              padding: "9px 18px", borderRadius: 12, fontWeight: 900, cursor: "pointer",
+              fontSize: 13, border: "none",
+              background: activeTab === tab ? "rgba(0,255,224,0.15)" : "rgba(255,255,255,0.05)",
+              color: activeTab === tab ? "#00ffe0" : "rgba(255,255,255,0.7)",
+              borderBottom: activeTab === tab ? "2px solid #00ffe0" : "2px solid transparent",
+            }}
+          >
+            {tab === "users" ? "Users" : "Analytics"}
+          </button>
+        ))}
+      </div>
+
       <div style={cardStyle}>
         <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: ".12em", textTransform: "uppercase" }}>
           Admin Control Room (Private)
@@ -253,12 +302,12 @@ export default function Admin() {
           Users (click to open details)
         </div>
 
-        <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
+        {activeTab === "users" && <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
           <input value={userQ} onChange={(e) => setUserQ(e.target.value)} placeholder="Search email..." style={inputStyle} />
           <button onClick={refreshUsers} style={btnStyle}>Search</button>
-        </div>
+        </div>}
 
-        <div style={{ marginTop: 12, overflowX: "auto" }}>
+        {activeTab === "users" && <div style={{ marginTop: 12, overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 980 }}>
             <thead>
               <tr style={{ textAlign: "left", fontSize: 11, opacity: 0.7 }}>
@@ -310,8 +359,142 @@ export default function Admin() {
               )}
             </tbody>
           </table>
-        </div>
+        </div>}
       </div>
+
+      {/* ── ANALYTICS TAB ─────────────────────────────────────────────────── */}
+      {activeTab === "analytics" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ fontSize: 16, fontWeight: 950 }}>Live Analytics</div>
+            <button onClick={loadAnalytics} disabled={analyticsLoading} style={btnStyle}>
+              {analyticsLoading ? "Loading…" : "Refresh"}
+            </button>
+          </div>
+
+          {analyticsOverview && (
+            <div style={cardStyle}>
+              <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.5, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Overall Performance</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 8 }}>
+                {[
+                  ["Total Trades",    analyticsOverview.total_trades],
+                  ["Win Rate",        `${analyticsOverview.combined_win_rate}%`],
+                  ["Avg Win",         `$${analyticsOverview.avg_win}`],
+                  ["Avg Loss",        `$${analyticsOverview.avg_loss}`],
+                  ["Total PnL",       `$${analyticsOverview.total_pnl}`],
+                  ["Live Running",    analyticsOverview.live_running],
+                  ["Total Accounts",  analyticsOverview.total_accounts],
+                ].map(([label, val]) => (
+                  <div key={String(label)} style={{ background: "rgba(0,0,0,.25)", borderRadius: 12, padding: "10px 14px" }}>
+                    <div style={{ fontSize: 10, opacity: 0.5, letterSpacing: 0.8, textTransform: "uppercase" }}>{label}</div>
+                    <div style={{ fontWeight: 950, fontSize: 18, marginTop: 2 }}>{val ?? "-"}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 10, fontSize: 12, opacity: 0.6 }}>
+                Best account: <b>{analyticsOverview.best_account || "-"}</b> (${analyticsOverview.best_account_pnl ?? 0}) &nbsp;|&nbsp;
+                Worst: <b>{analyticsOverview.worst_account || "-"}</b> (${analyticsOverview.worst_account_pnl ?? 0})
+              </div>
+            </div>
+          )}
+
+          {analyticsWinRates && (
+            <div style={cardStyle}>
+              <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.5, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Win Rate by Condition</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                {[
+                  { title: "By Grade", data: analyticsWinRates.by_grade },
+                  { title: "By Score Band", data: analyticsWinRates.by_score },
+                  { title: "By Leverage", data: analyticsWinRates.by_leverage },
+                ].map(({ title, data }) => (
+                  <div key={title}>
+                    <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.55, marginBottom: 6 }}>{title}</div>
+                    {Object.entries(data || {}).map(([key, stats]: [string, any]) => (
+                      <div key={key} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid rgba(255,255,255,0.05)", fontSize: 12 }}>
+                        <span style={{ opacity: 0.8 }}>{key}</span>
+                        <span style={{ fontWeight: 900, color: stats.win_rate >= 52 ? "#00ffd1" : "#ff5078" }}>
+                          {stats.total > 0 ? `${stats.win_rate}% (${stats.total})` : "No data"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {analyticsSignalTrend?.signal_trend?.length > 0 && (
+            <div style={cardStyle}>
+              <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.5, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Signal Quality Trend (last 30 days)</div>
+              <div style={{ display: "flex", gap: 4, alignItems: "flex-end", height: 80, overflowX: "auto" }}>
+                {analyticsSignalTrend.signal_trend.map((d: any) => {
+                  const h = Math.round((d.avg_score / 1.0) * 80);
+                  return (
+                    <div key={d.day} title={`${d.day}: avg score ${d.avg_score} (${d.count} trades)`}
+                      style={{ flex: "0 0 18px", height: h, background: "rgba(0,255,224,0.55)", borderRadius: "3px 3px 0 0", minHeight: 2 }} />
+                  );
+                })}
+              </div>
+              <div style={{ fontSize: 11, opacity: 0.45, marginTop: 4 }}>Each bar = 1 day. Height = avg signal score.</div>
+            </div>
+          )}
+
+          {analyticsByCoin?.by_coin && Object.keys(analyticsByCoin.by_coin).length > 0 && (
+            <div style={cardStyle}>
+              <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.5, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Coin Performance</div>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <thead>
+                    <tr>
+                      {["Symbol", "Trades", "Win Rate", "Avg Win", "Avg Loss", "Total PnL"].map(h => (
+                        <th key={h} style={{ ...th, textAlign: "left", fontSize: 11 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(analyticsByCoin.by_coin).map(([sym, s]: [string, any]) => (
+                      <tr key={sym}>
+                        <td style={td}><b>{sym}</b></td>
+                        <td style={td}>{s.total}</td>
+                        <td style={{ ...td, color: s.win_rate >= 52 ? "#00ffd1" : "#ff5078", fontWeight: 900 }}>{s.win_rate}%</td>
+                        <td style={{ ...td, color: "#00ffd1" }}>${s.avg_win}</td>
+                        <td style={{ ...td, color: "#ff5078" }}>${s.avg_loss}</td>
+                        <td style={{ ...td, color: s.total_pnl >= 0 ? "#00ffd1" : "#ff5078", fontWeight: 900 }}>${s.total_pnl}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {analyticsBySession?.monthly_returns?.length > 0 && (
+            <div style={cardStyle}>
+              <div style={{ fontSize: 11, fontWeight: 900, opacity: 0.5, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Monthly Returns (last 6 months)</div>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-end", height: 100 }}>
+                {analyticsBySession.monthly_returns.map((m: any) => {
+                  const maxAbs = Math.max(...analyticsBySession.monthly_returns.map((x: any) => Math.abs(x.pnl)), 1);
+                  const h = Math.round((Math.abs(m.pnl) / maxAbs) * 90);
+                  const isPos = m.pnl >= 0;
+                  return (
+                    <div key={m.month} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                      <div style={{ fontSize: 11, fontWeight: 900, color: isPos ? "#00ffd1" : "#ff5078" }}>${m.pnl > 0 ? "+" : ""}{m.pnl}</div>
+                      <div style={{ width: "100%", height: h, background: isPos ? "rgba(0,255,209,0.55)" : "rgba(255,80,120,0.55)", borderRadius: "4px 4px 0 0", minHeight: 2 }} />
+                      <div style={{ fontSize: 10, opacity: 0.5 }}>{m.month.slice(5)}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {!analyticsOverview && !analyticsLoading && (
+            <div style={{ ...cardStyle, textAlign: "center", opacity: 0.6, padding: 32 }}>
+              Click "Refresh" to load analytics data.
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
