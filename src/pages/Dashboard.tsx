@@ -797,6 +797,25 @@ export default function Dashboard() {
               </div>
             </div>
 
+            {/* ── Dangerous combo warning ── */}
+            {(() => {
+              const warn =
+                mode === "AGGRESSIVE" && tradeStyle === "SWING"
+                  ? "⚠ High Risk: AGGRESSIVE uses 8× leverage — a SWING 4h SL can mean a very large loss per trade."
+                  : mode === "ULTRA_SAFE" && tradeStyle === "SCALP"
+                  ? "⚠ Low Efficiency: ULTRA_SAFE + SCALP — fees and spread eat most gains at 30% size on 15m candles."
+                  : null;
+              return warn ? (
+                <div style={{
+                  marginTop: 10, padding: "9px 12px", borderRadius: 10,
+                  background: "rgba(251,146,60,0.10)", border: "1px solid rgba(251,146,60,0.35)",
+                  color: "#fb923c", fontSize: 12, fontWeight: 700, lineHeight: 1.5,
+                }}>
+                  {warn}
+                </div>
+              ) : null;
+            })()}
+
             {/* 4 ── Duration + Size config */}
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr 1fr", gap: 8, marginTop: isMobile ? 10 : 14 }}>
               <div className="field">
