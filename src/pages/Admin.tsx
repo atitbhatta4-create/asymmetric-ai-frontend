@@ -121,7 +121,7 @@ function EquityCurveBt({ points }: { points: { ts: number; equity: number }[] })
 export default function Admin() {
   const nav = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<"users" | "analytics" | "backtester">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "analytics" | "backtester" | "optimizer">("users");
   const [status, setStatus] = useState<AdminStatus | null>(null);
   const [signupEnabled, setSignupEnabled] = useState(true);
   const [seatCapacity, setSeatCapacity] = useState(50);
@@ -155,6 +155,26 @@ export default function Admin() {
   const [btLoading,   setBtLoading]   = useState(false);
   const [btHistory,   setBtHistory]   = useState<any[]>([]);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Optimizer state
+  const [optSymbol,   setOptSymbol]   = useState("ETHUSDT");
+  const [optMode,     setOptMode]     = useState("MINI_ASYM");
+  const [optStyle,    setOptStyle]    = useState("DAY_TRADE");
+  const [optExchange, setOptExchange] = useState("bybit");
+  const [optFrom,     setOptFrom]     = useState("2024-01-01");
+  const [optTo,       setOptTo]       = useState("2025-12-31");
+  const [optEquity,   setOptEquity]   = useState(1000);
+  const [optRunId,    setOptRunId]    = useState<string | null>(null);
+  const [optStatus,   setOptStatus]   = useState("");
+  const [optProgress, setOptProgress] = useState(0);
+  const [optDone,     setOptDone]     = useState(0);
+  const [optTotal,    setOptTotal]    = useState(135);
+  const [optResults,  setOptResults]  = useState<any[]>([]);
+  const [optError,    setOptError]    = useState<string | null>(null);
+  const [optLoading,  setOptLoading]  = useState(false);
+  const [optHistory,  setOptHistory]  = useState<any[]>([]);
+  const [optApplied,  setOptApplied]  = useState<any[]>([]);
+  const optPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ── Admin data ──────────────────────────────────────────────────────────────
   const loadAnalytics = async () => {
@@ -314,6 +334,7 @@ export default function Admin() {
 
   const statusLabel: Record<string, string> = {
     fetching: "Fetching candles from OKX…",
+    loading:  "Loading candles from DB…",
     running:  "Running simulation…",
     done:     "Complete",
     error:    "Error",
@@ -321,17 +342,89 @@ export default function Admin() {
     starting: "Starting…",
   };
 
+  // ── Optimizer functions ──────────────────────────────────────────────────────
+  const loadOptHistory = async () => {
+    try {
+      const [h, a] = await Promise.allSettled([
+        api.apiRequest("/optimizer/history?limit=10", { method: "GET" }),
+        api.apiRequest("/optimizer/applied", { method: "GET" }),
+      ]);
+      if (h.status === "fulfilled") setOptHistory(Array.isArray(h.value) ? h.value : []);
+      if (a.status === "fulfilled") setOptApplied(Array.isArray(a.value) ? a.value : []);
+    } catch { /* ignore */ }
+  };
+
+  const pollOptRun = (runId: string) => {
+    if (optPollRef.current) clearInterval(optPollRef.current);
+    optPollRef.current = setInterval(async () => {
+      try {
+        const r = await api.apiRequest(`/optimizer/status/${runId}`, { method: "GET" });
+        setOptStatus(r.status);
+        setOptProgress(r.progress ?? 0);
+        setOptDone(r.done_combos ?? 0);
+        setOptTotal(r.total_combos ?? 135);
+        if (r.status === "done") {
+          const full = await api.apiRequest(`/optimizer/results/${runId}`, { method: "GET" });
+          setOptResults(full.results ?? []);
+          clearInterval(optPollRef.current!);
+          optPollRef.current = null;
+          setOptLoading(false);
+          loadOptHistory();
+        } else if (r.status === "error") {
+          setOptError(r.error || "Optimizer failed");
+          clearInterval(optPollRef.current!);
+          optPollRef.current = null;
+          setOptLoading(false);
+        }
+      } catch { /* network blip */ }
+    }, 3000);
+  };
+
+  const runOptimizer = async () => {
+    setOptError(null); setOptResults([]); setOptStatus("starting");
+    setOptProgress(0); setOptDone(0); setOptLoading(true);
+    try {
+      const r = await api.apiRequest("/optimizer/run", {
+        method: "POST",
+        body: {
+          symbol: optSymbol.trim().toUpperCase(),
+          mode: optMode, style: optStyle, exchange: optExchange,
+          date_from: optFrom, date_to: optTo, start_equity: Number(optEquity),
+        },
+      });
+      setOptRunId(r.run_id);
+      setOptTotal(r.total_combos ?? 135);
+      pollOptRun(r.run_id);
+    } catch (e: any) {
+      setOptError(e?.message || "Failed to start optimizer");
+      setOptLoading(false); setOptStatus("");
+    }
+  };
+
+  const applyOptParams = async (resultId: number) => {
+    try {
+      const r = await api.apiRequest("/optimizer/apply", {
+        method: "POST", body: { result_id: resultId },
+      });
+      alert(`✓ Applied: ${r.message}`);
+      loadOptHistory();
+    } catch (e: any) {
+      alert("Failed to apply: " + (e?.message || "unknown error"));
+    }
+  };
+
   return (
     <div style={{ maxWidth: 1180, margin: "0 auto", display: "flex", flexDirection: "column", gap: 12 }}>
       {/* Tab Navigation */}
       <div style={{ display: "flex", gap: 8 }}>
-        {(["users", "analytics", "backtester"] as const).map((tab) => (
+        {(["users", "analytics", "backtester", "optimizer"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => {
               setActiveTab(tab);
               if (tab === "analytics") loadAnalytics();
               if (tab === "backtester") { loadBtHistory(); loadBtSymbols(btExchange); }
+              if (tab === "optimizer")  loadOptHistory();
             }}
             style={{
               padding: "9px 18px", borderRadius: 12, fontWeight: 900, cursor: "pointer",
@@ -341,7 +434,7 @@ export default function Admin() {
               borderBottom: activeTab === tab ? "2px solid #00ffe0" : "2px solid transparent",
             }}
           >
-            {tab === "users" ? "Users" : tab === "analytics" ? "Analytics" : "Backtester"}
+            {tab === "users" ? "Users" : tab === "analytics" ? "Analytics" : tab === "backtester" ? "Backtester" : "Optimizer"}
           </button>
         ))}
       </div>
@@ -811,6 +904,215 @@ export default function Admin() {
               <div style={{ fontSize: 14, fontWeight: 900 }}>No backtests yet</div>
               <div style={{ fontSize: 12, marginTop: 6 }}>
                 Configure a symbol, mode, style and date range above, then click Run Backtest.
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── OPTIMIZER TAB ──────────────────────────────────────────────────── */}
+      {activeTab === "optimizer" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+
+          {/* Config */}
+          <div style={cardStyle}>
+            <div style={{ fontSize: 13, fontWeight: 950, marginBottom: 4 }}>Parameter Optimizer</div>
+            <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 14 }}>
+              Runs 135 signal parameter combinations and ranks by Sharpe ratio.
+              Candles must be cached first (run Backtester for the same symbol/range).
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
+              <div>
+                <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 4 }}>Symbol</div>
+                <input list="opt-symbols-list" value={optSymbol}
+                  onChange={e => setOptSymbol(e.target.value.toUpperCase().trim())}
+                  placeholder="ETHUSDT" style={{ ...inputStyle, minWidth: "unset", width: "100%" }} />
+                <datalist id="opt-symbols-list">
+                  {["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","BNBUSDT","NEARUSDT","ADAUSDT","AVAXUSDT"].map(s =>
+                    <option key={s} value={s} />)}
+                </datalist>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 4 }}>Mode</div>
+                <select value={optMode} onChange={e => setOptMode(e.target.value)} style={{ ...selectStyle, width: "100%" }}>
+                  {["ULTRA_SAFE","SAFE","NORMAL","MINI_ASYM","AGGRESSIVE"].map(m => <option key={m}>{m}</option>)}
+                </select>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 4 }}>Style</div>
+                <select value={optStyle} onChange={e => setOptStyle(e.target.value)} style={{ ...selectStyle, width: "100%" }}>
+                  {["SCALP","DAY_TRADE","SWING"].map(s => <option key={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 4 }}>Exchange (fees)</div>
+                <select value={optExchange} onChange={e => setOptExchange(e.target.value)} style={{ ...selectStyle, width: "100%" }}>
+                  {["bybit","okx","binance"].map(x => <option key={x}>{x}</option>)}
+                </select>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 4 }}>From</div>
+                <input type="date" value={optFrom} onChange={e => setOptFrom(e.target.value)}
+                  style={{ ...inputStyle, minWidth: "unset", width: "100%" }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 4 }}>To</div>
+                <input type="date" value={optTo} onChange={e => setOptTo(e.target.value)}
+                  style={{ ...inputStyle, minWidth: "unset", width: "100%" }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 4 }}>Start Equity ($)</div>
+                <input type="number" value={optEquity} onChange={e => setOptEquity(Number(e.target.value))}
+                  min={100} style={{ ...inputStyle, minWidth: "unset", width: "100%" }} />
+              </div>
+            </div>
+            <div style={{ marginTop: 14, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+              <button onClick={runOptimizer} disabled={optLoading}
+                style={{ ...goodBtn, padding: "11px 28px", fontSize: 14 }}>
+                {optLoading ? `Testing ${optDone}/${optTotal}…` : "Run Optimizer"}
+              </button>
+              {optError && <span style={{ color: "tomato", fontSize: 12, fontWeight: 800 }}>{optError}</span>}
+              <span style={{ fontSize: 11, opacity: 0.45, marginLeft: "auto" }}>
+                ADX × score × SL × TP grid · 135 combos · ranked by Sharpe
+              </span>
+            </div>
+
+            {/* Progress bar */}
+            {optLoading && (
+              <div style={{ marginTop: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, opacity: 0.6, marginBottom: 4 }}>
+                  <span>{statusLabel[optStatus] || optStatus}</span>
+                  <span>{optDone}/{optTotal} combos · {optProgress}%</span>
+                </div>
+                <div style={{ height: 6, borderRadius: 6, background: "rgba(255,255,255,.08)", overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${optProgress}%`, background: "#00ffe0",
+                    borderRadius: 6, transition: "width .4s ease" }} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Results table */}
+          {optResults.length > 0 && (
+            <div style={cardStyle}>
+              <div style={{ fontSize: 13, fontWeight: 950, marginBottom: 12 }}>
+                Ranked Results — top {optResults.length} of 135 combos
+              </div>
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                  <thead>
+                    <tr style={{ textAlign: "left", opacity: 0.55 }}>
+                      {["Rank","ADX Δ","Score Δ","SL×","TP×","Trades","Win %","Return","Drawdown","Sharpe","R:R",""].map(h => (
+                        <th key={h} style={th}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {optResults.map((r: any, idx: number) => (
+                      <tr key={r.id} style={{ borderBottom: "1px solid rgba(255,255,255,.05)",
+                        background: idx === 0 ? "rgba(0,255,209,.04)" : "transparent" }}>
+                        <td style={{ ...td, fontWeight: 900, color: idx === 0 ? "#00ffd1" : undefined }}>#{idx + 1}</td>
+                        <td style={td}>{r.params.adx_delta > 0 ? "+" : ""}{r.params.adx_delta}</td>
+                        <td style={td}>{r.params.score_delta > 0 ? "+" : ""}{r.params.score_delta?.toFixed(2)}</td>
+                        <td style={td}>{r.params.sl_mult}×</td>
+                        <td style={td}>{r.params.tp_mult}×</td>
+                        <td style={td}>{r.total_trades}</td>
+                        <td style={{ ...td, color: r.win_rate_pct >= 52 ? "#00ffd1" : "tomato" }}>
+                          {r.win_rate_pct?.toFixed(1)}%
+                        </td>
+                        <td style={{ ...td, color: r.total_return >= 0 ? "#00ffd1" : "tomato" }}>
+                          {r.total_return >= 0 ? "+" : ""}{r.total_return?.toFixed(1)}%
+                        </td>
+                        <td style={{ ...td, color: "tomato" }}>{r.max_drawdown?.toFixed(1)}%</td>
+                        <td style={{ ...td, fontWeight: 900, color: "#00ffe0" }}>{r.sharpe_ratio?.toFixed(2)}</td>
+                        <td style={td}>{r.reward_risk?.toFixed(2)}×</td>
+                        <td style={td}>
+                          <button onClick={() => applyOptParams(r.id)}
+                            disabled={r.is_applied}
+                            style={{ ...goodBtn, padding: "4px 10px", fontSize: 11,
+                              opacity: r.is_applied ? 0.4 : 1 }}>
+                            {r.is_applied ? "Applied ✓" : "Apply"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Applied params */}
+          {optApplied.length > 0 && (
+            <div style={cardStyle}>
+              <div style={{ fontSize: 13, fontWeight: 950, marginBottom: 10 }}>Active Parameter Overrides</div>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <thead>
+                  <tr style={{ textAlign: "left", opacity: 0.55 }}>
+                    {["Symbol","Mode","Style","ADX Δ","Score Δ","SL×","TP×","Sharpe","Applied"].map(h => (
+                      <th key={h} style={th}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {optApplied.map((a: any) => (
+                    <tr key={`${a.symbol}-${a.mode}-${a.style}`}
+                      style={{ borderBottom: "1px solid rgba(255,255,255,.05)" }}>
+                      <td style={{ ...td, fontWeight: 900 }}>{a.symbol}</td>
+                      <td style={td}>{a.mode}</td>
+                      <td style={td}>{a.style}</td>
+                      <td style={td}>{a.params?.adx_delta > 0 ? "+" : ""}{a.params?.adx_delta}</td>
+                      <td style={td}>{a.params?.score_delta > 0 ? "+" : ""}{a.params?.score_delta?.toFixed(2)}</td>
+                      <td style={td}>{a.params?.sl_mult}×</td>
+                      <td style={td}>{a.params?.tp_mult}×</td>
+                      <td style={{ ...td, color: "#00ffd1", fontWeight: 900 }}>{a.sharpe?.toFixed(2)}</td>
+                      <td style={{ ...td, opacity: 0.5 }}>{a.applied_at?.slice(0, 10)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Run history */}
+          {optHistory.length > 0 && (
+            <div style={cardStyle}>
+              <div style={{ fontSize: 13, fontWeight: 950, marginBottom: 10 }}>Recent Optimizer Runs</div>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <thead>
+                  <tr style={{ textAlign: "left", opacity: 0.55 }}>
+                    {["Symbol","Mode","Style","Period","Combos","Status","Started"].map(h => (
+                      <th key={h} style={th}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {optHistory.map((r: any) => (
+                    <tr key={r.run_id} style={{ borderBottom: "1px solid rgba(255,255,255,.05)" }}>
+                      <td style={{ ...td, fontWeight: 900 }}>{r.symbol}</td>
+                      <td style={td}>{r.mode}</td>
+                      <td style={td}>{r.style}</td>
+                      <td style={td}>{r.date_from} → {r.date_to}</td>
+                      <td style={td}>{r.done_combos}/{r.total_combos}</td>
+                      <td style={{ ...td, color: r.status === "done" ? "#00ffd1" : r.status === "error" ? "tomato" : "white" }}>
+                        {r.status}
+                      </td>
+                      <td style={{ ...td, opacity: 0.6 }}>{r.created_at?.slice(0, 16)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!optLoading && optResults.length === 0 && (
+            <div style={{ ...cardStyle, textAlign: "center", padding: 40 }}>
+              <div style={{ fontSize: 32, marginBottom: 10 }}>⚡</div>
+              <div style={{ fontSize: 14, fontWeight: 900 }}>No optimizer runs yet</div>
+              <div style={{ fontSize: 12, opacity: 0.5, marginTop: 6 }}>
+                Run the Backtester first to cache candles, then run the Optimizer.
+                Results ranked by Sharpe ratio — click Apply on the best row.
               </div>
             </div>
           )}
