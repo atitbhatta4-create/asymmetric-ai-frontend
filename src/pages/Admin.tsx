@@ -592,8 +592,11 @@ export default function Admin() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10 }}>
               <div>
                 <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 4 }}>Symbol</div>
-                <input value={btSymbol} onChange={e => setBtSymbol(e.target.value.toUpperCase())}
-                  placeholder="ETHUSDT" style={{ ...inputStyle, minWidth: "unset", width: "100%" }} />
+                <select value={btSymbol} onChange={e => setBtSymbol(e.target.value)} style={{ ...selectStyle, width: "100%" }}>
+                  {["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","BNBUSDT","NEARUSDT","ADAUSDT","AVAXUSDT","DOTUSDT","LINKUSDT","XAUUSDT"].map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 4 }}>Mode</div>
