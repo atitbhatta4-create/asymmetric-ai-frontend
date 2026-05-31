@@ -246,17 +246,18 @@ export default function Admin() {
   const openUser = (email: string) => nav(`/admin/user/${encodeURIComponent(email)}`);
 
   // ── Backtester ──────────────────────────────────────────────────────────────
+  const loadBtSymbols = async (exchange: string) => {
+    try {
+      const s = await api.apiRequest(`/market/symbols?exchange=${exchange}`, { method: "GET" });
+      const list: string[] = Array.isArray(s?.symbols) ? s.symbols : [];
+      if (list.length > 0) setBtSymbols(list);
+    } catch { /* ignore */ }
+  };
+
   const loadBtHistory = async () => {
     try {
-      const [h, s] = await Promise.allSettled([
-        api.apiRequest("/backtest/history?limit=10", { method: "GET" }),
-        api.apiRequest("/market/symbols?exchange=okx", { method: "GET" }),
-      ]);
-      if (h.status === "fulfilled") setBtHistory(Array.isArray(h.value) ? h.value : []);
-      if (s.status === "fulfilled") {
-        const list: string[] = Array.isArray(s.value?.symbols) ? s.value.symbols : [];
-        if (list.length > 0) setBtSymbols(list);
-      }
+      const h = await api.apiRequest("/backtest/history?limit=10", { method: "GET" });
+      setBtHistory(Array.isArray(h) ? h : []);
     } catch { /* ignore */ }
   };
 
@@ -330,7 +331,7 @@ export default function Admin() {
             onClick={() => {
               setActiveTab(tab);
               if (tab === "analytics") loadAnalytics();
-              if (tab === "backtester") loadBtHistory();
+              if (tab === "backtester") { loadBtHistory(); loadBtSymbols(btExchange); }
             }}
             style={{
               padding: "9px 18px", borderRadius: 12, fontWeight: 900, cursor: "pointer",
@@ -600,7 +601,9 @@ export default function Admin() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10 }}>
               <div>
                 <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 4 }}>
-                  Symbol {btSymbols.length > 0 && <span style={{ opacity: 0.45 }}>({btSymbols.length} pairs)</span>}
+                  Symbol {btSymbols.length > 0
+                    ? <span style={{ opacity: 0.45 }}>({btSymbols.length} {btExchange} pairs)</span>
+                    : <span style={{ opacity: 0.35 }}>loading…</span>}
                 </div>
                 <input
                   list="bt-symbols-list"
@@ -631,7 +634,7 @@ export default function Admin() {
               </div>
               <div>
                 <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 4 }}>Exchange (fees)</div>
-                <select value={btExchange} onChange={e => setBtExchange(e.target.value)} style={{ ...selectStyle, width: "100%" }}>
+                <select value={btExchange} onChange={e => { setBtExchange(e.target.value); loadBtSymbols(e.target.value); }} style={{ ...selectStyle, width: "100%" }}>
                   {["bybit","okx","binance"].map(x => (
                     <option key={x} value={x}>{x}</option>
                   ))}
