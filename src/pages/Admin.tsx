@@ -140,6 +140,7 @@ export default function Admin() {
 
   // Backtester state
   const [btSymbol,   setBtSymbol]   = useState("ETHUSDT");
+  const [btSymbols,  setBtSymbols]  = useState<string[]>([]);
   const [btMode,     setBtMode]     = useState("MINI_ASYM");
   const [btStyle,    setBtStyle]    = useState("DAY_TRADE");
   const [btExchange, setBtExchange] = useState("bybit");
@@ -247,8 +248,15 @@ export default function Admin() {
   // ── Backtester ──────────────────────────────────────────────────────────────
   const loadBtHistory = async () => {
     try {
-      const h = await api.apiRequest("/backtest/history?limit=10", { method: "GET" });
-      setBtHistory(Array.isArray(h) ? h : []);
+      const [h, s] = await Promise.allSettled([
+        api.apiRequest("/backtest/history?limit=10", { method: "GET" }),
+        api.apiRequest("/market/symbols?exchange=okx", { method: "GET" }),
+      ]);
+      if (h.status === "fulfilled") setBtHistory(Array.isArray(h.value) ? h.value : []);
+      if (s.status === "fulfilled") {
+        const list: string[] = Array.isArray(s.value?.symbols) ? s.value.symbols : [];
+        if (list.length > 0) setBtSymbols(list);
+      }
     } catch { /* ignore */ }
   };
 
@@ -591,12 +599,19 @@ export default function Admin() {
             <div style={{ fontSize: 13, fontWeight: 950, marginBottom: 14 }}>Historical Simulation</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10 }}>
               <div>
-                <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 4 }}>Symbol</div>
-                <select value={btSymbol} onChange={e => setBtSymbol(e.target.value)} style={{ ...selectStyle, width: "100%" }}>
-                  {["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","BNBUSDT","NEARUSDT","ADAUSDT","AVAXUSDT","DOTUSDT","LINKUSDT","XAUUSDT"].map(s => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
+                <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 4 }}>
+                  Symbol {btSymbols.length > 0 && <span style={{ opacity: 0.45 }}>({btSymbols.length} pairs)</span>}
+                </div>
+                <input
+                  list="bt-symbols-list"
+                  value={btSymbol}
+                  onChange={e => setBtSymbol(e.target.value.toUpperCase().trim())}
+                  placeholder="Type to search…"
+                  style={{ ...inputStyle, minWidth: "unset", width: "100%" }}
+                />
+                <datalist id="bt-symbols-list">
+                  {btSymbols.map(s => <option key={s} value={s} />)}
+                </datalist>
               </div>
               <div>
                 <div style={{ fontSize: 11, opacity: 0.55, marginBottom: 4 }}>Mode</div>
