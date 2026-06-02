@@ -276,7 +276,7 @@ export default function Admin() {
 
   const loadBtHistory = async () => {
     try {
-      const h = await api.apiRequest("/backtest/history?limit=10", { method: "GET" });
+      const h = await api.apiRequest("/backtest/history?limit=30", { method: "GET" });
       setBtHistory(Array.isArray(h) ? h : []);
     } catch { /* ignore */ }
   };
@@ -346,12 +346,31 @@ export default function Admin() {
   const loadOptHistory = async () => {
     try {
       const [h, a] = await Promise.allSettled([
-        api.apiRequest("/optimizer/history?limit=10", { method: "GET" }),
+        api.apiRequest("/optimizer/history?limit=20", { method: "GET" }),
         api.apiRequest("/optimizer/applied", { method: "GET" }),
       ]);
       if (h.status === "fulfilled") setOptHistory(Array.isArray(h.value) ? h.value : []);
       if (a.status === "fulfilled") setOptApplied(Array.isArray(a.value) ? a.value : []);
     } catch { /* ignore */ }
+  };
+
+  const loadOptRun = async (runId: string) => {
+    try {
+      const full = await api.apiRequest(`/optimizer/results/${runId}`, { method: "GET" });
+      const results = full.results ?? [];
+      setOptResults(results);
+      setOptRunId(runId);
+      setOptStatus("done");
+      setOptProgress(100);
+      setOptLoading(false);
+      if (results.length === 0) {
+        setOptError("No combos passed quality filters (min 10 trades, win rate ≥ 35%, drawdown ≤ 25%). Try a wider date range.");
+      } else {
+        setOptError(null);
+      }
+    } catch (e: any) {
+      setOptError(e?.message || "Failed to load optimizer results");
+    }
   };
 
   const pollOptRun = (runId: string) => {
@@ -365,7 +384,11 @@ export default function Admin() {
         setOptTotal(r.total_combos ?? 135);
         if (r.status === "done") {
           const full = await api.apiRequest(`/optimizer/results/${runId}`, { method: "GET" });
-          setOptResults(full.results ?? []);
+          const results = full.results ?? [];
+          setOptResults(results);
+          if (results.length === 0) {
+            setOptError("No combos passed quality filters (min 10 trades, win rate ≥ 35%, drawdown ≤ 25%). Try a wider date range.");
+          }
           clearInterval(optPollRef.current!);
           optPollRef.current = null;
           setOptLoading(false);
@@ -792,6 +815,10 @@ export default function Admin() {
                     ["Return",        <span style={{ color: btResults.total_return_pct >= 0 ? "#00ffd1" : "#ff5078", fontWeight: 950 }}>{btResults.total_return_pct >= 0 ? "+" : ""}{btResults.total_return_pct}%</span>],
                     ["Final Equity",  `$${btResults.final_equity?.toFixed(2)}`],
                     ["Max Drawdown",  <span style={{ color: "#ff5078" }}>-{btResults.max_drawdown_pct}%</span>],
+                    ...(btResults.reversal_trades > 0 ? [
+                      ["Reversal Trades", <span style={{ color: "#ffb300", fontWeight: 900 }}>{btResults.reversal_trades}</span>],
+                      ["Reversal Win%",   <span style={{ color: btResults.reversal_win_rate >= 50 ? "#00ffd1" : "tomato" }}>{btResults.reversal_win_rate}%</span>],
+                    ] : []),
                     ["Sharpe Ratio",  btResults.sharpe_ratio],
                     ["Avg Win",       `+${btResults.avg_win_pct}%`],
                     ["Avg Loss",      <span style={{ color: "#ff5078" }}>{btResults.avg_loss_pct}%</span>],
@@ -1081,7 +1108,7 @@ export default function Admin() {
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                 <thead>
                   <tr style={{ textAlign: "left", opacity: 0.55 }}>
-                    {["Symbol","Mode","Style","Period","Combos","Status","Started"].map(h => (
+                    {["Symbol","Mode","Style","Period","Combos","Status","Started",""].map(h => (
                       <th key={h} style={th}>{h}</th>
                     ))}
                   </tr>
@@ -1094,10 +1121,17 @@ export default function Admin() {
                       <td style={td}>{r.style}</td>
                       <td style={td}>{r.date_from} → {r.date_to}</td>
                       <td style={td}>{r.done_combos}/{r.total_combos}</td>
-                      <td style={{ ...td, color: r.status === "done" ? "#00ffd1" : r.status === "error" ? "tomato" : "white" }}>
+                      <td style={{ ...td, color: r.status === "done" ? "#00ffd1" : r.status === "error" ? "tomato" : "white", fontWeight: 900 }}>
                         {r.status}
                       </td>
                       <td style={{ ...td, opacity: 0.6 }}>{r.created_at?.slice(0, 16)}</td>
+                      <td style={td}>
+                        {r.status === "done" && (
+                          <button onClick={() => loadOptRun(r.run_id)} style={btnStyle}>
+                            View
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -1109,10 +1143,13 @@ export default function Admin() {
           {!optLoading && optResults.length === 0 && (
             <div style={{ ...cardStyle, textAlign: "center", padding: 40 }}>
               <div style={{ fontSize: 32, marginBottom: 10 }}>⚡</div>
-              <div style={{ fontSize: 14, fontWeight: 900 }}>No optimizer runs yet</div>
+              <div style={{ fontSize: 14, fontWeight: 900 }}>
+                {optHistory.length > 0 ? "Select a run from history to view its results" : "No optimizer runs yet"}
+              </div>
               <div style={{ fontSize: 12, opacity: 0.5, marginTop: 6 }}>
-                Run the Backtester first to cache candles, then run the Optimizer.
-                Results ranked by Sharpe ratio — click Apply on the best row.
+                {optHistory.length > 0
+                  ? "Click View on any completed run above to load its ranked parameter table."
+                  : "Run the Backtester first to cache candles, then run the Optimizer. Results ranked by Sharpe ratio — click Apply on the best row."}
               </div>
             </div>
           )}
