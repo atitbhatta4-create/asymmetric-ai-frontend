@@ -76,7 +76,8 @@ export default function Login({ onLoggedIn }: { onLoggedIn: () => Promise<void> 
       padding: isMobile ? "20px 20px" : 20,
     }}>
       <div style={{
-        width: 460, maxWidth: "100%",
+        width: isMobile ? "100%" : 460,
+        maxWidth: isMobile ? 460 : "none",
         borderRadius: isMobile ? 14 : 18,
         padding: isMobile ? "16px 16px" : "clamp(18px, 5vw, 28px)",
         background: "rgba(9,15,30,0.96)",
