@@ -1017,10 +1017,10 @@ export default function Dashboard() {
             <div
               onClick={(e) => e.stopPropagation()}
               style={{
-                width: 920,
-                maxWidth: "100%",
-                borderRadius: 18,
-                padding: 16,
+                width: isMobile ? "100%" : 920,
+                maxWidth: isMobile ? 920 : "none",
+                borderRadius: isMobile ? 14 : 18,
+                padding: isMobile ? "12px 10px" : 16,
                 background: "rgba(9, 15, 30, 0.98)",
                 border: "1px solid rgba(255,255,255,0.10)",
               }}
@@ -1082,10 +1082,10 @@ export default function Dashboard() {
                       "rgba(255,255,255,0.80)";
                     return (
                       <div key={i} style={{ padding: "4px 12px", display: "flex", gap: 10, borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.03)" }}>
-                        <span style={{ fontSize: 10, opacity: 0.4, whiteSpace: "nowrap", paddingTop: 2, minWidth: 60 }}>
+                        <span style={{ fontSize: 10, opacity: 0.4, whiteSpace: "nowrap", paddingTop: 2, minWidth: 44, flexShrink: 0 }}>
                           {e.t.slice(11, 16)}
                         </span>
-                        <span style={{ fontSize: 11, color: logColor, lineHeight: 1.45 }}>{e.msg}</span>
+                        <span style={{ fontSize: 11, color: logColor, lineHeight: 1.45, minWidth: 0, wordBreak: "break-word", overflowWrap: "break-word" }}>{e.msg}</span>
                       </div>
                     );
                   })}
