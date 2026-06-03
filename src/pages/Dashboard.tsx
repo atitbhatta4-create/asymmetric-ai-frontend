@@ -294,19 +294,6 @@ export default function Dashboard() {
   const [reasonOpen, setReasonOpen] = useState(false);
   const [reasonText, setReasonText] = useState<string>("");
 
-  // Hard-floor reset modal state
-  const [floorModal, setFloorModal] = useState<{
-    situation: number;
-    message: string;
-    currentEquity: number;
-    startingCapital: number;
-    newPeak: number;
-    newFloor: number;
-    cooldownSec: number;
-  } | null>(null);
-  const [floorConfirmInput, setFloorConfirmInput] = useState("");
-  const [floorResetLoading, setFloorResetLoading] = useState(false);
-
   // -------------------------
   // API helpers (with 401 redirect)
   // -------------------------
@@ -406,7 +393,7 @@ export default function Dashboard() {
           locked_profit?: number; distance_to_floor?: number;
           distance_pct?: number; all_time_high?: number;
         }>("/balance");
-        const eq0 = Number(bal.total ?? NaN);
+        const eq0 = Number(bal.total ?? 1000);
         setEquity(eq0);
         setFloorStats({
           peak: Number(bal.peak_equity ?? eq0),
@@ -424,7 +411,7 @@ export default function Dashboard() {
         setTrades(list);
 
         // Build equity + floor series from oldest → newest
-        const startEq = Number(bal.start_equity ?? NaN);
+        const startEq = Number(bal.start_equity ?? 1000);
         const startFloor = Number(bal.hard_floor ?? startEq * 0.85);
         const curve: number[] = [startEq];
         const fCurve: number[] = [startFloor];
@@ -570,30 +557,6 @@ export default function Dashboard() {
         return;
       }
 
-      // Engine stopped due to hard floor — show reset confirmation before starting
-      if (autoStatus?.blocked_reason === "HARD_FLOOR") {
-        const dryRun = await apiPost<{
-          situation: number;
-          message: string;
-          current_equity: number;
-          starting_capital: number;
-          new_peak_if_reset: number;
-          new_floor_if_reset: number;
-          cooldown_remaining_sec: number;
-        }>("/auto/reset-floor", { confirm: false, typed_confirm: "" });
-        setFloorModal({
-          situation: dryRun.situation,
-          message: dryRun.message,
-          currentEquity: dryRun.current_equity,
-          startingCapital: dryRun.starting_capital,
-          newPeak: dryRun.new_peak_if_reset,
-          newFloor: dryRun.new_floor_if_reset,
-          cooldownSec: dryRun.cooldown_remaining_sec,
-        });
-        setFloorConfirmInput("");
-        return;
-      }
-
       await apiPost("/auto/start", {
         symbol,
         trade_style: tradeStyle,
@@ -611,37 +574,6 @@ export default function Dashboard() {
       setTimeout(() => refreshTradesAndEquity(), 1200);
     } catch (e: any) {
       setError(e?.message || "Start AI failed");
-    }
-  }
-
-  async function confirmFloorReset() {
-    try {
-      setFloorResetLoading(true);
-      setError("");
-      await apiPost("/auto/reset-floor", {
-        confirm: true,
-        typed_confirm: floorModal?.situation === 2 ? floorConfirmInput : "CONFIRM",
-      });
-      setFloorModal(null);
-      // Now start the engine with current settings
-      const symbol = (symbolInput || activeSymbol).toUpperCase().trim();
-      await apiPost("/auto/start", {
-        symbol,
-        trade_style: tradeStyle,
-        mode,
-        max_trades_per_day: Number(maxTradesPerDay),
-        stop_after_bad_trades: Number(stopAfterBadTrades),
-        duration_days: Number(durationDays),
-        trend_filter: !!trendFilter,
-        chop_min_sep_pct: Number(chopMinSepPct),
-      });
-      await loadAutoStatus();
-      await loadAutoHistory();
-      setTimeout(() => refreshTradesAndEquity(), 1200);
-    } catch (e: any) {
-      setError(e?.message || "Floor reset failed");
-    } finally {
-      setFloorResetLoading(false);
     }
   }
 
@@ -1213,102 +1145,6 @@ export default function Dashboard() {
               >
                 {reasonText}
               </pre>
-            </div>
-          </div>
-        )}
-
-        {/* Hard-floor reset confirmation modal */}
-        {floorModal && (
-          <div
-            onClick={() => { if (!floorResetLoading) setFloorModal(null); }}
-            style={{
-              position: "fixed", inset: 0, background: "rgba(0,0,0,0.70)",
-              display: "grid", placeItems: "center", padding: 18, zIndex: 80,
-            }}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                width: 480, maxWidth: "100%", borderRadius: 18, padding: 24,
-                background: "rgba(9,15,30,0.99)",
-                border: "1.5px solid rgba(255,80,120,0.45)",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                <div style={{ fontSize: 17, fontWeight: 950, color: "#ff5078" }}>
-                  Safety Floor Triggered
-                </div>
-                {!floorResetLoading && (
-                  <button onClick={() => setFloorModal(null)} style={{
-                    borderRadius: 10, border: "1px solid rgba(255,255,255,0.10)",
-                    background: "rgba(255,255,255,0.04)", color: "white",
-                    padding: "6px 10px", cursor: "pointer", fontWeight: 900,
-                  }}>✕</button>
-                )}
-              </div>
-
-              <div style={{
-                background: "rgba(255,80,120,0.08)", border: "1px solid rgba(255,80,120,0.22)",
-                borderRadius: 12, padding: "12px 14px", fontSize: 13, lineHeight: 1.5, marginBottom: 16,
-              }}>
-                {floorModal.message}
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
-                {[
-                  ["Current Equity", `$${fmtMoney(floorModal.currentEquity)}`],
-                  ["Starting Capital", `$${fmtMoney(floorModal.startingCapital)}`],
-                  ["New Peak (after reset)", `$${fmtMoney(floorModal.newPeak)}`],
-                  ["New Floor (85%)", `$${fmtMoney(floorModal.newFloor)}`],
-                ].map(([label, val]) => (
-                  <div key={label} style={{
-                    background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)",
-                    borderRadius: 10, padding: "8px 12px",
-                  }}>
-                    <div style={{ fontSize: 10, opacity: 0.5, letterSpacing: 0.8, textTransform: "uppercase" }}>{label}</div>
-                    <div style={{ fontWeight: 950, fontSize: 15, marginTop: 2 }}>{val}</div>
-                  </div>
-                ))}
-              </div>
-
-              {floorModal.situation === 3 ? (
-                <div style={{ color: "#ff5078", fontWeight: 700, fontSize: 13, textAlign: "center", padding: "10px 0" }}>
-                  Reset blocked — equity below 50% of starting capital. Contact support.
-                </div>
-              ) : floorModal.situation === 2 ? (
-                <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 12, opacity: 0.65, marginBottom: 6 }}>
-                    Type <b style={{ color: "#ff5078" }}>CONFIRM</b> to accept the loss and reset the safety floor
-                  </div>
-                  <input
-                    value={floorConfirmInput}
-                    onChange={(e) => setFloorConfirmInput(e.target.value.toUpperCase())}
-                    placeholder="Type CONFIRM"
-                    style={{
-                      width: "100%", background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,80,120,0.35)", borderRadius: 10,
-                      color: "white", padding: "10px 12px", fontSize: 14, fontWeight: 700,
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-              ) : null}
-
-              {floorModal.situation !== 3 && (
-                <button
-                  onClick={confirmFloorReset}
-                  disabled={floorResetLoading || (floorModal.situation === 2 && floorConfirmInput.trim() !== "CONFIRM")}
-                  style={{
-                    width: "100%", padding: "12px", borderRadius: 12, fontWeight: 950,
-                    fontSize: 14, cursor: "pointer", border: "none",
-                    background: (floorResetLoading || (floorModal.situation === 2 && floorConfirmInput.trim() !== "CONFIRM"))
-                      ? "rgba(255,80,120,0.3)" : "#ff5078",
-                    color: "white",
-                  }}
-                >
-                  {floorResetLoading ? "Resetting…" : "Reset Floor & Start AI"}
-                </button>
-              )}
             </div>
           </div>
         )}

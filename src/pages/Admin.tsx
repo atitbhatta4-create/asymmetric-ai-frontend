@@ -363,11 +363,7 @@ export default function Admin() {
       setOptStatus("done");
       setOptProgress(100);
       setOptLoading(false);
-      if (results.length === 0) {
-        setOptError("No combos passed quality filters (min 10 trades, win rate ≥ 35%, drawdown ≤ 25%). Try a wider date range.");
-      } else {
-        setOptError(null);
-      }
+      setOptError(null);
     } catch (e: any) {
       setOptError(e?.message || "Failed to load optimizer results");
     }
@@ -386,9 +382,7 @@ export default function Admin() {
           const full = await api.apiRequest(`/optimizer/results/${runId}`, { method: "GET" });
           const results = full.results ?? [];
           setOptResults(results);
-          if (results.length === 0) {
-            setOptError("No combos passed quality filters (min 10 trades, win rate ≥ 35%, drawdown ≤ 25%). Try a wider date range.");
-          }
+          setOptError(null);
           clearInterval(optPollRef.current!);
           optPollRef.current = null;
           setOptLoading(false);
@@ -1022,8 +1016,34 @@ export default function Admin() {
           {/* Results table */}
           {optResults.length > 0 && (
             <div style={cardStyle}>
-              <div style={{ fontSize: 13, fontWeight: 950, marginBottom: 12 }}>
-                Ranked Results — top {optResults.length} of 135 combos
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <div>
+                  <span style={{ fontSize: 13, fontWeight: 950 }}>
+                    Ranked Results — {optResults.length} combo{optResults.length !== 1 ? "s" : ""}
+                  </span>
+                  {optResults.filter((r: any) => r.passed_filters).length === 0 && (
+                    <span style={{ marginLeft: 10, fontSize: 11, background: "rgba(251,191,36,.15)",
+                      color: "#fbbf24", border: "1px solid rgba(251,191,36,.3)",
+                      borderRadius: 6, padding: "2px 8px" }}>
+                      Below quality threshold — use with caution
+                    </span>
+                  )}
+                  {optResults.filter((r: any) => r.passed_filters).length > 0 && (
+                    <span style={{ marginLeft: 10, fontSize: 11, background: "rgba(0,255,209,.10)",
+                      color: "#00ffd1", border: "1px solid rgba(0,255,209,.25)",
+                      borderRadius: 6, padding: "2px 8px" }}>
+                      {optResults.filter((r: any) => r.passed_filters).length} passed quality filters
+                    </span>
+                  )}
+                </div>
+                {optRunId && (
+                  <a href={`${import.meta.env.VITE_API_BASE ?? ""}/optimizer/download/${optRunId}`}
+                    style={{ fontSize: 11, color: "#6b7280", textDecoration: "none",
+                      border: "1px solid rgba(255,255,255,.12)", borderRadius: 6,
+                      padding: "4px 10px", background: "rgba(255,255,255,.04)" }}>
+                    ↓ CSV
+                  </a>
+                )}
               </div>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
@@ -1037,14 +1057,21 @@ export default function Admin() {
                   <tbody>
                     {optResults.map((r: any, idx: number) => (
                       <tr key={r.id} style={{ borderBottom: "1px solid rgba(255,255,255,.05)",
-                        background: idx === 0 ? "rgba(0,255,209,.04)" : "transparent" }}>
-                        <td style={{ ...td, fontWeight: 900, color: idx === 0 ? "#00ffd1" : undefined }}>#{idx + 1}</td>
+                        background: r.passed_filters && idx === 0 ? "rgba(0,255,209,.04)"
+                          : !r.passed_filters ? "rgba(255,255,255,.015)" : "transparent",
+                        opacity: r.passed_filters ? 1 : 0.65 }}>
+                        <td style={{ ...td, fontWeight: 900, color: r.passed_filters && idx === 0 ? "#00ffd1" : undefined }}>
+                          #{idx + 1}
+                          {!r.passed_filters && (
+                            <span style={{ marginLeft: 4, fontSize: 9, color: "#fbbf24" }}>⚠</span>
+                          )}
+                        </td>
                         <td style={td}>{r.params.adx_delta > 0 ? "+" : ""}{r.params.adx_delta}</td>
                         <td style={td}>{r.params.score_delta > 0 ? "+" : ""}{r.params.score_delta?.toFixed(2)}</td>
                         <td style={td}>{r.params.sl_mult}×</td>
                         <td style={td}>{r.params.tp_mult}×</td>
                         <td style={td}>{r.total_trades}</td>
-                        <td style={{ ...td, color: r.win_rate_pct >= 52 ? "#00ffd1" : "tomato" }}>
+                        <td style={{ ...td, color: r.win_rate_pct >= 52 ? "#00ffd1" : r.win_rate_pct >= 25 ? "#f59e0b" : "tomato" }}>
                           {r.win_rate_pct?.toFixed(1)}%
                         </td>
                         <td style={{ ...td, color: r.total_return >= 0 ? "#00ffd1" : "tomato" }}>
