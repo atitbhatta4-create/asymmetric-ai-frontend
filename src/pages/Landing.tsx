@@ -55,7 +55,7 @@ function Nav({ onLogin }: { onLogin: () => void }) {
         <button onClick={onLogin} style={{ padding: "8px 16px", borderRadius: 10, border: `1px solid ${BDR}`, background: "transparent", color: T, fontSize: 13, fontWeight: 800, cursor: "pointer" }}>
           Log In
         </button>
-        <button onClick={onLogin} style={{ padding: "8px 18px", borderRadius: 10, border: `1px solid ${GN}55`, background: `${GN}18`, color: GN, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
+        <button onClick={onLogin} className="nav-early-access" style={{ padding: "8px 18px", borderRadius: 10, border: `1px solid ${GN}55`, background: `${GN}18`, color: GN, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
           Get Early Access
         </button>
       </div>
@@ -116,7 +116,7 @@ function Hero({ onCTA }: { onCTA: () => void }) {
           <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: ".10em", textTransform: "uppercase", color: M, marginBottom: 10 }}>Live AI Signal Preview</div>
           <MiniEquityPreview />
           <div style={{ display: "flex", justifyContent: "space-around", marginTop: 14 }}>
-            {[["4-Layer Signal", "All must pass"], ["Grade A / B", "Position sizing"], ["Auto Protection", "15% hard stop"]].map(([v, l]) => (
+            {[["4-Layer Signal", "All must pass"], ["Grade A / B", "Position sizing"], ["Auto Protection", "Trailing floor"]].map(([v, l]) => (
               <div key={v} style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 13, fontWeight: 900, color: GN }}>{v}</div>
                 <div style={{ fontSize: 10, color: S, marginTop: 2 }}>{l}</div>
@@ -166,7 +166,7 @@ function Problem() {
         <h2 style={h2Style}>Why Retail Traders Lose</h2>
         <p style={subStyle}>It's rarely bad analysis. It's almost always bad discipline.</p>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16 }}>
+      <div className="land-grid-auto" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16 }}>
         {items.map(item => (
           <div key={item.title} style={{ ...cardStyle(), padding: "24px" }}>
             <div style={{ fontSize: 28, marginBottom: 12 }}>{item.icon}</div>
@@ -325,7 +325,7 @@ function Protection() {
           <p style={subStyle}>Most trading bots let you blow your account. We stop before that happens.</p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 14, marginBottom: 28 }}>
+        <div className="land-protection-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 14, marginBottom: 28 }}>
           {tiers.map(t => (
             <div key={t.dd} style={{ ...cardStyle(), padding: "20px", borderColor: `${t.color}33` }}>
               <div style={{ fontSize: 32, fontWeight: 950, color: t.color, marginBottom: 4 }}>{t.dd}</div>
@@ -335,11 +335,11 @@ function Protection() {
           ))}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+        <div className="land-protection-bottom" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           <div style={{ ...cardStyle(), padding: "20px" }}>
-            <div style={{ fontSize: 13, fontWeight: 900, color: T, marginBottom: 8 }}>Hard Floor</div>
+            <div style={{ fontSize: 13, fontWeight: 900, color: T, marginBottom: 8 }}>Trailing Hard Floor</div>
             <div style={{ fontSize: 28, fontWeight: 950, color: GN, marginBottom: 4 }}>85%</div>
-            <div style={{ fontSize: 12, color: M }}>If your equity drops below 85% of session start, the engine stops and will not trade again until you restart. Your remaining capital is always protected.</div>
+            <div style={{ fontSize: 12, color: M }}>The floor rises with your equity. Every time you hit a new peak, your protection floor moves up with it — locking in gains. If equity ever falls 15% from its highest point, the engine stops completely. Profits are protected, not just your starting capital.</div>
           </div>
           <div style={{ ...cardStyle(), padding: "20px" }}>
             <div style={{ fontSize: 13, fontWeight: 900, color: T, marginBottom: 8 }}>Trailing Stop System</div>
@@ -368,7 +368,7 @@ function NonCustodial() {
         <h2 style={h2Style}>We Never Touch Your Money</h2>
         <p style={subStyle}>Non-custodial by design. Your keys. Your funds. Always.</p>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16 }}>
+      <div className="land-grid-auto" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16 }}>
         {points.map(p => (
           <div key={p.title} style={{ ...cardStyle(), padding: "24px" }}>
             <div style={{ fontSize: 28, marginBottom: 12 }}>{p.icon}</div>
@@ -397,7 +397,7 @@ function Returns() {
           <p style={subStyle}>We don't promise 10x. We promise a systematic process that protects capital first and grows it second.</p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16, marginBottom: 28 }}>
+        <div className="land-returns-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16, marginBottom: 28 }}>
           {months.map(m => (
             <div key={m.label} style={{ ...cardStyle(), padding: "24px", textAlign: "center" }}>
               <div style={{ fontSize: 12, fontWeight: 800, color: S, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 8 }}>{m.label}</div>
@@ -432,7 +432,7 @@ function HowToStart({ onCTA }: { onCTA: () => void }) {
         <Chip>Getting Started</Chip>
         <h2 style={h2Style}>Live in 4 Steps</h2>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 16, marginBottom: 44 }}>
+      <div className="land-steps-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 16, marginBottom: 44 }}>
         {steps.map((s, i) => (
           <div key={s.n} style={{ ...cardStyle(), padding: "22px 20px", position: "relative" }}>
             <div style={{ fontSize: 11, fontWeight: 900, color: GN, letterSpacing: ".08em", marginBottom: 10 }}>STEP {s.n}</div>
@@ -1186,28 +1186,37 @@ export default function Landing() {
           /* global font + spacing scale-down */
           body { font-size: 13px !important; }
 
+          /* nav — hide early access button, keep login only */
+          nav .nav-early-access { display: none !important; }
+          nav button, nav a { padding: 6px 12px !important; font-size: 12px !important; }
+
           /* hero */
-          .land-hero { padding: 70px 14px 32px !important; min-height: auto !important; }
-          .land-hero h1 { font-size: 22px !important; line-height: 1.2 !important; margin-bottom: 12px !important; }
-          .land-hero p { font-size: 13px !important; margin-bottom: 20px !important; }
+          .land-hero { padding: 64px 14px 28px !important; min-height: auto !important; }
+          .land-hero h1 { font-size: 22px !important; line-height: 1.2 !important; margin-bottom: 10px !important; }
+          .land-hero p { font-size: 13px !important; margin-bottom: 16px !important; }
           .land-hero .cta-row { flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
           .land-hero .cta-row a,
           .land-hero .cta-row button { font-size: 13px !important; padding: 11px 16px !important; text-align: center !important; }
-          .land-hero .preview { margin-top: 24px !important; }
+          .land-hero .preview { margin-top: 20px !important; }
           .land-brand-name { font-size: 14px !important; letter-spacing: .10em !important; }
 
           /* section headings */
-          h2 { font-size: 20px !important; margin-bottom: 8px !important; }
+          h2 { font-size: 20px !important; margin-bottom: 6px !important; }
           h2 + p, section > div > p { font-size: 13px !important; }
 
           /* section padding */
-          section { padding-top: 40px !important; padding-bottom: 40px !important; padding-left: 14px !important; padding-right: 14px !important; }
+          section { padding-top: 36px !important; padding-bottom: 36px !important; padding-left: 14px !important; padding-right: 14px !important; }
 
           /* chips */
           span[style*="border-radius: 999"] { font-size: 9px !important; padding: 2px 8px !important; }
 
-          /* cards */
+          /* cards — reduce padding */
           div[style*="border-radius: 16px"], div[style*="border-radius: 14px"] { border-radius: 10px !important; }
+          .land-grid-auto > div { padding: 16px !important; }
+          .land-protection-grid > div { padding: 14px !important; }
+          .land-protection-bottom > div { padding: 16px !important; }
+          .land-returns-grid > div { padding: 16px !important; }
+          .land-steps-grid > div { padding: 14px 12px !important; }
 
           /* exchanges */
           .land-exchanges { flex-wrap: wrap !important; gap: 8px !important; justify-content: center !important; }
@@ -1237,7 +1246,6 @@ export default function Landing() {
 
           /* steps */
           .land-steps-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
-          .land-steps-grid > div { padding: 14px 12px !important; }
 
           /* protection */
           .land-protection-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
@@ -1255,11 +1263,14 @@ export default function Landing() {
 
         /* ── SMALL PHONES (≤480px) ── */
         @media (max-width: 480px) {
-          .land-hero h1 { font-size: 20px !important; }
+          .land-hero h1 { font-size: 19px !important; }
+          .land-hero { padding: 60px 12px 24px !important; }
+          section { padding-left: 12px !important; padding-right: 12px !important; padding-top: 30px !important; padding-bottom: 30px !important; }
           .land-engine-tabs { grid-template-columns: 1fr 1fr !important; }
           .land-modes-grid { grid-template-columns: 1fr !important; }
           .land-steps-grid { grid-template-columns: 1fr !important; }
           .land-protection-grid { grid-template-columns: 1fr !important; }
+          .land-returns-grid { grid-template-columns: 1fr !important; }
           .footer-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
