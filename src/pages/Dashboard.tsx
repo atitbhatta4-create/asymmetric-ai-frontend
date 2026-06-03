@@ -1057,37 +1057,59 @@ export default function Dashboard() {
                 protecting you (Option B).
               </div>
 
-              <div
-                style={{
-                  marginTop: 12,
-                  background: "rgba(15,23,42,0.65)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 14,
-                  maxHeight: "60vh",
-                  overflow: "auto",
-                  padding: "8px 0",
-                }}
-              >
-                {(autoHistory || []).map((e, i) => {
-                  const lt = (e as any).log_type || "";
-                  const logColor =
-                    lt === "TRADE"      ? "#00ffe0" :
-                    lt === "BLOCKED"    ? "#ff5078" :
-                    lt === "ERROR"      ? "#fca5a5" :
-                    lt === "MID_CANDLE" ? "#ffa032" :
-                    lt === "RESET"      ? "#a78bfa" :
-                    lt === "HOLDING"    ? "#64748b" :
-                    "rgba(255,255,255,0.80)";
-                  return (
-                    <div key={i} style={{ padding: isMobile ? "4px 12px" : "4px 16px", display: "flex", gap: 10, borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.03)" }}>
-                      <span style={{ fontSize: 10, opacity: 0.4, whiteSpace: "nowrap", paddingTop: 2, minWidth: isMobile ? 60 : 130 }}>
-                        {isMobile ? e.t.slice(11, 16) : e.t}
-                      </span>
-                      <span style={{ fontSize: 11, color: logColor, lineHeight: 1.45 }}>{e.msg}</span>
-                    </div>
-                  );
-                })}
-              </div>
+              {isMobile ? (
+                /* Mobile: compact row layout matching History page */
+                <div
+                  style={{
+                    marginTop: 12,
+                    background: "rgba(15,23,42,0.65)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 14,
+                    maxHeight: "60vh",
+                    overflow: "auto",
+                    padding: "8px 0",
+                  }}
+                >
+                  {(autoHistory || []).map((e, i) => {
+                    const lt = (e as any).log_type || "";
+                    const logColor =
+                      lt === "TRADE"      ? "#00ffe0" :
+                      lt === "BLOCKED"    ? "#ff5078" :
+                      lt === "ERROR"      ? "#fca5a5" :
+                      lt === "MID_CANDLE" ? "#ffa032" :
+                      lt === "RESET"      ? "#a78bfa" :
+                      lt === "HOLDING"    ? "#64748b" :
+                      "rgba(255,255,255,0.80)";
+                    return (
+                      <div key={i} style={{ padding: "4px 12px", display: "flex", gap: 10, borderTop: i === 0 ? "none" : "1px solid rgba(255,255,255,0.03)" }}>
+                        <span style={{ fontSize: 10, opacity: 0.4, whiteSpace: "nowrap", paddingTop: 2, minWidth: 60 }}>
+                          {e.t.slice(11, 16)}
+                        </span>
+                        <span style={{ fontSize: 11, color: logColor, lineHeight: 1.45 }}>{e.msg}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Desktop: original pre layout unchanged */
+                <pre
+                  style={{
+                    marginTop: 12,
+                    whiteSpace: "pre-wrap",
+                    lineHeight: 1.35,
+                    fontSize: 13,
+                    opacity: 0.95,
+                    background: "rgba(15,23,42,0.65)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    padding: 12,
+                    borderRadius: 14,
+                    maxHeight: "60vh",
+                    overflow: "auto",
+                  }}
+                >
+                  {(autoHistory || []).map((e) => `${e.t}  ${e.msg}`).join("\n")}
+                </pre>
+              )}
             </div>
           </div>
         )}
