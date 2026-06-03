@@ -17,12 +17,12 @@ export default function Login({ onLoggedIn }: { onLoggedIn: () => Promise<void> 
   const inputStyle: React.CSSProperties = {
     width: "100%",
     marginTop: isMobile ? 4 : 6,
-    padding: isMobile ? "9px 11px" : "12px 14px",
-    borderRadius: 14,
+    padding: isMobile ? "8px 10px" : "12px 14px",
+    borderRadius: 12,
     border: "1px solid rgba(148,163,184,0.5)",
     background: "rgba(15,23,42,0.85)",
     color: "white",
-    fontSize: 16,
+    fontSize: 16, // must stay 16 — iOS Safari zooms viewport on inputs < 16px
     boxSizing: "border-box",
   };
 
@@ -73,12 +73,12 @@ export default function Login({ onLoggedIn }: { onLoggedIn: () => Promise<void> 
       placeItems: "center",
       background: "radial-gradient(1200px 600px at 20% 10%, rgba(0,255,224,0.14), transparent 55%), #050814",
       color: "white",
-      padding: isMobile ? 8 : 20,
+      padding: isMobile ? "20px 20px" : 20,
     }}>
       <div style={{
         width: 460, maxWidth: "100%",
-        borderRadius: 18,
-        padding: isMobile ? "10px 12px" : "clamp(18px, 5vw, 28px)",
+        borderRadius: isMobile ? 14 : 18,
+        padding: isMobile ? "16px 16px" : "clamp(18px, 5vw, 28px)",
         background: "rgba(9,15,30,0.96)",
         border: "1px solid rgba(255,255,255,0.08)",
         boxShadow: "0 0 40px rgba(0,0,0,0.65)",
@@ -183,7 +183,7 @@ export default function Login({ onLoggedIn }: { onLoggedIn: () => Promise<void> 
                 placeholder="000000"
                 maxLength={6}
                 autoFocus
-                style={{ ...inputStyle, letterSpacing: 10, fontSize: isMobile ? 22 : 26, fontWeight: 900, textAlign: "center" }}
+                style={{ ...inputStyle, letterSpacing: isMobile ? 6 : 10, fontSize: isMobile ? 20 : 26, fontWeight: 900, textAlign: "center" }}
               />
             </div>
 
