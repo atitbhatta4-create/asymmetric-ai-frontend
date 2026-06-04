@@ -602,13 +602,14 @@ export default function Dashboard() {
   const aiLine = useMemo(() => {
     if (!aiRunning) return "AI: STOPPED";
 
+    const br = autoStatus?.blocked_reason ?? "";
+    const isPaused = br.startsWith("MAX_BAD_TRADES") || br.startsWith("MAX_TRADES_DAY");
+
     const modeTxt = autoStatus?.mode ? `${autoStatus.mode}` : "";
     const sig = autoStatus?.last_signal
       ? `signal ${autoStatus.last_signal}`
       : "";
-    const blocked = autoStatus?.blocked_reason
-      ? ` • BLOCKED: ${autoStatus.blocked_reason}`
-      : "";
+    const blocked = br && !isPaused ? ` • BLOCKED: ${br}` : "";
 
     const tradesToday = `${autoStatus?.trades_today ?? 0}/${
       autoStatus?.max_trades_per_day ?? "-"
@@ -628,6 +629,9 @@ export default function Dashboard() {
     const _g = _s >= 0.78 ? "A" : _s >= 0.65 ? "B" : "C";
     const gradeTxt = _s > 0 ? ` Grade ${_g}` : "";
 
+    if (isPaused) {
+      return `AI PAUSED — daily limit (${br}) • resumes at Dubai midnight • reset ${resetIn}`;
+    }
     return `AI RUNNING (${autoStatus?.side || "-"}) • ${modeTxt}${styleTxt}${gradeTxt} • ${sig}${blocked} • trades ${tradesToday} • bad ${badToday} • reset ${resetIn} • ${dur}`;
   }, [aiRunning, autoStatus]);
 
