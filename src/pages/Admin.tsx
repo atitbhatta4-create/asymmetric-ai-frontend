@@ -154,6 +154,8 @@ export default function Admin() {
   const [btRunError,  setBtRunError]  = useState<string | null>(null);
   const [btLoading,   setBtLoading]   = useState(false);
   const [btHistory,   setBtHistory]   = useState<any[]>([]);
+  const [btEnableT16, setBtEnableT16] = useState(true);
+  const [btEnableT18, setBtEnableT18] = useState(true);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Optimizer state
@@ -315,6 +317,7 @@ export default function Admin() {
           symbol: btSymbol.trim().toUpperCase(),
           mode: btMode, style: btStyle, exchange: btExchange,
           date_from: btFrom, date_to: btTo, start_equity: Number(btEquity),
+          enable_t16: btEnableT16, enable_t18: btEnableT18,
         },
       });
       setBtRunId(r.run_id);
@@ -767,6 +770,21 @@ export default function Admin() {
               </div>
             </div>
 
+            {/* T16 / T18 feature toggles */}
+            <div style={{ marginTop: 12, display: "flex", gap: 20, alignItems: "center", padding: "10px 14px", background: "rgba(0,0,0,.2)", borderRadius: 10 }}>
+              <span style={{ fontSize: 11, opacity: 0.55, fontWeight: 700 }}>Features:</span>
+              {([["T16 Reversal", btEnableT16, setBtEnableT16], ["T18 Momentum Scaling", btEnableT18, setBtEnableT18]] as const).map(([label, val, set]) => (
+                <label key={String(label)} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12 }}>
+                  <input type="checkbox" checked={val as boolean} onChange={e => (set as any)(e.target.checked)}
+                    style={{ width: 14, height: 14, accentColor: "#00ffd1" }} />
+                  <span style={{ color: (val as boolean) ? "#00ffd1" : "rgba(255,255,255,.4)", fontWeight: 800 }}>{label as string}</span>
+                </label>
+              ))}
+              <span style={{ fontSize: 10, opacity: 0.4, marginLeft: "auto" }}>
+                Disable to run Test A (baseline). Enable to run Test B (with feature).
+              </span>
+            </div>
+
             <div style={{ marginTop: 14, display: "flex", gap: 10, alignItems: "center" }}>
               <button onClick={runBacktest} disabled={btLoading} style={{ ...goodBtn, padding: "11px 28px", fontSize: 14 }}>
                 {btLoading ? "Running…" : "Run Backtest"}
@@ -812,6 +830,11 @@ export default function Admin() {
                     ...(btResults.reversal_trades > 0 ? [
                       ["Reversal Trades", <span style={{ color: "#ffb300", fontWeight: 900 }}>{btResults.reversal_trades}</span>],
                       ["Reversal Win%",   <span style={{ color: btResults.reversal_win_rate >= 50 ? "#00ffd1" : "tomato" }}>{btResults.reversal_win_rate}%</span>],
+                    ] : []),
+                    ...(btResults.scaled_trades > 0 ? [
+                      ["Scaled Trades",   <span style={{ color: "#a78bfa", fontWeight: 900 }}>{btResults.scaled_trades}</span>],
+                      ["Scaled Avg Win",  <span style={{ color: "#00ffd1", fontWeight: 900 }}>+{btResults.avg_scaled_win_pct}%</span>],
+                      ["Normal Avg Win",  <span style={{ color: "#00aaff", fontWeight: 900 }}>+{btResults.avg_normal_win_pct}%</span>],
                     ] : []),
                     ["Sharpe Ratio",  btResults.sharpe_ratio],
                     ["Avg Win",       `+${btResults.avg_win_pct}%`],

@@ -10,6 +10,17 @@ type ModeData    = { mode: string;   trades: number; wins: number; pnl: number; 
 type StyleData   = { style: string;  trades: number; wins: number; pnl: number; win_rate: number; avg_hold: string };
 type TradeRec    = { time: string; side: string; symbol: string; mode: string; unreal_pnl_percent: number; unreal_pnl_value: number; entry_price: number; current_price: number; reason?: string | null; sl: number; tp: number; leverage: number };
 
+type PnlPeriod = { pnl: number; pnl_pct: number; trades: number; wins: number };
+type PnlMonth  = { period: string; pnl: number; pnl_pct: number; trades: number; wins: number; losses: number };
+type PnlYear   = { year: string; pnl: number; pnl_pct?: number; trades: number; wins: number; losses: number; months: PnlMonth[] };
+type PnlData   = {
+  empty?: boolean;
+  today: PnlPeriod; week: PnlPeriod; month: PnlPeriod;
+  history: PnlMonth[]; yearly: PnlYear[];
+  best_month: PnlMonth | null; worst_month: PnlMonth | null;
+  has_multiple_years: boolean;
+};
+
 type Stats = {
   empty?: boolean;
   summary: {
@@ -378,6 +389,34 @@ function TradeCard({ trade, isBest }: { trade: TradeRec; isBest: boolean }) {
   );
 }
 
+// ── PnL month row ─────────────────────────────────────────────────────────────
+function MonthRow({ m, active, onClick }: { m: PnlMonth; active: boolean; onClick: () => void }) {
+  const isPos = m.pnl >= 0;
+  const wr    = m.trades > 0 ? Math.round((m.wins / m.trades) * 100) : 0;
+  return (
+    <div onClick={onClick}
+      style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 10px", borderRadius:8,
+        cursor:"pointer", marginBottom:3,
+        background: active ? "rgba(0,255,209,.06)" : "rgba(255,255,255,.02)",
+        border:`1px solid ${active ? "rgba(0,255,209,.18)" : "rgba(255,255,255,.05)"}`,
+        transition:"background .15s" }}>
+      <span style={{ fontSize:12, fontWeight:900, minWidth:70 }}>{m.period}</span>
+      <span style={{ fontSize:13, fontWeight:900, color: isPos ? GN : RD, minWidth:90 }}>
+        {isPos ? "+" : ""}{m.pnl.toFixed(2)}
+      </span>
+      <span style={{ fontSize:11, color: isPos ? GN : RD, minWidth:62 }}>
+        {isPos ? "+" : ""}{m.pnl_pct.toFixed(2)}%
+      </span>
+      <span style={{ fontSize:11, color:M, minWidth:60 }}>{m.trades} trades</span>
+      <span style={{ fontSize:11, color: wr >= 50 ? GN : RD, minWidth:42 }}>{wr}% W</span>
+      <div style={{ flex:1, height:4, background:"rgba(255,255,255,.07)", borderRadius:2, overflow:"hidden", minWidth:40 }}>
+        <div style={{ height:"100%", width:`${wr}%`, background: wr>=50 ? GN : RD, borderRadius:2 }} />
+      </div>
+      <span style={{ fontSize:10, color:M }}>▾ details</span>
+    </div>
+  );
+}
+
 // ── main page ─────────────────────────────────────────────────────────────────
 export default function Portfolio() {
   const isMobile = useIsMobile();
@@ -386,24 +425,50 @@ export default function Portfolio() {
   const [error, setError]     = useState<string | null>(null);
   const [currentDd, setCurrentDd] = useState(0);
 
+  // PnL section state
+  const [pnlData,       setPnlData]       = useState<PnlData | null>(null);
+  const [pnlView,       setPnlView]       = useState<"monthly" | "yearly">("monthly");
+  const [drillMonth,    setDrillMonth]    = useState<string | null>(null);
+  const [drillTrades,   setDrillTrades]   = useState<any[]>([]);
+  const [drillLoading,  setDrillLoading]  = useState(false);
+  const [expandedYear,  setExpandedYear]  = useState<string | null>(null);
+
   const load = async () => {
     setLoading(true); setError(null);
     try {
-      const [s, bal] = await Promise.all([
+      const [s, bal, pnl] = await Promise.all([
         api.apiRequest<Stats>("/portfolio/stats", { method: "GET" }),
         api.apiRequest<{ total?: number; peak_equity?: number; hard_floor?: number }>("/balance", { method: "GET" }),
+        api.apiRequest<PnlData>("/portfolio/pnl", { method: "GET" }).catch(() => null),
       ]);
       setStats(s);
       const eq   = Number(bal.total ?? 0);
       const peak = Number(bal.peak_equity ?? eq);
       const dd   = peak > 0 ? Math.max(0, (peak - eq) / peak * 100) : 0;
       setCurrentDd(dd);
+      if (pnl && !pnl.empty) {
+        setPnlData(pnl);
+        setPnlView(pnl.has_multiple_years ? "yearly" : "monthly");
+      }
     } catch (e: any) {
       setError(e.message || "Failed to load");
     } finally {
       setLoading(false);
     }
   };
+
+  const drillDown = async (month: string) => {
+    if (drillMonth === month) { setDrillMonth(null); setDrillTrades([]); return; }
+    setDrillMonth(month); setDrillLoading(true);
+    try {
+      const r = await api.apiRequest<{ trades: any[] }>(`/portfolio/pnl/month/${month}`, { method: "GET" });
+      setDrillTrades(r.trades || []);
+    } catch { setDrillTrades([]); }
+    setDrillLoading(false);
+  };
+
+  const csvUrl = (year: string) =>
+    `${(import.meta.env.VITE_API_BASE as string) ?? ""}/portfolio/pnl/csv/${year}`;
 
   useEffect(() => { load(); }, []);
 
@@ -467,6 +532,183 @@ export default function Portfolio() {
             Refresh
           </button>
         </div>
+
+        {/* ── PnL SECTION ── */}
+        {pnlData && (
+          <>
+            {/* Three period cards */}
+            <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap:G }}>
+              {([
+                { label: "Today",      data: pnlData.today },
+                { label: "This Week",  data: pnlData.week  },
+                { label: "This Month", data: pnlData.month },
+              ] as const).map(({ label, data }) => {
+                const isPos = data.pnl >= 0;
+                const color = isPos ? GN : RD;
+                return (
+                  <div key={label} style={{ ...card(), padding: "16px 18px" }}>
+                    <div style={{ fontSize:10, fontWeight:900, letterSpacing:".10em", textTransform:"uppercase", color:M, marginBottom:8 }}>{label}</div>
+                    <div style={{ fontSize:26, fontWeight:900, color, lineHeight:1 }}>
+                      {isPos ? "+" : ""}{data.pnl.toFixed(2)} <span style={{ fontSize:14, fontWeight:700 }}>USD</span>
+                    </div>
+                    <div style={{ fontSize:13, color, marginTop:4 }}>
+                      {isPos ? "+" : ""}{data.pnl_pct.toFixed(2)}%
+                    </div>
+                    <div style={{ marginTop:8, fontSize:11, color:M }}>
+                      {data.trades} trade{data.trades !== 1 ? "s" : ""} &nbsp;·&nbsp;
+                      <span style={{ color:GN }}>{data.wins}W</span> &nbsp;/&nbsp;
+                      <span style={{ color:RD }}>{data.trades - data.wins}L</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Best / worst month highlight cards */}
+            {(pnlData.best_month || pnlData.worst_month) && (
+              <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap:G }}>
+                {[
+                  { label:"Best Month",  entry: pnlData.best_month,  color: GN },
+                  { label:"Worst Month", entry: pnlData.worst_month, color: RD },
+                ].filter(x => x.entry).map(({ label, entry, color }) => (
+                  <div key={label} style={{ ...card(), padding:"14px 16px", display:"flex", alignItems:"center", gap:16 }}>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:10, fontWeight:900, letterSpacing:".10em", textTransform:"uppercase", color:M, marginBottom:6 }}>{label}</div>
+                      <div style={{ fontSize:22, fontWeight:900, color }}>{entry!.period}</div>
+                      <div style={{ fontSize:13, color, marginTop:4 }}>
+                        {entry!.pnl >= 0 ? "+" : ""}{entry!.pnl.toFixed(2)} USD &nbsp;·&nbsp; {entry!.pnl_pct >= 0 ? "+" : ""}{entry!.pnl_pct.toFixed(2)}%
+                      </div>
+                    </div>
+                    <div style={{ textAlign:"right", fontSize:11, color:M }}>
+                      <div>{entry!.trades} trades</div>
+                      <div style={{ color:GN }}>{entry!.wins} wins</div>
+                      <div style={{ color:RD }}>{entry!.losses} losses</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* History table — yearly or monthly view */}
+            <div style={card()}>
+              <div style={{ padding:"10px 14px 0", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:8 }}>
+                <div style={{ fontSize:11, fontWeight:900, letterSpacing:".12em", textTransform:"uppercase", color:M }}>
+                  P&L History
+                </div>
+                <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                  {pnlData.has_multiple_years && (
+                    <>
+                      {(["monthly","yearly"] as const).map(v => (
+                        <button key={v} onClick={() => setPnlView(v)}
+                          style={{ padding:"4px 10px", borderRadius:8, fontSize:11, fontWeight:800, cursor:"pointer", border:"none",
+                            background: pnlView===v ? "rgba(0,255,209,.15)" : "rgba(255,255,255,.05)",
+                            color: pnlView===v ? GN : M }}>
+                          {v === "monthly" ? "Monthly" : "By Year"}
+                        </button>
+                      ))}
+                    </>
+                  )}
+                  {/* CSV export per year */}
+                  {pnlData.yearly.map(y => (
+                    <a key={y.year} href={csvUrl(y.year)}
+                      style={{ padding:"4px 10px", borderRadius:8, fontSize:11, fontWeight:800, cursor:"pointer",
+                        border:`1px solid rgba(255,255,255,.12)`, background:"rgba(255,255,255,.04)",
+                        color:M, textDecoration:"none" }}>
+                      {y.year} CSV
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {pnlView === "yearly" ? (
+                /* Yearly grouped view */
+                <div style={{ padding:"10px 14px 14px" }}>
+                  {[...pnlData.yearly].reverse().map(y => (
+                    <div key={y.year} style={{ marginBottom:10 }}>
+                      {/* Year header row */}
+                      <div onClick={() => setExpandedYear(expandedYear === y.year ? null : y.year)}
+                        style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 12px", borderRadius:10,
+                          background:"rgba(0,0,0,.25)", cursor:"pointer",
+                          border:`1px solid ${expandedYear === y.year ? "rgba(0,255,209,.2)" : "rgba(255,255,255,.06)"}` }}>
+                        <span style={{ fontSize:13, fontWeight:900 }}>{y.year}</span>
+                        <span style={{ fontSize:13, fontWeight:900, color: y.pnl >= 0 ? GN : RD, marginLeft:"auto" }}>
+                          {y.pnl >= 0 ? "+" : ""}{y.pnl.toFixed(2)} USD
+                        </span>
+                        <span style={{ fontSize:11, color:M }}>{y.trades} trades · {y.wins}W / {y.losses}L</span>
+                        <span style={{ fontSize:11, color:M }}>{expandedYear === y.year ? "▲" : "▼"}</span>
+                      </div>
+                      {/* Expanded months */}
+                      {expandedYear === y.year && (
+                        <div style={{ marginTop:4, paddingLeft:12 }}>
+                          {[...y.months].reverse().map(m => (
+                            <MonthRow key={m.period} m={m} active={drillMonth===m.period}
+                              onClick={() => drillDown(m.period)} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                /* Monthly flat view */
+                <div style={{ padding:"10px 14px 14px" }}>
+                  {[...pnlData.history].reverse().map(m => (
+                    <MonthRow key={m.period} m={m} active={drillMonth===m.period}
+                      onClick={() => drillDown(m.period)} />
+                  ))}
+                </div>
+              )}
+
+              {/* Drill-down trade list */}
+              {drillMonth && (
+                <div style={{ margin:"0 14px 14px", borderRadius:10, border:`1px solid rgba(0,255,209,.15)`, overflow:"hidden" }}>
+                  <div style={{ padding:"8px 12px", background:"rgba(0,255,209,.06)", fontSize:11, fontWeight:900, color:GN, display:"flex", justifyContent:"space-between" }}>
+                    <span>Trades in {drillMonth}</span>
+                    <span style={{ cursor:"pointer", color:M }} onClick={() => { setDrillMonth(null); setDrillTrades([]); }}>✕ Close</span>
+                  </div>
+                  {drillLoading ? (
+                    <div style={{ padding:16, fontSize:12, color:M }}>Loading trades…</div>
+                  ) : drillTrades.length === 0 ? (
+                    <div style={{ padding:16, fontSize:12, color:M }}>No trades found.</div>
+                  ) : (
+                    <div style={{ overflowX:"auto" }}>
+                      <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
+                        <thead>
+                          <tr>
+                            {["Date (UTC)","Side","Symbol","Mode","P&L ($)","P&L (%)","Equity After"].map(h => (
+                              <th key={h} style={{ textAlign:"left", padding:"6px 10px", borderBottom:`1px solid ${BORDER2}`, fontSize:10, color:M, fontWeight:900 }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {drillTrades.map((t, i) => {
+                            const pv = parseFloat(t.unreal_pnl_value);
+                            const pp = parseFloat(t.unreal_pnl_percent);
+                            return (
+                              <tr key={i} style={{ borderBottom:`1px solid ${BORDER2}` }}>
+                                <td style={{ padding:"6px 10px", color:M }}>{String(t.time).slice(0,16)}</td>
+                                <td style={{ padding:"6px 10px", color: t.side==="LONG" ? GN : RD, fontWeight:900 }}>{t.side}</td>
+                                <td style={{ padding:"6px 10px", fontWeight:800 }}>{t.symbol}</td>
+                                <td style={{ padding:"6px 10px", color:M }}>{t.mode}</td>
+                                <td style={{ padding:"6px 10px", color: pv>=0 ? GN : RD, fontWeight:900 }}>
+                                  {pv>=0 ? "+" : ""}{pv.toFixed(3)}
+                                </td>
+                                <td style={{ padding:"6px 10px", color: pp>=0 ? GN : RD }}>
+                                  {pp>=0 ? "+" : ""}{pp.toFixed(3)}%
+                                </td>
+                                <td style={{ padding:"6px 10px", color:M }}>${parseFloat(t.equity_after).toFixed(2)}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
         {/* ── summary cards (streak card has extended sub text) ── */}
         <div style={{ display:"grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(7,1fr)", gap:G }}>
