@@ -47,7 +47,12 @@ export default function SupportChat() {
   useEffect(() => {
     load();
     pollRef.current = setInterval(load, 15000);
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+    const onOpen = () => setOpen(true);
+    window.addEventListener("open-support-chat", onOpen);
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+      window.removeEventListener("open-support-chat", onOpen);
+    };
   }, []);
 
   useEffect(() => {
@@ -64,12 +69,12 @@ export default function SupportChat() {
       if (!ticket) {
         await api.apiRequest("/support/ticket", {
           method: "POST",
-          body: JSON.stringify({ message: text.trim() }),
+          body: { message: text.trim() },
         });
       } else {
         await api.apiRequest("/support/message", {
           method: "POST",
-          body: JSON.stringify({ message: text.trim() }),
+          body: { message: text.trim() },
         });
       }
       setInput("");

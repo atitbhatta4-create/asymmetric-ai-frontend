@@ -383,6 +383,28 @@ function TwoFactor() {
   );
 }
 
+// ── Contact Support card ──────────────────────────────────────────────────────
+function ContactSupport() {
+  return (
+    <div style={card}>
+      <div style={{ fontSize: 15, fontWeight: 900, marginBottom: 4 }}>Contact Support</div>
+      <div style={{ fontSize: 13, opacity: 0.6, marginBottom: 16, lineHeight: 1.6 }}>
+        Have a question or need help? Our team replies within 24 hours.
+      </div>
+      <button
+        onClick={() => window.dispatchEvent(new CustomEvent("open-support-chat"))}
+        style={{
+          padding: "11px 22px", borderRadius: 12, border: "none", cursor: "pointer",
+          background: "linear-gradient(135deg,#00ffe0,#0066ff)",
+          color: "#020612", fontWeight: 900, fontSize: 14,
+        }}
+      >
+        Open Support Chat
+      </button>
+    </div>
+  );
+}
+
 // ── Main Settings page ────────────────────────────────────────────────────────
 export default function Settings() {
   return (
@@ -393,6 +415,7 @@ export default function Settings() {
       <ChangePassword />
       <ResetViaEmail />
       <TwoFactor />
+      <ContactSupport />
     </div>
   );
 }
