@@ -121,7 +121,7 @@ function EquityCurveBt({ points }: { points: { ts: number; equity: number }[] })
 export default function Admin() {
   const nav = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<"users" | "analytics" | "backtester" | "optimizer">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "analytics" | "backtester" | "optimizer" | "support">("users");
   const [status, setStatus] = useState<AdminStatus | null>(null);
   const [signupEnabled, setSignupEnabled] = useState(true);
   const [seatCapacity, setSeatCapacity] = useState(50);
@@ -177,6 +177,15 @@ export default function Admin() {
   const [optHistory,  setOptHistory]  = useState<any[]>([]);
   const [optApplied,  setOptApplied]  = useState<any[]>([]);
   const optPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Support state
+  const [supportTickets,     setSupportTickets]     = useState<any[]>([]);
+  const [supportLoading,     setSupportLoading]     = useState(false);
+  const [supportViewId,      setSupportViewId]      = useState<number | null>(null);
+  const [supportMessages,    setSupportMessages]    = useState<any[]>([]);
+  const [supportTicketInfo,  setSupportTicketInfo]  = useState<any>(null);
+  const [supportReply,       setSupportReply]       = useState("");
+  const [supportSending,     setSupportSending]     = useState(false);
 
   // ── Admin data ──────────────────────────────────────────────────────────────
   const loadAnalytics = async () => {
@@ -357,6 +366,53 @@ export default function Admin() {
     } catch { /* ignore */ }
   };
 
+  const loadSupport = async () => {
+    setSupportLoading(true);
+    try {
+      const res = await api.apiRequest("/admin/support/tickets", { method: "GET" }) as any;
+      setSupportTickets(res?.tickets || []);
+    } catch { /* ignore */ }
+    setSupportLoading(false);
+  };
+
+  const loadSupportMessages = async (ticketId: number) => {
+    setSupportViewId(ticketId);
+    try {
+      const res = await api.apiRequest(`/admin/support/ticket/${ticketId}/messages`, { method: "GET" }) as any;
+      setSupportTicketInfo(res?.ticket || null);
+      setSupportMessages(res?.messages || []);
+    } catch { /* ignore */ }
+  };
+
+  const sendSupportReply = async (ticketId: number) => {
+    if (!supportReply.trim() || supportSending) return;
+    setSupportSending(true);
+    try {
+      await api.apiRequest(`/admin/support/ticket/${ticketId}/reply`, {
+        method: "POST",
+        body: JSON.stringify({ message: supportReply.trim() }),
+      });
+      setSupportReply("");
+      await loadSupportMessages(ticketId);
+      await loadSupport();
+    } catch (e: any) {
+      alert("Reply failed: " + (e?.message || "unknown error"));
+    }
+    setSupportSending(false);
+  };
+
+  const resolveSupportTicket = async (ticketId: number) => {
+    try {
+      await api.apiRequest(`/admin/support/ticket/${ticketId}/resolve`, { method: "POST" });
+      await loadSupport();
+      if (supportViewId === ticketId) {
+        setSupportTicketInfo((t: any) => t ? { ...t, status: "resolved" } : t);
+      }
+    } catch (e: any) {
+      alert("Resolve failed: " + (e?.message || "unknown error"));
+    }
+  };
+
   const loadOptRun = async (runId: string) => {
     try {
       const full = await api.apiRequest(`/optimizer/results/${runId}`, { method: "GET" });
@@ -437,7 +493,7 @@ export default function Admin() {
     <div style={{ maxWidth: 1180, margin: "0 auto", display: "flex", flexDirection: "column", gap: 12 }}>
       {/* Tab Navigation */}
       <div style={{ display: "flex", gap: 8 }}>
-        {(["users", "analytics", "backtester", "optimizer"] as const).map((tab) => (
+        {(["users", "analytics", "backtester", "optimizer", "support"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => {
@@ -445,6 +501,7 @@ export default function Admin() {
               if (tab === "analytics") loadAnalytics();
               if (tab === "backtester") { loadBtHistory(); loadBtSymbols(btExchange); }
               if (tab === "optimizer")  loadOptHistory();
+              if (tab === "support")   loadSupport();
             }}
             style={{
               padding: "9px 18px", borderRadius: 12, fontWeight: 900, cursor: "pointer",
@@ -454,7 +511,7 @@ export default function Admin() {
               borderBottom: activeTab === tab ? "2px solid #00ffe0" : "2px solid transparent",
             }}
           >
-            {tab === "users" ? "Users" : tab === "analytics" ? "Analytics" : tab === "backtester" ? "Backtester" : "Optimizer"}
+            {tab === "users" ? "Users" : tab === "analytics" ? "Analytics" : tab === "backtester" ? "Backtester" : tab === "optimizer" ? "Optimizer" : "Support"}
           </button>
         ))}
       </div>
@@ -1203,6 +1260,157 @@ export default function Admin() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── SUPPORT TAB ────────────────────────────────────────────────────── */}
+      {activeTab === "support" && (
+        <div style={{ display: "flex", gap: 12 }}>
+          {/* Ticket list */}
+          <div style={{ ...cardStyle, flex: "0 0 340px", minWidth: 0 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <div style={{ fontSize: 13, fontWeight: 950 }}>
+                Support Tickets
+                <span style={{ marginLeft: 8, fontSize: 11, opacity: 0.5 }}>
+                  {supportTickets.filter(t => t.status === "open").length} open
+                </span>
+              </div>
+              <button onClick={loadSupport} style={btnStyle}>Refresh</button>
+            </div>
+            {supportLoading && <div style={{ opacity: 0.4, fontSize: 12 }}>Loading…</div>}
+            {!supportLoading && supportTickets.length === 0 && (
+              <div style={{ opacity: 0.4, fontSize: 12 }}>No tickets yet</div>
+            )}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {supportTickets.map((t) => {
+                const isLate = t.status === "open" && t.wait_hours > 24;
+                const isSelected = supportViewId === t.id;
+                return (
+                  <div
+                    key={t.id}
+                    onClick={() => loadSupportMessages(t.id)}
+                    style={{
+                      padding: "10px 12px", borderRadius: 12, cursor: "pointer",
+                      border: isSelected
+                        ? "1px solid rgba(0,255,224,0.4)"
+                        : isLate
+                        ? "1px solid rgba(248,113,113,0.4)"
+                        : "1px solid rgba(255,255,255,0.08)",
+                      background: isSelected
+                        ? "rgba(0,255,224,0.08)"
+                        : isLate
+                        ? "rgba(248,113,113,0.06)"
+                        : "rgba(255,255,255,0.03)",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ fontSize: 12, fontWeight: 900, color: isLate ? "#f87171" : "white" }}>
+                        {t.user_email}
+                      </div>
+                      <span style={{
+                        fontSize: 9, fontWeight: 900, padding: "2px 7px", borderRadius: 6,
+                        background: t.status === "open" ? "rgba(0,255,224,0.12)" : "rgba(255,255,255,0.06)",
+                        color: t.status === "open" ? "#00ffe0" : "#6b7280",
+                        border: `1px solid ${t.status === "open" ? "rgba(0,255,224,0.25)" : "rgba(255,255,255,0.10)"}`,
+                        textTransform: "uppercase",
+                      }}>
+                        {t.status}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 11, opacity: 0.6, marginTop: 3, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
+                      {t.subject}
+                    </div>
+                    <div style={{ fontSize: 10, marginTop: 4, color: isLate ? "#f87171" : "rgba(255,255,255,0.35)" }}>
+                      {isLate ? `⚠ Waiting ${t.wait_hours}h` : t.wait_hours > 0 ? `${t.wait_hours}h ago` : "Just now"}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Conversation view */}
+          <div style={{ ...cardStyle, flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+            {!supportViewId ? (
+              <div style={{ opacity: 0.4, fontSize: 13, textAlign: "center", marginTop: 40 }}>
+                Select a ticket to view the conversation
+              </div>
+            ) : (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div>
+                    <div style={{ fontWeight: 900, fontSize: 13 }}>{supportTicketInfo?.user_email}</div>
+                    <div style={{ fontSize: 11, opacity: 0.5 }}>{supportTicketInfo?.subject}</div>
+                  </div>
+                  {supportTicketInfo?.status !== "resolved" && (
+                    <button
+                      onClick={() => resolveSupportTicket(supportViewId)}
+                      style={{ ...goodBtn, fontSize: 12 }}
+                    >
+                      Mark Resolved
+                    </button>
+                  )}
+                  {supportTicketInfo?.status === "resolved" && (
+                    <span style={{ fontSize: 11, color: "#00ffe0", opacity: 0.7 }}>✓ Resolved</span>
+                  )}
+                </div>
+
+                {/* Messages */}
+                <div style={{
+                  flex: 1, overflowY: "auto", display: "flex", flexDirection: "column",
+                  gap: 8, maxHeight: 400, padding: "8px 0",
+                }}>
+                  {supportMessages.map((m, i) => (
+                    <div key={i} style={{
+                      alignSelf: m.sender === "admin" ? "flex-end" : "flex-start",
+                      maxWidth: "80%",
+                    }}>
+                      <div style={{
+                        padding: "8px 12px", borderRadius: 12,
+                        background: m.sender === "admin"
+                          ? "rgba(0,255,224,0.12)"
+                          : "rgba(255,255,255,0.07)",
+                        fontSize: 13, lineHeight: 1.55,
+                        border: `1px solid ${m.sender === "admin" ? "rgba(0,255,224,0.20)" : "rgba(255,255,255,0.08)"}`,
+                      }}>
+                        {m.message}
+                      </div>
+                      <div style={{ fontSize: 10, opacity: 0.35, marginTop: 3, textAlign: m.sender === "admin" ? "right" : "left" }}>
+                        {m.sender === "admin" ? "You · " : "User · "}
+                        {new Date(m.sent_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Reply box */}
+                {supportTicketInfo?.status !== "resolved" && (
+                  <div style={{ marginTop: 12, display: "flex", gap: 8, alignItems: "flex-end" }}>
+                    <textarea
+                      value={supportReply}
+                      onChange={(e) => setSupportReply(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendSupportReply(supportViewId); } }}
+                      placeholder="Type reply… (Enter to send)"
+                      rows={2}
+                      style={{
+                        flex: 1, resize: "none", background: "rgba(0,0,0,.22)",
+                        border: "1px solid rgba(255,255,255,.10)", borderRadius: 10,
+                        padding: "8px 10px", color: "white", fontSize: 13,
+                        outline: "none", fontFamily: "inherit",
+                      }}
+                    />
+                    <button
+                      onClick={() => sendSupportReply(supportViewId)}
+                      disabled={supportSending || !supportReply.trim()}
+                      style={{ ...goodBtn, fontSize: 13, padding: "8px 16px" }}
+                    >
+                      {supportSending ? "…" : "Send"}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>

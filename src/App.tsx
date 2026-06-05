@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Routes, Route, NavLink, useNavigate, Navigate } from "react-router-dom";
 import * as api from "./lib/api";
 import useIsMobile from "./hooks/useIsMobile";
+import SupportChat from "./components/SupportChat";
 
 import Dashboard from "./pages/Dashboard";
 import Market from "./pages/Market";
@@ -221,6 +222,7 @@ export default function App() {
             <Route path="*"           element={<Dashboard />} />
           </Routes>
         </main>
+        <SupportChat />
       </div>
     );
   }
@@ -284,6 +286,7 @@ export default function App() {
           <Route path="*"           element={<Dashboard />} />
         </Routes>
       </main>
+      <SupportChat />
     </div>
   );
 }
