@@ -390,7 +390,7 @@ export default function Admin() {
     try {
       await api.apiRequest(`/admin/support/ticket/${ticketId}/reply`, {
         method: "POST",
-        body: JSON.stringify({ message: supportReply.trim() }),
+        body: { message: supportReply.trim() },
       });
       setSupportReply("");
       await loadSupportMessages(ticketId);
@@ -1370,13 +1370,17 @@ export default function Admin() {
                         background: m.sender === "admin"
                           ? "rgba(0,255,224,0.12)"
                           : "rgba(255,255,255,0.07)",
-                        fontSize: 13, lineHeight: 1.55,
+                        fontSize: 13, lineHeight: 1.65,
                         border: `1px solid ${m.sender === "admin" ? "rgba(0,255,224,0.20)" : "rgba(255,255,255,0.08)"}`,
-                      }}>
-                        {m.message}
-                      </div>
+                        whiteSpace: "pre-line",
+                      }}
+                        {...(m.sender === "admin"
+                          ? { dangerouslySetInnerHTML: { __html: m.message } }
+                          : { children: m.message }
+                        )}
+                      />
                       <div style={{ fontSize: 10, opacity: 0.35, marginTop: 3, textAlign: m.sender === "admin" ? "right" : "left" }}>
-                        {m.sender === "admin" ? "You · " : "User · "}
+                        {m.sender === "admin" ? "Bot/Admin · " : "User · "}
                         {new Date(m.sent_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </div>
                     </div>

@@ -78,6 +78,13 @@ export default function SupportChat() {
         });
       }
       setInput("");
+      // Try to get a bot auto-reply, then reload regardless
+      try {
+        await api.apiRequest("/support/bot-reply", {
+          method: "POST",
+          body: { message: text.trim() },
+        });
+      } catch { /* non-critical */ }
       await load();
     } catch (e: any) {
       alert("Failed to send: " + (e?.message || "unknown error"));
@@ -198,7 +205,7 @@ export default function SupportChat() {
             {messages.map((m, i) => (
               <div key={i} style={{
                 alignSelf: m.sender === "user" ? "flex-end" : "flex-start",
-                maxWidth: "80%",
+                maxWidth: "85%",
               }}>
                 <div style={{
                   padding: "8px 12px",
@@ -206,15 +213,19 @@ export default function SupportChat() {
                   background: m.sender === "user"
                     ? "linear-gradient(135deg,rgba(0,102,255,0.6),rgba(0,255,224,0.3))"
                     : "rgba(255,255,255,0.07)",
-                  fontSize: 12, lineHeight: 1.55,
-                }}>
-                  {m.message}
-                </div>
+                  fontSize: 12, lineHeight: 1.7,
+                  whiteSpace: "pre-line",
+                }}
+                  {...(m.sender !== "user"
+                    ? { dangerouslySetInnerHTML: { __html: m.message } }
+                    : { children: m.message }
+                  )}
+                />
                 <div style={{
                   fontSize: 9, opacity: 0.4, marginTop: 3,
                   textAlign: m.sender === "user" ? "right" : "left",
                 }}>
-                  {m.sender === "admin" ? "Support · " : ""}{fmtTime(m.sent_at)}
+                  {m.sender === "admin" ? "Asymmetric AI · " : ""}{fmtTime(m.sent_at)}
                 </div>
               </div>
             ))}
