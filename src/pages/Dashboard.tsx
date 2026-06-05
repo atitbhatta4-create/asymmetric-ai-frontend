@@ -803,17 +803,25 @@ export default function Dashboard() {
 
             {/* ── Dangerous combo warning ── */}
             {(() => {
+              const isDanger =
+                (mode === "AGGRESSIVE" && tradeStyle === "SCALP") ||
+                (mode === "AGGRESSIVE" && tradeStyle === "DAY_TRADE");
               const warn =
-                mode === "AGGRESSIVE" && tradeStyle === "SWING"
+                isDanger
+                  ? "⚠ Warning: This combination has shown negative returns in historical testing. Consider MINI_ASYM + DAY_TRADE instead."
+                  : mode === "AGGRESSIVE" && tradeStyle === "SWING"
                   ? "⚠ High Risk: AGGRESSIVE uses 8× leverage — a SWING 4h SL can mean a very large loss per trade."
                   : mode === "ULTRA_SAFE" && tradeStyle === "SCALP"
                   ? "⚠ Low Efficiency: ULTRA_SAFE + SCALP — fees and spread eat most gains at 30% size on 15m candles."
                   : null;
+              const dangerColor   = isDanger ? "#f87171" : "#fb923c";
+              const dangerBg      = isDanger ? "rgba(248,113,113,0.10)" : "rgba(251,146,60,0.10)";
+              const dangerBorder  = isDanger ? "rgba(248,113,113,0.40)" : "rgba(251,146,60,0.35)";
               return warn ? (
                 <div style={{
                   marginTop: 10, padding: "9px 12px", borderRadius: 10,
-                  background: "rgba(251,146,60,0.10)", border: "1px solid rgba(251,146,60,0.35)",
-                  color: "#fb923c", fontSize: 12, fontWeight: 700, lineHeight: 1.5,
+                  background: dangerBg, border: `1px solid ${dangerBorder}`,
+                  color: dangerColor, fontSize: 12, fontWeight: 700, lineHeight: 1.5,
                 }}>
                   {warn}
                 </div>
