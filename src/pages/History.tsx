@@ -88,6 +88,8 @@ export default function History() {
 
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
+  const [appliedFrom, setAppliedFrom] = useState<string>("");
+  const [appliedTo, setAppliedTo] = useState<string>("");
 
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<Trade | null>(null);
@@ -114,8 +116,8 @@ export default function History() {
         if (times.length) {
           const minT = new Date(Math.min(...times.map((d) => d.getTime())));
           const maxT = new Date(Math.max(...times.map((d) => d.getTime())));
-          if (!fromDate) setFromDate(toDateInputValue(minT));
-          if (!toDate) setToDate(toDateInputValue(maxT));
+          if (!fromDate) { setFromDate(toDateInputValue(minT)); setAppliedFrom(toDateInputValue(minT)); }
+          if (!toDate)   { setToDate(toDateInputValue(maxT));   setAppliedTo(toDateInputValue(maxT)); }
         }
       }
     } catch (e: any) {
@@ -152,22 +154,22 @@ export default function History() {
 
   const filtered = useMemo(() => {
     const query = q.trim().toUpperCase();
-    const from = fromDate ? new Date(fromDate + "T00:00:00Z") : null;
-    const to = toDate ? new Date(toDate + "T23:59:59Z") : null;
+    const from = appliedFrom ? new Date(appliedFrom + "T00:00:00Z") : null;
+    const to   = appliedTo   ? new Date(appliedTo   + "T23:59:59Z") : null;
 
     return trades.filter((t) => {
       const sym = (t.symbol || "").toUpperCase();
-      const okQ = !query || sym.includes(query);
+      const okQ    = !query || sym.includes(query);
       const okMode = mode === "ALL" ? true : (t.mode || "MINI_ASYM") === mode;
       const okSide = side === "ALL" ? true : t.side === side;
 
       const dt = parseTradeTime(t);
       const okFrom = !from || (dt && dt.getTime() >= from.getTime());
-      const okTo = !to || (dt && dt.getTime() <= to.getTime());
+      const okTo   = !to   || (dt && dt.getTime() <= to.getTime());
 
       return okQ && okMode && okSide && okFrom && okTo;
     });
-  }, [trades, q, mode, side, fromDate, toDate]);
+  }, [trades, q, mode, side, appliedFrom, appliedTo]);
 
   const openReason = (t: Trade) => {
     setActive(t);
@@ -239,109 +241,98 @@ export default function History() {
           padding: isMobile ? 8 : 14,
           background: "rgba(9, 15, 30, 0.92)",
           border: "1px solid rgba(255,255,255,0.08)",
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 200px 200px 160px 160px",
+          display: "flex",
+          flexDirection: "column",
           gap: isMobile ? 6 : 10,
         }}
       >
-        <div>
-          <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.75 }}>Search symbol</div>
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="BTCUSDT"
-            style={{
-              width: "100%",
-              marginTop: 6,
-              padding: 12,
-              borderRadius: 14,
-              border: "1px solid rgba(148,163,184,0.5)",
-              background: "rgba(15,23,42,0.85)",
-              color: "white",
-            }}
-          />
+        {/* Row 1: symbol + mode + side */}
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 200px 200px", gap: isMobile ? 6 : 10 }}>
+          <div>
+            <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.75 }}>Search symbol</div>
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="BTCUSDT"
+              style={{ width: "100%", marginTop: 6, padding: 12, borderRadius: 14, border: "1px solid rgba(148,163,184,0.5)", background: "rgba(15,23,42,0.85)", color: "white", boxSizing: "border-box" }}
+            />
+          </div>
+          <div>
+            <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.75 }}>Mode</div>
+            <select
+              value={mode}
+              onChange={(e) => setMode(e.target.value as any)}
+              style={{ width: "100%", marginTop: 6, padding: 12, borderRadius: 14, border: "1px solid rgba(148,163,184,0.5)", background: "rgba(15,23,42,0.85)", color: "white" }}
+            >
+              <option value="ALL">All</option>
+              <option value="ULTRA_SAFE">ULTRA SAFE</option>
+              <option value="SAFE">SAFE</option>
+              <option value="NORMAL">NORMAL</option>
+              <option value="MINI_ASYM">MINI-ASYM</option>
+              <option value="AGGRESSIVE">AGGRESSIVE</option>
+            </select>
+          </div>
+          <div>
+            <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.75 }}>Side</div>
+            <select
+              value={side}
+              onChange={(e) => setSide(e.target.value as any)}
+              style={{ width: "100%", marginTop: 6, padding: 12, borderRadius: 14, border: "1px solid rgba(148,163,184,0.5)", background: "rgba(15,23,42,0.85)", color: "white" }}
+            >
+              <option value="ALL">All</option>
+              <option value="LONG">LONG</option>
+              <option value="SHORT">SHORT</option>
+            </select>
+          </div>
         </div>
 
-        <div>
-          <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.75 }}>Mode</div>
-          <select
-            value={mode}
-            onChange={(e) => setMode(e.target.value as any)}
-            style={{
-              width: "100%",
-              marginTop: 6,
-              padding: 12,
-              borderRadius: 14,
-              border: "1px solid rgba(148,163,184,0.5)",
-              background: "rgba(15,23,42,0.85)",
-              color: "white",
-            }}
+        {/* Row 2: date range + Apply + Clear */}
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "160px 160px auto auto", gap: isMobile ? 6 : 10, alignItems: "flex-end" }}>
+          <div>
+            <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.75 }}>From</div>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              style={{ width: "100%", marginTop: 6, padding: 10, borderRadius: 14, border: "1px solid rgba(148,163,184,0.5)", background: "rgba(15,23,42,0.85)", color: "white", boxSizing: "border-box" }}
+            />
+          </div>
+          <div>
+            <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.75 }}>To</div>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              style={{ width: "100%", marginTop: 6, padding: 10, borderRadius: 14, border: "1px solid rgba(148,163,184,0.5)", background: "rgba(15,23,42,0.85)", color: "white", boxSizing: "border-box" }}
+            />
+          </div>
+          <button
+            onClick={() => { setAppliedFrom(fromDate); setAppliedTo(toDate); }}
+            style={{ padding: "10px 22px", borderRadius: 14, border: "1px solid rgba(0,255,224,0.35)", background: "rgba(0,255,224,0.12)", color: "#00ffe0", fontWeight: 900, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}
           >
-            <option value="ALL">All</option>
-            <option value="ULTRA_SAFE">ULTRA SAFE</option>
-            <option value="SAFE">SAFE</option>
-            <option value="NORMAL">NORMAL</option>
-            <option value="MINI_ASYM">MINI-ASYM</option>
-            <option value="AGGRESSIVE">AGGRESSIVE</option>
-          </select>
-        </div>
-
-        <div>
-          <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.75 }}>Side</div>
-          <select
-            value={side}
-            onChange={(e) => setSide(e.target.value as any)}
-            style={{
-              width: "100%",
-              marginTop: 6,
-              padding: 12,
-              borderRadius: 14,
-              border: "1px solid rgba(148,163,184,0.5)",
-              background: "rgba(15,23,42,0.85)",
-              color: "white",
+            Apply
+          </button>
+          <button
+            onClick={() => {
+              if (!trades.length) return;
+              const times = trades.map(parseTradeTime).filter(Boolean) as Date[];
+              const minT = toDateInputValue(new Date(Math.min(...times.map(d => d.getTime()))));
+              const maxT = toDateInputValue(new Date(Math.max(...times.map(d => d.getTime()))));
+              setFromDate(minT); setToDate(maxT);
+              setAppliedFrom(minT); setAppliedTo(maxT);
             }}
+            style={{ padding: "10px 16px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.6)", fontWeight: 700, fontSize: 13, cursor: "pointer", whiteSpace: "nowrap" }}
           >
-            <option value="ALL">All</option>
-            <option value="LONG">LONG</option>
-            <option value="SHORT">SHORT</option>
-          </select>
+            Clear
+          </button>
         </div>
 
-        <div>
-          <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.75 }}>From</div>
-          <input
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            style={{
-              width: "100%",
-              marginTop: 6,
-              padding: 10,
-              borderRadius: 14,
-              border: "1px solid rgba(148,163,184,0.5)",
-              background: "rgba(15,23,42,0.85)",
-              color: "white",
-            }}
-          />
-        </div>
-
-        <div>
-          <div style={{ fontSize: isMobile ? 10 : 12, opacity: 0.75 }}>To</div>
-          <input
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            style={{
-              width: "100%",
-              marginTop: 6,
-              padding: 10,
-              borderRadius: 14,
-              border: "1px solid rgba(148,163,184,0.5)",
-              background: "rgba(15,23,42,0.85)",
-              color: "white",
-            }}
-          />
-        </div>
+        {/* Pending filter indicator */}
+        {(fromDate !== appliedFrom || toDate !== appliedTo) && (
+          <div style={{ fontSize: 11, color: "#f59e0b", display: "flex", alignItems: "center", gap: 6 }}>
+            <span>⚠</span> Date changed — press <strong>Apply</strong> to filter
+          </div>
+        )}
       </div>
 
       {err ? (
