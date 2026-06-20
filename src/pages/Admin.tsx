@@ -156,6 +156,7 @@ export default function Admin() {
   const [btHistory,   setBtHistory]   = useState<any[]>([]);
   const [btEnableT16, setBtEnableT16] = useState(true);
   const [btEnableT18, setBtEnableT18] = useState(true);
+  const [btEnableS4,  setBtEnableS4]  = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Optimizer state
@@ -326,7 +327,7 @@ export default function Admin() {
           symbol: btSymbol.trim().toUpperCase(),
           mode: btMode, style: btStyle, exchange: btExchange,
           date_from: btFrom, date_to: btTo, start_equity: Number(btEquity),
-          enable_t16: btEnableT16, enable_t18: btEnableT18,
+          enable_t16: btEnableT16, enable_t18: btEnableT18, enable_s4: btEnableS4,
         },
       });
       setBtRunId(r.run_id);
@@ -830,7 +831,7 @@ export default function Admin() {
             {/* T16 / T18 feature toggles */}
             <div style={{ marginTop: 12, display: "flex", gap: 20, alignItems: "center", padding: "10px 14px", background: "rgba(0,0,0,.2)", borderRadius: 10 }}>
               <span style={{ fontSize: 11, opacity: 0.55, fontWeight: 700 }}>Features:</span>
-              {([["T16 Reversal", btEnableT16, setBtEnableT16], ["T18 Momentum Scaling", btEnableT18, setBtEnableT18]] as const).map(([label, val, set]) => (
+              {([["T16 Reversal", btEnableT16, setBtEnableT16], ["T18 Momentum Scaling", btEnableT18, setBtEnableT18], ["S4 Dynamic Weights", btEnableS4, setBtEnableS4]] as const).map(([label, val, set]) => (
                 <label key={String(label)} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 12 }}>
                   <input type="checkbox" checked={val as boolean} onChange={e => (set as any)(e.target.checked)}
                     style={{ width: 14, height: 14, accentColor: "#00ffd1" }} />
