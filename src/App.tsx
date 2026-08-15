@@ -47,6 +47,7 @@ export default function App() {
   const [isAdmin, setIsAdmin]         = useState(false);
   const [adminChecked, setAdminChecked] = useState(false);
   const [menuOpen, setMenuOpen]       = useState(false);
+  const [isRealTrading, setIsRealTrading] = useState(false);
 
   const authed = !!session?.ok;
 
@@ -81,6 +82,9 @@ export default function App() {
   useEffect(() => {
     if (!session?.ok) { setIsAdmin(false); setAdminChecked(true); return; }
     checkAdmin();
+    api.apiRequest("/config", { method: "GET" })
+      .then((cfg: any) => setIsRealTrading(!!cfg?.real_trading))
+      .catch(() => {});
   }, [session?.ok, session?.email]);
 
   const doLogout = async () => {
@@ -198,7 +202,7 @@ export default function App() {
               Logout
             </button>
             <div style={{ marginTop: 10, fontSize: 9, opacity: 0.4, textAlign: "center" }}>
-              Demo mode · No real funds · Educational only
+              {isRealTrading ? "Live Trading · Real funds at risk" : "Demo mode · No real funds · Educational only"}
             </div>
           </div>
         )}
@@ -265,7 +269,7 @@ export default function App() {
         </button>
 
         <div style={{ marginTop: 10, fontSize: 10, opacity: 0.45 }}>
-          Demo mode · No real funds · Educational only
+          {isRealTrading ? "Live Trading · Real funds at risk" : "Demo mode · No real funds · Educational only"}
         </div>
       </aside>
 
