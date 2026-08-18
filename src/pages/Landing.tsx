@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 // ── palette (matches app) ─────────────────────────────────────────────────────
@@ -27,6 +27,131 @@ const Chip = ({ children, color = GN }: { children: React.ReactNode; color?: str
 const Divider = () => (
   <div style={{ height: 1, background: BDR2, margin: "0 auto", maxWidth: 1080 }} />
 );
+
+// ── count-up hook ─────────────────────────────────────────────────────────────
+function useCountUp(target: number, duration = 1400) {
+  const [count, setCount] = useState(0);
+  const [visible, setVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const started = useRef(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !started.current) {
+        started.current = true;
+        setVisible(true);
+        if (target === 0) { setCount(0); return; }
+        const t0 = performance.now();
+        const tick = (now: number) => {
+          const p = Math.min((now - t0) / duration, 1);
+          const eased = 1 - Math.pow(1 - p, 3);
+          setCount(Math.round(eased * target));
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }
+    }, { threshold: 0.3 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [target, duration]);
+  return { count, visible, ref };
+}
+
+// ── typewriter text ───────────────────────────────────────────────────────────
+function TypewriterText({ text, charDelay = 48, startDelay = 0 }: { text: string; charDelay?: number; startDelay?: number }) {
+  const [displayed, setDisplayed] = useState("");
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    let i = 0;
+    const outer = setTimeout(() => {
+      const iv = setInterval(() => {
+        i++;
+        setDisplayed(text.slice(0, i));
+        if (i >= text.length) { clearInterval(iv); setDone(true); }
+      }, charDelay);
+      return () => clearInterval(iv);
+    }, startDelay);
+    return () => clearTimeout(outer);
+  }, [text, charDelay, startDelay]);
+  return <span>{displayed}{!done && <span className="typewriter-cursor">|</span>}</span>;
+}
+
+// ── stagger container ─────────────────────────────────────────────────────────
+function StaggerContainer({ children, className = "", style: s = {} }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const done = useRef(false);
+  useEffect(() => {
+    const el = ref.current; if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !done.current) { done.current = true; el.classList.add("visible"); obs.disconnect(); }
+    }, { threshold: 0.07 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return <div ref={ref} className={`stagger-container ${className}`} style={s}>{children}</div>;
+}
+
+// ── scroll reveal wrapper ─────────────────────────────────────────────────────
+function RevealWrapper({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const done = useRef(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !done.current) {
+        done.current = true;
+        setTimeout(() => {
+          if (ref.current) {
+            ref.current.style.opacity = "1";
+            ref.current.style.transform = "translateY(0)";
+          }
+        }, delay);
+        obs.disconnect();
+      }
+    }, { threshold: 0.07 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [delay]);
+  return (
+    <div ref={ref} style={{
+      opacity: 0, transform: "translateY(28px)",
+      transition: `opacity 0.65s ease, transform 0.65s ease`,
+    }}>
+      {children}
+    </div>
+  );
+}
+
+// ── single animated stat ──────────────────────────────────────────────────────
+function CountStat({ target, suffix, label, color, delay = 0, isFixed = false, fixedDisplay = "" }: {
+  target: number; suffix: string; label: string; color: string;
+  delay?: number; isFixed?: boolean; fixedDisplay?: string;
+}) {
+  const { count, visible, ref } = useCountUp(isFixed ? 0 : target);
+  return (
+    <div ref={ref} style={{
+      textAlign: "center",
+      opacity: visible ? 1 : 0,
+      transform: visible ? "translateY(0)" : "translateY(18px)",
+      transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms`,
+    }}>
+      <div style={{
+        fontSize: "clamp(36px,4.5vw,54px)", fontWeight: 950,
+        color, lineHeight: 1, fontVariantNumeric: "tabular-nums",
+      }}>
+        {isFixed ? fixedDisplay : `${count}${suffix}`}
+      </div>
+      <div style={{
+        fontSize: 11, color: S, marginTop: 8, fontWeight: 800,
+        letterSpacing: ".10em", textTransform: "uppercase",
+      }}>
+        {label}
+      </div>
+    </div>
+  );
+}
 
 // ── nav ───────────────────────────────────────────────────────────────────────
 function Nav({ onLogin }: { onLogin: () => void }) {
@@ -72,8 +197,8 @@ function Hero({ onCTA }: { onCTA: () => void }) {
       padding: "100px 24px 60px", position: "relative", overflow: "hidden",
     }}>
       {/* glow blobs */}
-      <div style={{ position: "absolute", top: "10%", left: "15%", width: 500, height: 400, background: `radial-gradient(circle,${GN}12,transparent 65%)`, pointerEvents: "none" }} />
-      <div style={{ position: "absolute", top: "5%", right: "10%", width: 400, height: 350, background: "radial-gradient(circle,rgba(120,90,255,.12),transparent 65%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: "10%", left: "15%", width: 500, height: 400, background: `radial-gradient(circle,${GN}12,transparent 65%)`, pointerEvents: "none", animation: "blobFloat1 12s ease-in-out infinite" }} />
+      <div style={{ position: "absolute", top: "5%", right: "10%", width: 400, height: 350, background: "radial-gradient(circle,rgba(120,90,255,.12),transparent 65%)", pointerEvents: "none", animation: "blobFloat2 15s ease-in-out infinite" }} />
 
       <div style={{ position: "relative", maxWidth: 780 }}>
         <div style={{ marginBottom: 12 }}>
@@ -83,7 +208,7 @@ function Hero({ onCTA }: { onCTA: () => void }) {
 
         <h1 style={{ fontSize: "clamp(36px,6vw,72px)", fontWeight: 950, lineHeight: 1.08, margin: "0 0 24px", color: T, fontFamily: ff }}>
           Trade With a System.<br />
-          <span style={{ color: GN }}>Not an Emotion.</span>
+          <span style={{ color: GN }}><TypewriterText text="Not an Emotion." startDelay={800} /></span>
         </h1>
 
         <p style={{ fontSize: "clamp(13px,1.5vw,16px)", color: GN, fontWeight: 800, marginBottom: 10, letterSpacing: ".02em" }}>
@@ -97,7 +222,7 @@ function Hero({ onCTA }: { onCTA: () => void }) {
         </p>
 
         <div className="cta-row" style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <button onClick={onCTA} style={{ padding: "14px 32px", borderRadius: 14, border: `1px solid ${GN}55`, background: `linear-gradient(90deg,${GN}28,${GN}10)`, color: GN, fontSize: 15, fontWeight: 950, cursor: "pointer", letterSpacing: ".02em" }}>
+          <button onClick={onCTA} className="land-btn-glow" style={{ padding: "14px 32px", borderRadius: 14, border: `1px solid ${GN}55`, background: `linear-gradient(90deg,${GN}28,${GN}10)`, color: GN, fontSize: 15, fontWeight: 950, cursor: "pointer", letterSpacing: ".02em" }}>
             Get Early Access →
           </button>
           <a href="#how" style={{ padding: "14px 28px", borderRadius: 14, border: `1px solid ${BDR}`, background: "rgba(255,255,255,.04)", color: T, fontSize: 15, fontWeight: 800, cursor: "pointer", textDecoration: "none", display: "inline-block" }}>
@@ -146,9 +271,172 @@ function MiniEquityPreview() {
         </linearGradient>
       </defs>
       <path d={fill} fill="url(#hero-g)" />
-      <polyline points={pStr} fill="none" stroke={GN} strokeWidth="2" />
-      <circle cx={tx(pts.length-1)} cy={ty(pts[pts.length-1])} r="4" fill={GN} />
+      <polyline points={pStr} fill="none" stroke={GN} strokeWidth="2" className="hero-equity-line" />
+      <circle cx={tx(pts.length-1)} cy={ty(pts[pts.length-1])} r="4" fill={GN} className="hero-equity-dot" />
     </svg>
+  );
+}
+
+// ── stats strip ──────────────────────────────────────────────────────────────
+function StatsStrip() {
+  const stats = [
+    { target: 4,  suffix: "",  label: "Signal Layers",     color: GN,         isFixed: false },
+    { target: 3,  suffix: "",  label: "Exchanges",          color: "#00b8ff",  isFixed: false },
+    { target: 5,  suffix: "",  label: "Risk Modes",         color: YL,         isFixed: false },
+    { target: 0,  suffix: "",  label: "Live Monitoring",    color: GN,         isFixed: true, fixedDisplay: "24/7" },
+    { target: 85, suffix: "%", label: "Trailing Floor",     color: GN,         isFixed: false },
+    { target: 0,  suffix: "%", label: "Withdrawal Access",  color: RD,         isFixed: false },
+  ];
+  return (
+    <section style={{
+      padding: "64px 24px",
+      background: "rgba(0,0,0,.14)",
+      borderTop: `1px solid ${BDR2}`, borderBottom: `1px solid ${BDR2}`,
+    }}>
+      <div style={{
+        maxWidth: 1080, margin: "0 auto",
+        display: "grid",
+        gridTemplateColumns: "repeat(6,1fr)",
+        gap: 16,
+      }} className="stats-strip-grid">
+        {stats.map((s, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && (
+              <div style={{
+                display: "none", // shown via CSS as vertical divider
+                width: 1, alignSelf: "stretch", background: BDR2,
+              }} className="stat-divider" />
+            )}
+            <CountStat {...s} delay={i * 90} fixedDisplay={s.fixedDisplay ?? ""} />
+          </React.Fragment>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ── founding members section ──────────────────────────────────────────────────
+function FoundingMembers({ onCTA }: { onCTA: () => void }) {
+  const benefits = [
+    { icon: "🔒", text: "Lock in founding member pricing — guaranteed before public plans launch" },
+    { icon: "🎯", text: "Priority support — direct line to the founding team, not a ticket queue" },
+    { icon: "⚡", text: "First access to every new feature, trading mode, and supported coin" },
+    { icon: "🛠", text: "Shape the product — your feedback directly influences what we build next" },
+    { icon: "★",  text: "Founding Member badge on your account, permanently" },
+  ];
+  return (
+    <section style={{ padding: "90px 24px", position: "relative", overflow: "hidden" }}>
+      {/* background glow */}
+      <div style={{ position: "absolute", top: "20%", left: "5%", width: 500, height: 400, background: `radial-gradient(circle,${GN}09,transparent 65%)`, pointerEvents: "none" }} />
+
+      <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 72, alignItems: "center" }} className="founding-grid">
+
+          {/* ── left: copy ── */}
+          <div>
+            <Chip>Early Access</Chip>
+            <h2 style={{ ...h2Style, marginTop: 16 }}>
+              Join the<br /><span style={{ color: GN }}>Founding Members</span>
+            </h2>
+            <p style={{ fontSize: 15, color: M, lineHeight: 1.85, marginBottom: 36 }}>
+              We're accepting a limited number of founding members during private beta.
+              This isn't just early access — it's a seat at the table while we build something serious.
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 40 }}>
+              {benefits.map((b, i) => (
+                <div key={i} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+                    background: `${GN}12`, border: `1px solid ${GN}30`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 14,
+                  }}>
+                    {b.icon}
+                  </div>
+                  <span style={{ fontSize: 14, color: T, lineHeight: 1.55, paddingTop: 6 }}>{b.text}</span>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={onCTA} className="land-btn-glow" style={{
+              padding: "15px 38px", borderRadius: 14, cursor: "pointer",
+              background: `linear-gradient(90deg, ${GN}30, ${GN}12)`,
+              border: `1px solid ${GN}55`, color: GN, fontSize: 15, fontWeight: 950,
+              letterSpacing: ".02em",
+            }}>
+              Claim Your Founding Seat →
+            </button>
+            <div style={{ marginTop: 12, fontSize: 11, color: S }}>
+              Seat-limited · Demo mode active · No credit card required
+            </div>
+          </div>
+
+          {/* ── right: membership card ── */}
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <div style={{
+              width: 290,
+              borderRadius: 28,
+              background: "linear-gradient(145deg, rgba(13,22,44,.98), rgba(4,7,18,.99))",
+              border: `1.5px solid rgba(0,255,209,.22)`,
+              padding: "32px 28px",
+              boxShadow: `0 50px 100px rgba(0,0,0,.65), 0 0 70px ${GN}10, 0 0 0 1px rgba(255,255,255,.04)`,
+              position: "relative", overflow: "hidden",
+            }}>
+              {/* inner glow */}
+              <div style={{ position: "absolute", top: -50, right: -50, width: 200, height: 200, background: `radial-gradient(circle,${GN}14,transparent 70%)`, pointerEvents: "none" }} />
+              <div style={{ position: "absolute", bottom: -40, left: -40, width: 160, height: 160, background: "radial-gradient(circle,rgba(0,120,255,.10),transparent 70%)", pointerEvents: "none" }} />
+              {/* shimmer sweep */}
+              <div className="founding-shimmer" style={{ position: "absolute", inset: 0, borderRadius: 28, pointerEvents: "none" }} />
+
+              {/* card header */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 30, height: 30, borderRadius: 9, background: `linear-gradient(135deg,${GN},#00b8ff)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 900, color: "#050814" }}>A</div>
+                  <span style={{ fontSize: 12, fontWeight: 900, color: T }}>Asymmetric AI</span>
+                </div>
+                <span style={{ fontSize: 8, fontWeight: 900, color: "#050814", background: GN, padding: "3px 9px", borderRadius: 6, letterSpacing: ".08em", whiteSpace: "nowrap" }}>
+                  ★ FOUNDING
+                </span>
+              </div>
+
+              {/* status */}
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 10, color: S, letterSpacing: ".14em", textTransform: "uppercase", marginBottom: 5 }}>Member Status</div>
+                <div style={{ fontSize: 24, fontWeight: 950, color: GN, letterSpacing: "-.01em" }}>Founding Member</div>
+                <div style={{ fontSize: 12, color: M, marginTop: 5 }}>Private Beta · Early Access</div>
+              </div>
+
+              {/* perks list */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
+                {["Pricing locked in at founding rate", "Priority support line", "Shape the roadmap directly", "All future features included"].map((p) => (
+                  <div key={p} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                    <div style={{ width: 5, height: 5, borderRadius: "50%", background: GN, boxShadow: `0 0 5px ${GN}88`, flexShrink: 0 }} />
+                    <span style={{ fontSize: 12, color: M }}>{p}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* bottom */}
+              <div style={{ paddingTop: 20, borderTop: `1px solid rgba(255,255,255,.07)`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: 9, color: S, letterSpacing: ".10em", textTransform: "uppercase", marginBottom: 3 }}>Access</div>
+                  <div style={{ fontSize: 13, fontWeight: 900, color: T }}>Demo Mode</div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 9, color: S, letterSpacing: ".10em", textTransform: "uppercase", marginBottom: 3 }}>Status</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, justifyContent: "flex-end" }}>
+                    <div className="pulse-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: GN, boxShadow: `0 0 6px ${GN}` }} />
+                    <span style={{ fontSize: 13, fontWeight: 900, color: GN }}>Active</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -166,15 +454,15 @@ function Problem() {
         <h2 style={h2Style}>Why Retail Traders Lose</h2>
         <p style={subStyle}>It's rarely bad analysis. It's almost always bad discipline.</p>
       </div>
-      <div className="land-grid-auto" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16 }}>
+      <StaggerContainer className="land-grid-auto" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16 }}>
         {items.map(item => (
-          <div key={item.title} style={{ ...cardStyle(), padding: "24px" }}>
+          <div key={item.title} className="land-hover-card" style={{ ...cardStyle(), padding: "24px" }}>
             <div style={{ fontSize: 28, marginBottom: 12 }}>{item.icon}</div>
             <div style={{ fontSize: 16, fontWeight: 900, marginBottom: 8, color: T }}>{item.title}</div>
             <div style={{ fontSize: 13, color: M, lineHeight: 1.7 }}>{item.body}</div>
           </div>
         ))}
-      </div>
+      </StaggerContainer>
     </section>
   );
 }
@@ -325,15 +613,15 @@ function Protection() {
           <p style={subStyle}>Most trading bots let you blow your account. We stop before that happens.</p>
         </div>
 
-        <div className="land-protection-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 14, marginBottom: 28 }}>
+        <StaggerContainer className="land-protection-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 14, marginBottom: 28 }}>
           {tiers.map(t => (
-            <div key={t.dd} style={{ ...cardStyle(), padding: "20px", borderColor: `${t.color}33` }}>
+            <div key={t.dd} className="land-hover-card" style={{ ...cardStyle(), padding: "20px", borderColor: `${t.color}33` }}>
               <div style={{ fontSize: 32, fontWeight: 950, color: t.color, marginBottom: 4 }}>{t.dd}</div>
               <div style={{ fontSize: 11, fontWeight: 900, color: t.color, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 10 }}>{t.label}</div>
               <div style={{ fontSize: 13, color: M }}>{t.action}</div>
             </div>
           ))}
-        </div>
+        </StaggerContainer>
 
         <div className="land-protection-bottom" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           <div style={{ ...cardStyle(), padding: "20px" }}>
@@ -368,15 +656,15 @@ function NonCustodial() {
         <h2 style={h2Style}>We Never Touch Your Money</h2>
         <p style={subStyle}>Non-custodial by design. Your keys. Your funds. Always.</p>
       </div>
-      <div className="land-grid-auto" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16 }}>
+      <StaggerContainer className="land-grid-auto" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16 }}>
         {points.map(p => (
-          <div key={p.title} style={{ ...cardStyle(), padding: "24px" }}>
+          <div key={p.title} className="land-hover-card" style={{ ...cardStyle(), padding: "24px" }}>
             <div style={{ fontSize: 28, marginBottom: 12 }}>{p.icon}</div>
             <div style={{ fontSize: 15, fontWeight: 900, marginBottom: 8, color: T }}>{p.title}</div>
             <div style={{ fontSize: 13, color: M, lineHeight: 1.7 }}>{p.body}</div>
           </div>
         ))}
-      </div>
+      </StaggerContainer>
     </section>
   );
 }
@@ -432,9 +720,9 @@ function HowToStart({ onCTA }: { onCTA: () => void }) {
         <Chip>Getting Started</Chip>
         <h2 style={h2Style}>Live in 4 Steps</h2>
       </div>
-      <div className="land-steps-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 16, marginBottom: 44 }}>
+      <StaggerContainer className="land-steps-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 16, marginBottom: 44 }}>
         {steps.map((s, i) => (
-          <div key={s.n} style={{ ...cardStyle(), padding: "22px 20px", position: "relative" }}>
+          <div key={s.n} className="land-hover-card" style={{ ...cardStyle(), padding: "22px 20px", position: "relative" }}>
             <div style={{ fontSize: 11, fontWeight: 900, color: GN, letterSpacing: ".08em", marginBottom: 10 }}>STEP {s.n}</div>
             <div style={{ fontSize: 15, fontWeight: 900, color: T, marginBottom: 8 }}>{s.title}</div>
             <div style={{ fontSize: 13, color: M, lineHeight: 1.6 }}>{s.body}</div>
@@ -443,9 +731,9 @@ function HowToStart({ onCTA }: { onCTA: () => void }) {
             )}
           </div>
         ))}
-      </div>
+      </StaggerContainer>
       <div style={{ textAlign: "center" }}>
-        <button onClick={onCTA} style={{ padding: "16px 40px", borderRadius: 14, border: `1px solid ${GN}55`, background: `linear-gradient(90deg,${GN}28,${GN}10)`, color: GN, fontSize: 16, fontWeight: 950, cursor: "pointer", letterSpacing: ".02em" }}>
+        <button onClick={onCTA} className="land-btn-glow" style={{ padding: "16px 40px", borderRadius: 14, border: `1px solid ${GN}55`, background: `linear-gradient(90deg,${GN}28,${GN}10)`, color: GN, fontSize: 16, fontWeight: 950, cursor: "pointer", letterSpacing: ".02em" }}>
           Start Free — Get Early Access →
         </button>
         <div style={{ marginTop: 12, fontSize: 11, color: S }}>Seat-limited · Demo mode · No credit card required</div>
@@ -523,9 +811,9 @@ function Modes() {
           <p style={subStyle}>5 modes from ultra conservative to aggressive. Switch anytime.</p>
         </div>
 
-        <div className="land-modes-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 14 }}>
+        <StaggerContainer className="land-modes-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 14 }}>
           {modes.map(m => (
-            <div key={m.name} style={{
+            <div key={m.name} className="land-hover-card" style={{
               ...cardStyle(),
               padding: "24px 20px",
               borderColor: m.flagship ? `${GN}55` : `${m.color}22`,
@@ -547,7 +835,7 @@ function Modes() {
               </div>
             </div>
           ))}
-        </div>
+        </StaggerContainer>
 
         <div style={{ marginTop: 20, textAlign: "center", fontSize: 12, color: S }}>
           Full technical specs available after signup.
@@ -620,7 +908,7 @@ function FAQ() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                 <span style={{ fontSize: 10, fontWeight: 900, color: GN }}>Asymmetric AI</span>
                 <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: GN, boxShadow: `0 0 4px ${GN}` }} />
+                  <div className="pulse-dot" style={{ width: 5, height: 5, borderRadius: "50%", background: GN, boxShadow: `0 0 4px ${GN}` }} />
                   <span style={{ fontSize: 8, color: GN, fontWeight: 800 }}>LIVE</span>
                 </div>
               </div>
@@ -685,7 +973,7 @@ function FooterCTA({ onCTA }: { onCTA: () => void }) {
         <p style={{ fontSize: 16, color: M, marginBottom: 32, lineHeight: 1.6 }}>
           Seats are limited. Join the early access list and be first when real-money trading launches.
         </p>
-        <button onClick={onCTA} style={{ padding: "16px 44px", borderRadius: 14, border: `1px solid ${GN}55`, background: `linear-gradient(90deg,${GN}28,${GN}10)`, color: GN, fontSize: 16, fontWeight: 950, cursor: "pointer" }}>
+        <button onClick={onCTA} className="land-btn-glow" style={{ padding: "16px 44px", borderRadius: 14, border: `1px solid ${GN}55`, background: `linear-gradient(90deg,${GN}28,${GN}10)`, color: GN, fontSize: 16, fontWeight: 950, cursor: "pointer" }}>
           Get Early Access →
         </button>
         <div style={{ marginTop: 14, fontSize: 11, color: S }}>
@@ -1084,7 +1372,7 @@ function DashboardMockup() {
                 {/* AI status */}
                 <div style={{ background: `${GN}08`, border: `1px solid ${GN}20`, borderRadius: 9, padding: "8px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: GN, boxShadow: `0 0 5px ${GN}` }} />
+                    <div className="pulse-dot" style={{ width: 6, height: 6, borderRadius: "50%", background: GN, boxShadow: `0 0 5px ${GN}` }} />
                     <span style={{ fontSize: 8, fontWeight: 900, color: GN }}>AI RUNNING · MINI_ASYM MODE</span>
                   </div>
                   <span style={{ fontSize: 7, color: M }}>BTC/USDT · Next check 4m</span>
@@ -1125,7 +1413,7 @@ function DashboardMockup() {
               ))}
               <div style={{ background: `${GN}08`, border: `1px solid ${GN}22`, borderRadius: 7, padding: "6px 8px", marginTop: 4 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: GN, boxShadow: `0 0 4px ${GN}` }} />
+                  <div className="pulse-dot" style={{ width: 5, height: 5, borderRadius: "50%", background: GN, boxShadow: `0 0 4px ${GN}` }} />
                   <span style={{ fontSize: 6, fontWeight: 900, color: GN }}>AI RUNNING</span>
                 </div>
                 <div style={{ fontSize: 6, color: M, marginTop: 2 }}>MINI_ASYM · BTC/USDT</div>
@@ -1180,6 +1468,69 @@ export default function Landing() {
       <style>{`
         html { scroll-behavior: smooth; }
 
+        /* ── equity curve draw animation ── */
+        .hero-equity-line {
+          stroke-dasharray: 2000;
+          stroke-dashoffset: 2000;
+          animation: drawEquity 2.2s cubic-bezier(0.4,0,0.2,1) forwards 0.6s;
+        }
+        .hero-equity-dot {
+          opacity: 0;
+          animation: fadeInDot 0.4s ease forwards 2.6s;
+        }
+        @keyframes drawEquity { to { stroke-dashoffset: 0; } }
+        @keyframes fadeInDot  { to { opacity: 1; } }
+
+        /* ── blob float ── */
+        @keyframes blobFloat1 {
+          0%,100% { transform: translate(0,0) scale(1); }
+          33%      { transform: translate(30px,-20px) scale(1.05); }
+          66%      { transform: translate(-20px,15px) scale(0.95); }
+        }
+        @keyframes blobFloat2 {
+          0%,100% { transform: translate(0,0) scale(1); }
+          33%      { transform: translate(-25px,20px) scale(1.04); }
+          66%      { transform: translate(20px,-15px) scale(0.97); }
+        }
+
+        /* ── typewriter cursor ── */
+        .typewriter-cursor { display:inline-block; margin-left:1px; color:#00ffd1; animation: twBlink 0.7s step-end infinite; }
+        @keyframes twBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+        /* ── stagger grid ── */
+        @keyframes fadeSlideUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+        .stagger-container > * { opacity: 0; }
+        .stagger-container.visible > *:nth-child(1) { animation: fadeSlideUp 0.5s ease 0.00s both; }
+        .stagger-container.visible > *:nth-child(2) { animation: fadeSlideUp 0.5s ease 0.10s both; }
+        .stagger-container.visible > *:nth-child(3) { animation: fadeSlideUp 0.5s ease 0.20s both; }
+        .stagger-container.visible > *:nth-child(4) { animation: fadeSlideUp 0.5s ease 0.30s both; }
+        .stagger-container.visible > *:nth-child(5) { animation: fadeSlideUp 0.5s ease 0.40s both; }
+
+        /* ── card hover lift ── */
+        .land-hover-card { transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease; cursor: default; }
+        .land-hover-card:hover { transform: translateY(-5px); box-shadow: 0 24px 48px rgba(0,0,0,.55), 0 0 24px rgba(0,255,209,.08); border-color: rgba(0,255,209,.28) !important; }
+
+        /* ── button glow pulse ── */
+        @keyframes btnGlow { 0%,100%{box-shadow:0 0 0 0 rgba(0,255,209,0)} 50%{box-shadow:0 0 22px 5px rgba(0,255,209,.22)} }
+        .land-btn-glow { animation: btnGlow 3s ease-in-out infinite; }
+
+        /* ── pulsing status dot ── */
+        @keyframes dotPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.5)} }
+        .pulse-dot { animation: dotPulse 1.8s ease-in-out infinite; }
+
+        /* ── founding card shimmer ── */
+        @keyframes shimmerMove { 0%{background-position:-200% center} 100%{background-position:200% center} }
+        .founding-shimmer {
+          background: linear-gradient(105deg, transparent 35%, rgba(0,255,209,.06) 50%, transparent 65%);
+          background-size: 200% auto;
+          animation: shimmerMove 3.5s linear infinite;
+        }
+
+        /* ── stats strip ── */
+        .stats-strip-grid { gap: 0 !important; }
+        .stats-strip-grid > div { padding: 0 24px; border-right: 1px solid rgba(255,255,255,.07); }
+        .stats-strip-grid > div:last-child { border-right: none; }
+
         /* ── MOBILE (≤768px) ── */
         @media (max-width: 768px) {
 
@@ -1230,6 +1581,15 @@ export default function Landing() {
           .land-engine-tabs button div:first-child { font-size: 14px !important; }
           .land-engine-tabs button div:nth-child(3) { font-size: 11px !important; }
 
+          /* stats strip */
+          .stats-strip-grid { grid-template-columns: 1fr 1fr 1fr !important; gap: 20px 0 !important; }
+          .stats-strip-grid > div { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,.07); padding: 16px 0 !important; }
+          .stats-strip-grid > div:nth-child(odd) { border-right: 1px solid rgba(255,255,255,.07) !important; }
+          .stats-strip-grid > div:nth-last-child(-n+3) { border-bottom: none !important; }
+
+          /* founding section */
+          .founding-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+
           /* dashboard mockup */
           .land-dash-tilt { transform: none !important; width: 100% !important; box-shadow: 0 20px 40px rgba(0,0,0,.5) !important; }
           .land-dash-phone { display: none !important; }
@@ -1276,28 +1636,30 @@ export default function Landing() {
       `}</style>
       <Nav onLogin={() => nav("/login")} />
       <Hero onCTA={goSignup} />
+      <StatsStrip />
+      <RevealWrapper><Exchanges /></RevealWrapper>
       <Divider />
-      <Exchanges />
+      <RevealWrapper><Problem /></RevealWrapper>
       <Divider />
-      <Problem />
+      <RevealWrapper><Engine /></RevealWrapper>
       <Divider />
-      <Engine />
+      <RevealWrapper><Protection /></RevealWrapper>
       <Divider />
-      <Protection />
+      <RevealWrapper><NonCustodial /></RevealWrapper>
       <Divider />
-      <NonCustodial />
+      <RevealWrapper><Returns /></RevealWrapper>
       <Divider />
-      <Returns />
+      <RevealWrapper><DashboardMockup /></RevealWrapper>
       <Divider />
-      <DashboardMockup />
+      <RevealWrapper><Modes /></RevealWrapper>
       <Divider />
-      <Modes />
+      <RevealWrapper><FoundingMembers onCTA={goSignup} /></RevealWrapper>
       <Divider />
-      <HowToStart onCTA={goSignup} />
+      <RevealWrapper><HowToStart onCTA={goSignup} /></RevealWrapper>
       <Divider />
-      <FAQ />
+      <RevealWrapper><FAQ /></RevealWrapper>
       <Divider />
-      <FooterCTA onCTA={goSignup} />
+      <RevealWrapper><FooterCTA onCTA={goSignup} /></RevealWrapper>
       <Footer onLogin={() => nav("/login")} onSignup={goSignup} />
     </div>
   );
