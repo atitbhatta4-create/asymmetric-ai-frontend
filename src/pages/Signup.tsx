@@ -34,7 +34,7 @@ export default function Signup() {
 
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail || !password) { setErr("Please enter email and password."); return; }
-    if (password.length < 6) { setErr("Password must be at least 6 characters."); return; }
+    if (password.length < 8) { setErr("Password must be at least 8 characters."); return; }
     if (password !== confirm) { setErr("Passwords do not match."); return; }
 
     setLoading(true);
