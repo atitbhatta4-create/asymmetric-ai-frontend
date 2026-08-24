@@ -124,14 +124,78 @@ export default function App() {
   if (!adminChecked) return <div style={{ padding: 30, color: "white" }}>Loading…</div>;
 
   if (!onboardingDone) {
+    const onboardingComplete = () => {
+      setOnboardingDone(true);
+      if (!acceptedTerms) {
+        localStorage.setItem(termsKey(session?.email ?? null), "true");
+        setAcceptedTerms(true);
+      }
+    };
+
+    // ── MOBILE — onboarding inside mobile shell ──────────────────────────────
+    if (isMobile) {
+      return (
+        <div style={{ minHeight: "100vh", background: "#050814", color: "white" }}>
+          <div style={{
+            position: "sticky", top: 0, zIndex: 100,
+            background: "rgba(9,15,30,0.97)",
+            borderBottom: "1px solid rgba(255,255,255,0.07)",
+            padding: "5px 10px",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+          }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 900 }}>Asymmetric AI</div>
+              <div style={{ fontSize: 8, opacity: 0.5 }}>{session.email}</div>
+            </div>
+            <div style={{
+              fontSize: 10, fontWeight: 700,
+              color: "rgba(0,255,224,0.7)",
+              background: "rgba(0,255,224,0.08)",
+              border: "1px solid rgba(0,255,224,0.18)",
+              borderRadius: 8, padding: "4px 10px",
+            }}>
+              Setup Guide
+            </div>
+          </div>
+          <main style={{ padding: "10px 6px 24px" }}>
+            <Onboarding onComplete={onboardingComplete} />
+          </main>
+        </div>
+      );
+    }
+
+    // ── DESKTOP — onboarding inside desktop shell ────────────────────────────
     return (
-      <Onboarding onComplete={() => {
-        setOnboardingDone(true);
-        if (!acceptedTerms) {
-          localStorage.setItem(termsKey(session?.email ?? null), "true");
-          setAcceptedTerms(true);
-        }
-      }} />
+      <div className="app-desktop-shell" style={{
+        minHeight: "100vh", background: "#050814", color: "white",
+        display: "grid", gridTemplateColumns: "200px 1fr",
+      }}>
+        <aside style={{
+          borderRight: "1px solid rgba(255,255,255,0.06)",
+          padding: 12, background: "rgba(9,15,30,0.92)",
+          position: "sticky", top: 0, height: "100vh", overflowY: "auto",
+        }}>
+          <div style={{ fontSize: 14, fontWeight: 900, marginBottom: 2 }}>Asymmetric AI</div>
+          <div style={{ fontSize: 10, opacity: 0.55, marginBottom: 16 }}>
+            <b>{session.email}</b>
+          </div>
+          <div style={{
+            padding: "9px 11px", borderRadius: 10,
+            background: "rgba(0,255,224,0.08)",
+            border: "1px solid rgba(0,255,224,0.18)",
+            fontSize: 12, fontWeight: 800, color: "rgba(0,255,224,0.85)",
+            marginBottom: 8,
+          }}>
+            Setup Guide
+          </div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", lineHeight: 1.6, marginTop: 8 }}>
+            Complete the setup guide to unlock the full dashboard.
+          </div>
+        </aside>
+        <main style={{ padding: 24, minWidth: 0 }}>
+          <Onboarding onComplete={onboardingComplete} />
+        </main>
+      </div>
     );
   }
 

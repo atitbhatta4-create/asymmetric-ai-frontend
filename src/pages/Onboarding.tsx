@@ -562,24 +562,18 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div style={{
-      minHeight: "100vh",
       display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: isMobile ? "flex-start" : "center",
-      background: `radial-gradient(1200px 600px at 20% 10%, rgba(0,255,224,0.09), transparent 55%), ${dark}`,
-      color: "white",
-      padding: isMobile ? "12px 10px 24px" : "24px 16px",
-      boxSizing: "border-box",
+      justifyContent: "center",
+      width: "100%",
     }}>
       <div style={{
         width: "100%",
-        maxWidth: 680,
-        borderRadius: isMobile ? 16 : 22,
-        padding: isMobile ? "18px 16px 16px" : "26px 28px 24px",
+        maxWidth: isMobile ? "100%" : 660,
+        borderRadius: isMobile ? 14 : 20,
+        padding: isMobile ? "16px 14px 14px" : "24px 26px 22px",
         background: card,
         border: `1px solid ${bdr}`,
-        boxShadow: "0 0 50px rgba(0,0,0,0.7)",
+        boxShadow: "0 0 40px rgba(0,0,0,0.5)",
       }}>
         {/* Top label */}
         <div style={{
