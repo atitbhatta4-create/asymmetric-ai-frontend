@@ -19,11 +19,12 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import AcceptTerms from "./pages/AcceptTerms";
+import Onboarding from "./pages/Onboarding";
 import Terms from "./pages/Terms";
 import RiskDisclosure from "./pages/RiskDisclosure";
 import Privacy from "./pages/Privacy";
 
-type SessionOut = { ok: boolean; email: string | null };
+type SessionOut = { ok: boolean; email: string | null; onboarding_complete?: boolean };
 
 function termsKey(email: string | null) {
   return email ? `termsAccepted:${email}` : "termsAccepted:unknown";
@@ -44,6 +45,7 @@ export default function App() {
   const isMobile = useIsMobile();
   const [session, setSession]         = useState<SessionOut | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [onboardingDone, setOnboardingDone] = useState(false);
   const [isAdmin, setIsAdmin]         = useState(false);
   const [adminChecked, setAdminChecked] = useState(false);
   const [menuOpen, setMenuOpen]       = useState(false);
@@ -77,7 +79,8 @@ export default function App() {
   useEffect(() => {
     if (!session?.ok) return;
     setAcceptedTerms(localStorage.getItem(termsKey(session.email)) === "true");
-  }, [session?.ok, session?.email]);
+    setOnboardingDone(!!session.onboarding_complete);
+  }, [session?.ok, session?.email, session?.onboarding_complete]);
 
   useEffect(() => {
     if (!session?.ok) { setIsAdmin(false); setAdminChecked(true); return; }
@@ -119,6 +122,18 @@ export default function App() {
   }
 
   if (!adminChecked) return <div style={{ padding: 30, color: "white" }}>Loading…</div>;
+
+  if (!onboardingDone) {
+    return (
+      <Onboarding onComplete={() => {
+        setOnboardingDone(true);
+        if (!acceptedTerms) {
+          localStorage.setItem(termsKey(session?.email ?? null), "true");
+          setAcceptedTerms(true);
+        }
+      }} />
+    );
+  }
 
   if (!acceptedTerms) {
     return (

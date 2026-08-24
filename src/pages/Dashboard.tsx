@@ -263,7 +263,7 @@ export default function Dashboard() {
 
   // Option B controls
   const [maxTradesPerDay, setMaxTradesPerDay] = useState<number>(3); // 0 = unlimited
-  const [durationDays, setDurationDays] = useState<number>(0); // 0 = unlimited
+  const [durationDays, setDurationDays] = useState<number>(7);
   const [stopAfterBadTrades, setStopAfterBadTrades] = useState<number>(2);
   const [trendFilter, setTrendFilter] = useState<boolean>(true);
   const [chopMinSepPct, setChopMinSepPct] = useState<number>(0.005); // 0.5%
@@ -557,6 +557,12 @@ export default function Dashboard() {
         return;
       }
 
+      const dur = Number(durationDays);
+      if (!dur || dur < 1 || dur > 30) {
+        setError("Set a duration between 1 and 30 days before starting.");
+        return;
+      }
+
       await apiPost("/auto/start", {
         symbol,
         trade_style: tradeStyle,
@@ -831,8 +837,8 @@ export default function Dashboard() {
             {/* 4 ── Duration + Size config */}
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr 1fr", gap: 8, marginTop: isMobile ? 10 : 14 }}>
               <div className="field">
-                <label>Duration (days)</label>
-                <input className="input" type="number" min={0} max={365} step={1}
+                <label>Duration (days) <span style={{ color: "#ff5078", fontSize: 11 }}>*required</span></label>
+                <input className="input" type="number" min={1} max={30} step={1}
                   value={durationDays} onChange={(e) => setDurationDays(Number(e.target.value))} />
               </div>
               <div className="field">
