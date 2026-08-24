@@ -183,7 +183,7 @@ function Step2() {
 
   const steps: Record<string, [string, React.ReactNode][]> = {
     bybit: [
-      ["Log in to Bybit", <>Go to <b style={{ color: light }}>bybit.com</b> and sign in.</>],
+      ["Log in to your exchange", <>Go to <b style={{ color: light }}>bybit.com</b> and sign in.</>],
       ["Open API Management", <>Click your profile icon (top right) → <b style={{ color: light }}>API Management</b>.</>],
       ["Create New Key", <>Click <b style={{ color: light }}>"Create New Key"</b> → choose <b style={{ color: light }}>"System-generated API Keys"</b>.</>],
       ["Set permissions", <><Pill>Read</Pill> <Pill>Trade</Pill> — Leave <b style={{ color: "#fca5a5" }}>Withdrawal OFF</b> — never enable it.</>],
@@ -191,7 +191,7 @@ function Step2() {
       ["Connect in app", <>Go to the <b style={{ color: light }}>Exchange tab</b> in Asymmetric AI → paste your keys → click Connect.</>],
     ],
     okx: [
-      ["Log in to OKX", <>Go to <b style={{ color: light }}>okx.com</b> and sign in.</>],
+      ["Log in to your exchange", <>Go to <b style={{ color: light }}>okx.com</b> and sign in.</>],
       ["Open API", <>Click your profile icon → <b style={{ color: light }}>API</b> from the dropdown.</>],
       ["Create V5 API Key", <>Click <b style={{ color: light }}>"Create V5 API Key"</b>.</>],
       ["Set permissions", <><Pill>Read</Pill> <Pill>Trade</Pill> — Do NOT enable Withdrawal or Transfer.</>],
@@ -199,7 +199,7 @@ function Step2() {
       ["Connect in app", <>Go to the <b style={{ color: light }}>Exchange tab</b> → paste API Key, Secret, and Passphrase → Connect.</>],
     ],
     binance: [
-      ["Log in to Binance", <>Go to <b style={{ color: light }}>binance.com</b> and sign in.</>],
+      ["Log in to your exchange", <>Go to <b style={{ color: light }}>binance.com</b> and sign in.</>],
       ["Open API Management", <>Click your profile icon → <b style={{ color: light }}>API Management</b>.</>],
       ["Create API", <>Click <b style={{ color: light }}>"Create API"</b> → choose <b style={{ color: light }}>"System generated"</b> → enter a label.</>],
       ["Complete verification", <>Complete the 2FA verification step Binance requires.</>],
