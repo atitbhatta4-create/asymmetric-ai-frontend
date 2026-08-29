@@ -294,6 +294,13 @@ export default function Dashboard() {
   const [reasonOpen, setReasonOpen] = useState(false);
   const [reasonText, setReasonText] = useState<string>("");
 
+  const [floorConfirm, setFloorConfirm] = useState<{
+    current_equity: number;
+    new_floor: number;
+    message: string;
+    pendingPayload: Record<string, unknown>;
+  } | null>(null);
+
   // -------------------------
   // API helpers (with 401 redirect)
   // -------------------------
@@ -538,7 +545,7 @@ export default function Dashboard() {
   const connected = !!exStatus?.connected;
   const aiRunning = !!autoStatus?.running;
 
-  async function startAI() {
+  async function startAI(floorOverride = false) {
     try {
       setError("");
 
@@ -563,7 +570,7 @@ export default function Dashboard() {
         return;
       }
 
-      await apiPost("/auto/start", {
+      const payload: Record<string, unknown> = {
         symbol,
         trade_style: tradeStyle,
         mode,
@@ -572,14 +579,45 @@ export default function Dashboard() {
         duration_days: Number(durationDays),
         trend_filter: !!trendFilter,
         chop_min_sep_pct: Number(chopMinSepPct),
-      });
+        floor_override: floorOverride,
+      };
 
+      try {
+        await apiPost("/auto/start", payload);
+      } catch (e: any) {
+        // 409 = hard floor confirmation required
+        const msg = String(e?.message || "");
+        try {
+          const parsed = JSON.parse(msg);
+          if (parsed?.code === "HARD_FLOOR_CONFIRM") {
+            setFloorConfirm({
+              current_equity: parsed.current_equity,
+              new_floor: parsed.new_floor,
+              message: parsed.message,
+              pendingPayload: payload,
+            });
+            return;
+          }
+        } catch (_) { /* not JSON, fall through */ }
+        throw e;
+      }
+
+      setFloorConfirm(null);
       await loadAutoStatus();
       await loadAutoHistory();
 
       setTimeout(() => refreshTradesAndEquity(), 1200);
     } catch (e: any) {
       setError(e?.message || "Start AI failed");
+    }
+  }
+
+  async function confirmFloorStart() {
+    try {
+      setError("");
+      await startAI(true);
+    } catch (e: any) {
+      setError(e?.message || "Start failed");
     }
   }
 
@@ -912,6 +950,45 @@ export default function Dashboard() {
                 Mini-Asym Panel
               </button>
             </div>
+
+            {/* Hard floor confirmation modal */}
+            {floorConfirm && (
+              <div style={{
+                marginTop: 14,
+                padding: "16px 18px",
+                borderRadius: 12,
+                background: "rgba(255,80,120,0.08)",
+                border: "1px solid rgba(255,80,120,0.35)",
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#ff5078", marginBottom: 8 }}>
+                  Hard Floor Hit — Confirm Restart
+                </div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", lineHeight: 1.6, marginBottom: 12 }}>
+                  Your AI stopped because equity fell below the safety floor.<br />
+                  Restarting will set a <strong style={{ color: "#fff" }}>new floor at ${floorConfirm.new_floor.toFixed(2)}</strong>{" "}
+                  (85% of your current equity ${floorConfirm.current_equity.toFixed(2)}).<br />
+                  Any further losses beyond this level will stop the AI again.
+                </div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button
+                    className="primary"
+                    type="button"
+                    onClick={confirmFloorStart}
+                    style={{ fontSize: 12, padding: "7px 18px" }}
+                  >
+                    Yes, restart with new floor
+                  </button>
+                  <button
+                    className="ghost"
+                    type="button"
+                    onClick={() => setFloorConfirm(null)}
+                    style={{ fontSize: 12, padding: "7px 14px" }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
 
             {error ? <div className="error">{error}</div> : null}
           </section>
