@@ -955,34 +955,43 @@ export default function Dashboard() {
             {floorConfirm && (
               <div style={{
                 marginTop: 14,
-                padding: "16px 18px",
+                padding: "18px 20px",
                 borderRadius: 12,
-                background: "rgba(255,80,120,0.08)",
-                border: "1px solid rgba(255,80,120,0.35)",
+                background: "rgba(255,80,120,0.07)",
+                border: "1px solid rgba(255,80,120,0.40)",
               }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#ff5078", marginBottom: 8 }}>
-                  Hard Floor Hit — Confirm Restart
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#ff5078", marginBottom: 10, letterSpacing: 0.3 }}>
+                  ⚠️ Hard Floor Was Hit — Action Required
                 </div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", lineHeight: 1.6, marginBottom: 12 }}>
-                  Your AI stopped because equity fell below the safety floor.<br />
-                  Restarting will set a <strong style={{ color: "#fff" }}>new floor at ${floorConfirm.new_floor.toFixed(2)}</strong>{" "}
-                  (85% of your current equity ${floorConfirm.current_equity.toFixed(2)}).<br />
-                  Any further losses beyond this level will stop the AI again.
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.80)", lineHeight: 1.75, marginBottom: 14 }}>
+                  <strong style={{ color: "#fff" }}>What happened:</strong><br />
+                  Your account equity dropped below the safety floor — the minimum level the AI is allowed to trade at.
+                  The AI automatically stopped to prevent further losses and protect your capital.<br /><br />
+
+                  <strong style={{ color: "#fff" }}>What happens if you restart:</strong><br />
+                  Your safety floor will be <strong style={{ color: "#fff" }}>reset to ${floorConfirm.new_floor.toFixed(2)}</strong>,
+                  which is 85% of your current balance of <strong style={{ color: "#fff" }}>${floorConfirm.current_equity.toFixed(2)}</strong>.
+                  This means the AI is allowed to trade again, but if your equity drops below <strong style={{ color: "#ff5078" }}>${floorConfirm.new_floor.toFixed(2)}</strong>{" "}
+                  at any point, it will stop again immediately.<br /><br />
+
+                  <strong style={{ color: "#fff" }}>Recommendation:</strong><br />
+                  Only restart if you understand the current market conditions and are comfortable with the risk.
+                  Consider switching to a safer mode (SAFE or ULTRA_SAFE) if you have been losing recently.
                 </div>
-                <div style={{ display: "flex", gap: 10 }}>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                   <button
                     className="primary"
                     type="button"
                     onClick={confirmFloorStart}
-                    style={{ fontSize: 12, padding: "7px 18px" }}
+                    style={{ fontSize: 12, padding: "8px 20px" }}
                   >
-                    Yes, restart with new floor
+                    I understand — restart with new floor
                   </button>
                   <button
                     className="ghost"
                     type="button"
                     onClick={() => setFloorConfirm(null)}
-                    style={{ fontSize: 12, padding: "7px 14px" }}
+                    style={{ fontSize: 12, padding: "8px 14px" }}
                   >
                     Cancel
                   </button>
