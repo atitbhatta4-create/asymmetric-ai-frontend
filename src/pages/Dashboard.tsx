@@ -545,7 +545,7 @@ export default function Dashboard() {
   const connected = !!exStatus?.connected;
   const aiRunning = !!autoStatus?.running;
 
-  async function startAI(floorOverride = false) {
+  async function startAI(floorOverride: boolean = false) {
     try {
       setError("");
 
@@ -938,7 +938,7 @@ export default function Dashboard() {
 
             {/* 6 ── Actions */}
             <div className="actions" style={{ gap: 8, marginTop: isMobile ? 8 : 12 }}>
-              <button className="primary" type="button" onClick={startAI} disabled={!connected || aiRunning}>
+              <button className="primary" type="button" onClick={() => startAI()} disabled={!connected || aiRunning}>
                 {aiRunning ? "AI Running" : "Start AI"}
               </button>
               <button className="danger" type="button" onClick={stopAI} disabled={!aiRunning}>Stop AI</button>
