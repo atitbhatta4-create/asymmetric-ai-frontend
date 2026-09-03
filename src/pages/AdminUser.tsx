@@ -247,6 +247,14 @@ export default function AdminUser() {
     } catch (e: any) { setErr(e?.message || "Reset failed"); }
   };
 
+  const stopAI = async () => {
+    if (!confirm(`Stop AI for:\n${decodedEmail}?`)) return;
+    try {
+      await api.apiRequest(`/admin/stop-runner/${encodeURIComponent(decodedEmail)}`, { method: "POST" });
+      setMsg("AI stopped ✅"); await loadBase();
+    } catch (e: any) { setErr(e?.message || "Stop failed"); }
+  };
+
   const ai = data?.ai?.status;
   const state = data?.state;
   const trades: any[] = data?.trades?.recent || [];
@@ -258,6 +266,9 @@ export default function AdminUser() {
         <button onClick={() => nav("/admin")} style={btn}>← Back</button>
         <button onClick={loadBase} style={btn}>Refresh</button>
         <button onClick={resetUser} style={goodBtn}>Reset User</button>
+        {data?.ai?.running && (
+          <button onClick={stopAI} style={dangerBtn}>Stop AI</button>
+        )}
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ width: 10, height: 10, borderRadius: "50%", background: data?.ai?.running ? GN : "rgba(255,80,120,.7)" }} />
           <span style={{ fontSize: 12, opacity: 0.8 }}>{data?.ai?.running ? "AI Running" : "AI Off"}</span>

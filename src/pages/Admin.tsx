@@ -187,6 +187,11 @@ export default function Admin() {
   const [supportTicketInfo,  setSupportTicketInfo]  = useState<any>(null);
   const [supportReply,       setSupportReply]       = useState("");
   const [supportSending,     setSupportSending]     = useState(false);
+  const [showCompose,        setShowCompose]        = useState(false);
+  const [composeEmail,       setComposeEmail]       = useState("");
+  const [composeSubject,     setComposeSubject]     = useState("");
+  const [composeMessage,     setComposeMessage]     = useState("");
+  const [composeSending,     setComposeSending]     = useState(false);
 
   // ── Admin data ──────────────────────────────────────────────────────────────
   const loadAnalytics = async () => {
@@ -412,6 +417,28 @@ export default function Admin() {
     } catch (e: any) {
       alert("Resolve failed: " + (e?.message || "unknown error"));
     }
+  };
+
+  const sendInitiateMessage = async () => {
+    if (!composeEmail.trim() || !composeMessage.trim() || composeSending) return;
+    setComposeSending(true);
+    try {
+      const res = await api.apiRequest("/admin/support/initiate", {
+        method: "POST",
+        body: {
+          user_email: composeEmail.trim().toLowerCase(),
+          subject: composeSubject.trim() || "Message from Support",
+          message: composeMessage.trim(),
+        },
+      }) as any;
+      setShowCompose(false);
+      setComposeEmail(""); setComposeSubject(""); setComposeMessage("");
+      await loadSupport();
+      if (res?.ticket_id) loadSupportMessages(res.ticket_id);
+    } catch (e: any) {
+      alert("Send failed: " + (e?.message || "unknown error"));
+    }
+    setComposeSending(false);
   };
 
   const loadOptRun = async (runId: string) => {
@@ -1276,8 +1303,47 @@ export default function Admin() {
                   {supportTickets.filter(t => t.status === "open").length} open
                 </span>
               </div>
-              <button onClick={loadSupport} style={btnStyle}>Refresh</button>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button onClick={() => setShowCompose(o => !o)} style={goodBtn}>+ Message User</button>
+                <button onClick={loadSupport} style={btnStyle}>Refresh</button>
+              </div>
             </div>
+
+            {/* Compose — admin-initiated message */}
+            {showCompose && (
+              <div style={{
+                marginBottom: 14, padding: "14px 14px", borderRadius: 14,
+                background: "rgba(0,255,224,0.05)", border: "1px solid rgba(0,255,224,0.18)",
+                display: "flex", flexDirection: "column", gap: 8,
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 900, color: "#00ffe0", marginBottom: 2 }}>New message to user</div>
+                <input
+                  value={composeEmail}
+                  onChange={e => setComposeEmail(e.target.value)}
+                  placeholder="User email"
+                  style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,.12)", background: "rgba(0,0,0,.22)", color: "white", fontSize: 12 }}
+                />
+                <input
+                  value={composeSubject}
+                  onChange={e => setComposeSubject(e.target.value)}
+                  placeholder="Subject (optional)"
+                  style={{ padding: "7px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,.12)", background: "rgba(0,0,0,.22)", color: "white", fontSize: 12 }}
+                />
+                <textarea
+                  value={composeMessage}
+                  onChange={e => setComposeMessage(e.target.value)}
+                  placeholder="Message…"
+                  rows={3}
+                  style={{ resize: "none", padding: "7px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,.12)", background: "rgba(0,0,0,.22)", color: "white", fontSize: 12, fontFamily: "inherit" }}
+                />
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={sendInitiateMessage} disabled={composeSending || !composeEmail.trim() || !composeMessage.trim()} style={goodBtn}>
+                    {composeSending ? "Sending…" : "Send & Email User"}
+                  </button>
+                  <button onClick={() => setShowCompose(false)} style={btnStyle}>Cancel</button>
+                </div>
+              </div>
+            )}
             {supportLoading && <div style={{ opacity: 0.4, fontSize: 12 }}>Loading…</div>}
             {!supportLoading && supportTickets.length === 0 && (
               <div style={{ opacity: 0.4, fontSize: 12 }}>No tickets yet</div>
