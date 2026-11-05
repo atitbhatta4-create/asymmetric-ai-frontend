@@ -507,7 +507,7 @@ export default function MiniAsym() {
 
                 {/* Grade badge */}
                 <div style={{ padding: "5px 14px", borderRadius: 999, fontWeight: 950, fontSize: 14, background: gradeBg, border: `1px solid ${gradeBorder}`, color: gradeColor }}>
-                  Grade {gradeLabel} · {(score * 100).toFixed(0)}%
+                  Grade {gradeLabel} · {(score * 100).toFixed(1)}%
                 </div>
 
                 {/* Adaptive strictness */}
@@ -525,7 +525,7 @@ export default function MiniAsym() {
               <div style={{ flex: 1, height: 6, borderRadius: 99, background: "rgba(255,255,255,0.07)", overflow: "hidden" }}>
                 <div style={{ height: "100%", width: `${Math.min(100, score * 100)}%`, borderRadius: 99, background: `linear-gradient(90deg, ${gradeColor}, ${gradeColor}aa)`, transition: "width 0.6s ease" }} />
               </div>
-              <div style={{ fontSize: 13, fontWeight: 900, color: gradeColor, minWidth: 36 }}>{(score * 100).toFixed(0)}%</div>
+              <div style={{ fontSize: 13, fontWeight: 900, color: gradeColor, minWidth: 36 }}>{(score * 100).toFixed(1)}%</div>
             </div>
 
             {/* Pending trade */}
@@ -617,8 +617,8 @@ export default function MiniAsym() {
             {signalData.breakdown?.session && (
               <div style={{ padding: "10px 18px", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", gap: 16, fontSize: 12, opacity: 0.55 }}>
                 <span>Session: <b style={{ opacity: 1, color: "white" }}>{signalData.breakdown.session.label}</b></span>
-                <span>Quality: <b style={{ opacity: 1, color: "white" }}>{((signalData.breakdown.session.quality ?? 1) * 100).toFixed(0)}%</b></span>
-                <span>Raw score: <b style={{ opacity: 1, color: "white" }}>{((signalData.breakdown.session.raw_score ?? 0) * 100).toFixed(0)}%</b></span>
+                <span>Quality: <b style={{ opacity: 1, color: "white" }}>{((signalData.breakdown.session.quality ?? 1) * 100).toFixed(1)}%</b></span>
+                <span>Raw score: <b style={{ opacity: 1, color: "white" }}>{((signalData.breakdown.session.raw_score ?? 0) * 100).toFixed(1)}%</b></span>
               </div>
             )}
           </div>
